@@ -2,7 +2,7 @@
 #include <iostream>
 #include <fstream>
 
-#include <base64.h>
+#include <sha256.h>
 
 #include "address_space.h"
 
@@ -13,6 +13,19 @@ AddressSpace::AddressSpace(unsigned int bits, unsigned int sample) {
 	for(int i=0; i<this->sample; i++) {
 		this->addresses.push_back(new Bitstring(this->bits));
 	}
+
+}
+
+std::string AddressSpace::hash() {
+	std::vector<Bitstring*> v(this->addresses);
+	std::sort(v.begin(), v.end());
+
+	SHA256 hash = SHA256();
+	hash.init();
+	for(int i=0; i<this->sample; i++) {
+		hash.update((const unsigned char *)v[i]->data, sizeof(int64_t)*v[i]->len);
+	}
+	return hash.string();
 }
 
 int AddressSpace::scan(const Bitstring *bs, unsigned int radius, std::vector<Bitstring*> *dst) const {
@@ -31,13 +44,30 @@ int AddressSpace::scan(const Bitstring *bs, unsigned int radius, std::vector<Bit
 
 int AddressSpace::save(std::string filename) const {
 	std::ofstream file(filename);
-	file << "SDM|v0.0.1|ADDRESS SPACE|v1|" << this->bits << "|" << this->sample << "\n";
+	file << "SDM:ADDRESS SPACE\nSDM-Version: v0.0.1\nFormat: v1\nBits: " << this->bits << "\nSample: " << this->sample << "\n\n";
 	const unsigned int n = this->sample;
 	for(int i=0; i<n; i++) {
 		Bitstring *addr = this->addresses[i];
-		// FIXME It cannot depend on whether the computer is big-endian or little-endian. [msbrogli 2015-12-01]
-		file << i << "|" << base64_encode((const unsigned char *)addr->data, 8*addr->len) << "\n";
+		// It does not depend on whether the computer is big-endian or little-endian. [msbrogli 2015-12-01]
+		file << addr->base64() << "\n";
 	}
 	file.close();
 	return 0;
 }
+
+/*
+int AddressSpace::load(std::string filename) {
+	std::ifstream file(filename);
+	std::string buffer;
+
+	std::getline(file, buffer);
+	std::cout << buffer << std::endl;
+
+	int cnt = 0;
+	while(std::getline(file, buffer)) {
+		cnt++;
+	}
+
+	std::cout << cnt << std::endl;
+}
+*/

@@ -5,6 +5,8 @@
 
 void run(const int N) {
 	AddressSpace *s1 = new AddressSpace(N, 1000000);
+	std::cout << "Address space generated." << std::endl;
+	std::cout << "Hash: " << s1->hash() << std::endl;
 	s1->save("teste1.txt");
 	free(s1);
 }

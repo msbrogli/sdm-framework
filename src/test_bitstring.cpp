@@ -5,6 +5,8 @@
 
 void run(const int N) {
 	Bitstring *bs1 = new Bitstring(N);
+	std::cout << bs1->str() << "\n";
+	std::cout << bs1->base64() << "\n";
 
 	for (int i=0; i<N; i++) {
 		bs1->set(i, 1);
@@ -16,6 +18,7 @@ void run(const int N) {
 		assert(bs1->distance(bs1) == 0);
 	}
 	std::cout << bs1->str() << "\n";
+	std::cout << bs1->base64() << "\n";
 
 	Bitstring *bs2 = new Bitstring(N);
 	for (int i=0; i<N; i++) {
@@ -23,6 +26,7 @@ void run(const int N) {
 		assert(bs2->distance(bs2) == 0);
 	}
 	std::cout << bs2->str() << "\n";
+	std::cout << bs2->base64() << "\n";
 
 	int d = bs1->distance(bs2);
 	std::cout << N << "\n";

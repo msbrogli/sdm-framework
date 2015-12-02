@@ -2,9 +2,10 @@
 #include <iostream>
 #include <stdlib.h>
 #include <assert.h>
+#include <base64.h>
 #include "bitstring.h"
 
-Bitstring::Bitstring(unsigned int bits) {
+void Bitstring::_init(unsigned int bits) {
 	this->bits = bits;
 
 	this->len = bits/64;
@@ -13,15 +14,35 @@ Bitstring::Bitstring(unsigned int bits) {
 	}
 
 	this->data = (int64_t *) malloc(sizeof(int64_t) * this->len);
+}
 
-	for (int i=0; i<this->len; i++) {
-		this->data[i] = ((int64_t)arc4random() << 32) | arc4random();
-	}
-
-	int last = bits % 64;
+void Bitstring::clear_surplus() {
+	int last = this->bits % 64;
 	if (last > 0) {
 		this->data[this->len-1] &= ~((int64_t)0xFFFFFFFFFFFFFFFF << last);
 	}
+}
+
+Bitstring::Bitstring(unsigned int bits) {
+	this->_init(bits);
+	arc4random_buf(this->data, sizeof(int64_t) * this->len);
+	this->clear_surplus();
+}
+
+Bitstring::Bitstring(unsigned int bits, std::string const &b64) {
+	const size_t size = sizeof(int64_t) * this->len;
+	std::string buffer = base64_decode(b64);
+	assert(size == buffer.length());
+
+	this->_init(bits);
+	memcpy(this->data, buffer.c_str(), size);
+	this->clear_surplus();
+}
+
+Bitstring::Bitstring(Bitstring const &bs) {
+	this->_init(bs.bits);
+	memcpy(this->data, bs.data, sizeof(int64_t) * this->len);
+	this->clear_surplus();
 }
 
 Bitstring::~Bitstring() {
@@ -71,5 +92,25 @@ std::string Bitstring::str() const {
 	}
 	str[this->bits] = '\0';
 	return std::string(str);
+}
+
+std::string Bitstring::base64() const {
+	// FIXME It cannot depend on whether the computer is big-endian or little-endian. [msbrogli 2015-12-01]
+	return base64_encode((const unsigned char *)this->data, sizeof(int64_t)*this->len);
+}
+
+bool Bitstring::operator<(const Bitstring &bs) const {
+	assert(this->bits == bs.bits);
+
+	int64_t x;
+	for(int i=0; i<this->len; i++) {
+		x = this->data[i] - bs.data[i];
+		if (x < 0) {
+			return true;
+		} else if (x > 0) {
+			return false;
+		}
+	}
+	return false;
 }
 

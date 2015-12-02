@@ -14,6 +14,10 @@ Bitstring::Bitstring(unsigned int bits) {
 
 	this->data = (int64_t *) malloc(sizeof(int64_t) * this->len);
 
+	for (int i=0; i<this->len; i++) {
+		this->data[i] = ((int64_t)arc4random() << 32) | arc4random();
+	}
+
 	int last = bits % 64;
 	if (last > 0) {
 		this->data[this->len-1] &= ~((int64_t)0xFFFFFFFFFFFFFFFF << last);

@@ -3,17 +3,21 @@
 #define SDM_ADDRESS_SPACE_H
 
 #include <vector>
+#include <string>
 
 #include "bitstring.h"
 
 class AddressSpace {
 public:
 	unsigned int bits;
-	unsigned int len;
+	unsigned int sample;
 
-	Bitstring *addresses;
+	std::vector<Bitstring*> addresses;
 
-	int scan(const Bitstring *bs, unsigned int radius, std::vector<Bitstring*> *dst);
+	AddressSpace(unsigned int bits, unsigned int sample);
+
+	int save(std::string filename) const;
+	int scan(const Bitstring *bs, unsigned int radius, std::vector<Bitstring*> *dst) const;
 };
 
 #endif

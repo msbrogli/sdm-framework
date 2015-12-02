@@ -1,5 +1,7 @@
 
+#include <iostream>
 #include <stdlib.h>
+#include <assert.h>
 #include "bitstring.h"
 
 Bitstring::Bitstring(unsigned int bits) {
@@ -11,22 +13,28 @@ Bitstring::Bitstring(unsigned int bits) {
 	}
 
 	this->data = (int64_t *) malloc(sizeof(int64_t) * this->len);
+
+	int last = bits % 64;
+	if (last > 0) {
+		this->data[this->len-1] &= ~((int64_t)0xFFFFFFFFFFFFFFFF << last);
+	}
 }
 
 Bitstring::~Bitstring() {
 	free(this->data);
 }
 
-unsigned int Bitstring::getbit(unsigned int bit) const {
+unsigned int Bitstring::get(unsigned int bit) const {
+	assert(bit <= this->bits);
 	unsigned int offset = bit / 64;
 	unsigned int idx = bit % 64;
 	return (data[offset] & ((int64_t)1<<idx) ? 1 : 0);
 }
 
-void Bitstring::setbit(unsigned int bit) {
+void Bitstring::set(unsigned int bit, unsigned int value) {
 	unsigned int offset = bit / 64;
 	unsigned int idx = bit % 64;
-	if (bit == 0) {
+	if (value == 0) {
 		data[offset] &= ~((int64_t)1<<idx);
 	} else {
 		data[offset] |= ((int64_t)1<<idx);
@@ -41,7 +49,7 @@ int Bitstring::distance(const Bitstring *bs) const {
 	uint64_t a;
 	int dist = 0;
 	for(int i=0; i<this->len; i++) {
-		a = this->data[i] % bs->data[i];
+		a = this->data[i] ^ bs->data[i];
 		while(a) {
 			if (a%2) {
 				dist++;
@@ -52,13 +60,12 @@ int Bitstring::distance(const Bitstring *bs) const {
 	return dist;
 }
 
-/*
-string Bitstring::str() {
+std::string Bitstring::str() const {
 	char str[this->bits+1];
 	for(int i=0; i<this->bits; i++) {
-		str[i] = 
+		str[i] = this->get(i) ? '1' : '0';
 	}
-	return string(str);
+	str[this->bits] = '\0';
+	return std::string(str);
 }
-*/
 

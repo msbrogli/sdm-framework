@@ -1,11 +1,16 @@
 
 all: bitstring.o address_space.o
 
-bitstring.o: bitstring.h bitstring.cpp
-	gcc -c bitstring.cpp
+tests: test_bitstring
 
-address_space.o: address_space.h address_space.cpp
-	gcc -c address_space.cpp
+test_bitstring: bitstring.o test_bitstring.cpp
+	g++ bitstring.o test_bitstring.cpp -o test_bitstring
+
+bitstring.o: bitstring.h bitstring.cpp
+	g++ -c bitstring.cpp
+
+address_space.o: address_space.h address_space.cpp bitstring.h
+	g++ -c address_space.cpp
 
 clean:
 	rm -f *.o

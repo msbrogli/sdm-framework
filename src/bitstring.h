@@ -3,6 +3,7 @@
 #define SDM_BITSTRING_H
 
 #include <stdint.h>
+#include <string>
 
 class Bitstring {
 public:
@@ -13,10 +14,12 @@ public:
 	Bitstring(unsigned int bits);
 	~Bitstring();
 
-	unsigned int getbit(unsigned int bit) const;
-	void setbit(unsigned int bit);
+	unsigned int get(unsigned int bit) const;
+	void set(unsigned int bit, unsigned int value);
 
 	int distance(const Bitstring *bs) const;
+
+	std::string str() const;
 };
 
 

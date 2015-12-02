@@ -5,15 +5,15 @@
 #include <vector>
 
 #include "bitstring.h"
-#include "address.h"
 
 class AddressSpace {
+public:
 	unsigned int bits;
 	unsigned int len;
 
-	Address *addresses;
+	Bitstring *addresses;
 
-	int scan(const Bitstring *bs, unsigned int radius, std::vector<Address*> *dst);
+	int scan(const Bitstring *bs, unsigned int radius, std::vector<Bitstring*> *dst);
 };
 
 #endif

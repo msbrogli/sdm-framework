@@ -1,0 +1,90 @@
+\documentclass[12pt]{article}
+
+\usepackage[utf8]{inputenc}
+\usepackage[T1]{fontenc}
+\usepackage{lmodern}
+
+\usepackage{natbib}
+
+\usepackage{graphicx}
+\usepackage{color}
+
+\usepackage{tabularx}
+\usepackage{amsmath,amssymb}
+
+\title{Sparse Distributed Memory: a Cross-Platform, Massively Parallel, Open Source Reference Implementation.}
+\author{Marcelo Salhab Brogliato, Alexandre Linhares}
+\date{December 1, 2015}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+
+The Sparse Distributed Memory \citep{kanerva} has been applied in several areas... blah blah blah.
+
+This model is psychological plausible. Several authors have been studing the properties of this memory model \citep{chada, brogliato}, blah blah blah.
+
+Although \cite{brogliato} have published the code they used in their paper, there is no open source reference implementation of SDM, which would allow future works to publish their model adaptation, other authors to re-run their results, blah blah blah.
+
+\section{Sparse Distributed Memory}
+
+Include a simple explanation about SDM.
+
+
+\section{Architecture}
+
+The architecture was designed to be cross-platform, massively parallel, and supporting multiples backends.
+
+A SDM memory was divided into two parts: the hard-location addresses and the hard-location data, which are stored in different files.
+
+The operations in SDM was divided in two steps: (i) searching for the hard-locations in a region; (ii) performing the operations in the activated hard-locations. The former step depends only on the hard-location addresses, while the latter step depends only on the hard-location data.
+
+There are at least two approachs to have multiple memories: (i) using a single set of addresses, but one dataset for each memory; (ii) using independent hard-locations for each memory. The main advantage of the former model is to be able to perform a single scan and store the datum in all memories. The latter would have to perform one scan for each memory, demanding more processing, and thus taking more time.
+
+We developed a memory which is able to conform to all these approaches. It consists of a master process which receives the commands and manages their execution, dispatching the orders in order to the right backends. The master process uses libevent and supports multiple connections, memories, and environments at the same time.
+
+There are three types of backend: scanner, executor, and storage.
+
+
+\section{Protocol}
+
+LIST MEMORIES
+CREATE MEMORY [NAME] WITH [B] BITS AND [N] HARDLOCATIONS
+CREATE MEMORY [NAME] USING [ADDR] ADDRESS SPACE
+CLEAR MEMORY [NAME] DATA
+DROP MEMORY [NAME]
+DESCRIBE MEMORY
+STATISTICS MEMORY
+
+LIST ADDRESS SPACES
+CREATE ADDRESS SPACE [NAME] WITH [B] BITS AND [N] HARDLOCATIONS
+DUMP ADDRESS SPACE [NAME]
+CREATE ADDRESS SPACE FROM DUMP [FILENAME]
+SCAN ADDRESS SPACE [ADDR] AROUND [BS] WITH RADIUS [R]
+
+USE MEMORY [NAME]
+READ RAW DATA FROM [ADDR]
+WRITE RAW DATA [DATA] TO [ADDR]
+READ FROM [BS]
+WRITE [BS] TO [BS]
+SCAN AROUND [BS] WITH RADIUS [R]
+ACTIVATE AROUND [BS] WITH RADIUS [R]
+
+TODO How to read/write using multiple memories with same address space?
+
+\section{Backends Implementations}
+
+\subsection{Scanner}
+\subsection{Executor}
+\subsection{Storage}
+
+
+\section{Simulations}
+
+%\bibliographystyle{plainnat}
+\bibliographystyle{apa}
+\bibliography{mybib.bib}
+
+\end{document}

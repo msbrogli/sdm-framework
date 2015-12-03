@@ -19,7 +19,7 @@ public:
 	int save(std::string filename) const;
 	int scan(const Bitstring *bs, unsigned int radius, std::vector<Bitstring*> *dst) const;
 
-	std::string hash();
+	std::string hash() const;
 };
 
 #endif

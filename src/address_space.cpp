@@ -16,7 +16,7 @@ AddressSpace::AddressSpace(unsigned int bits, unsigned int sample) {
 
 }
 
-std::string AddressSpace::hash() {
+std::string AddressSpace::hash() const {
 	std::vector<Bitstring*> v(this->addresses);
 	std::sort(v.begin(), v.end());
 
@@ -44,7 +44,8 @@ int AddressSpace::scan(const Bitstring *bs, unsigned int radius, std::vector<Bit
 
 int AddressSpace::save(std::string filename) const {
 	std::ofstream file(filename);
-	file << "SDM:ADDRESS SPACE\nSDM-Version: v0.0.1\nFormat: v1\nBits: " << this->bits << "\nSample: " << this->sample << "\n\n";
+	file << "SDM:ADDRESS SPACE\nSDM-Version: v0.0.1\nFormat: v1\n";
+	file << "Bits: " << this->bits << "\nSample: " << this->sample << "\nHash: " << this->hash() << "\n\n";
 	const unsigned int n = this->sample;
 	for(int i=0; i<n; i++) {
 		Bitstring *addr = this->addresses[i];

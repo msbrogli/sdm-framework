@@ -35,6 +35,7 @@ void run(const int N) {
 	std::cout << "Success.\n";
 
 	free(bs1);
+	free(bs2);
 }
 
 int main(void) {

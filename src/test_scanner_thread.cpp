@@ -13,20 +13,23 @@ void run(const unsigned int bits, const unsigned int sample, int radius) {
 	Scanner *scanner1 = new LinearScanner(addresses);
 	Scanner *scanner2 = new ThreadScanner(addresses, 8);
 
-	Bitstring *bs = new Bitstring(bits);
+	for(int i=0; i<20; i++) {
+		Bitstring *bs = new Bitstring(bits);
 
-	std::vector<Bitstring *> v1;
-	std::vector<Bitstring *> v2;
+		std::vector<Bitstring *> v1;
+		std::vector<Bitstring *> v2;
 
-	scanner1->scan(bs, radius, &v1);
-	std::cout << v1.size() << " hard-locations activated." << std::endl;
+		scanner1->scan(bs, radius, &v1);
+		std::cout << v1.size() << " hard-locations activated." << std::endl;
 
-	scanner2->scan(bs, radius, &v2);
-	std::cout << v2.size() << " hard-locations activated." << std::endl;
+		scanner2->scan(bs, radius, &v2);
+		std::cout << v2.size() << " hard-locations activated." << std::endl;
 
-	assert(v1.size() == v2.size());
+		assert(v1.size() == v2.size());
 
-	free(bs);
+		delete bs;
+	}
+
 	free(addresses);
 	free(scanner1);
 	free(scanner2);

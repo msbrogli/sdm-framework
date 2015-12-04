@@ -2,7 +2,8 @@
 #include <iostream>
 #include <stdlib.h>
 #include <assert.h>
-#include <base64.h>
+
+#include "lib/base64.h"
 #include "bitstring.h"
 
 #ifdef SDM_USE_BITCOUNT_TABLE

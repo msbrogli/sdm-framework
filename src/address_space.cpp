@@ -2,7 +2,7 @@
 #include <iostream>
 #include <fstream>
 
-#include <sha256.h>
+#include "lib/sha256.h"
 
 #include "address_space.h"
 

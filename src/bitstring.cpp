@@ -59,11 +59,12 @@ Bitstring::Bitstring(unsigned int bits) {
 }
 
 Bitstring::Bitstring(unsigned int bits, std::string const &b64) {
+	this->_init(bits);
+
 	const size_t size = sizeof(uint64_t) * this->len;
 	std::string buffer = base64_decode(b64);
 	assert(size == buffer.length());
 
-	this->_init(bits);
 	memcpy(this->data, buffer.c_str(), size);
 	this->clear_surplus();
 }

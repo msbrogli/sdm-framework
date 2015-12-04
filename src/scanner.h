@@ -12,7 +12,7 @@ public:
 	virtual int scan(const Bitstring *bs, unsigned int radius, std::vector<Bitstring *> *result) const = 0;
 };
 
-class LinearScanner : Scanner {
+class LinearScanner : public Scanner {
 public:
 	AddressSpace *addresses;
 	LinearScanner(AddressSpace *addresses);

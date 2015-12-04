@@ -5,11 +5,13 @@
 #include <stdint.h>
 #include <string>
 
+#define SDM_USE_BITCOUNT_TABLE
+
 class Bitstring {
 public:
 	unsigned int bits;
 	unsigned int len;
-	int64_t *data;
+	uint64_t *data;
 
 	Bitstring(unsigned int bits);
 	Bitstring(unsigned int bits, std::string const &b64);

@@ -1,7 +1,7 @@
 *.swp
-src/*.o
-lib/*.o
+*.o
 
 src/test_address_space
 src/test_bitstring
 src/test_counter
+src/test_scanner

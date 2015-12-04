@@ -3,12 +3,12 @@
 #include <assert.h>
 #include "bitstring.h"
 
-void run(const int N) {
-	Bitstring *bs1 = new Bitstring(N);
+void run(const int bits) {
+	Bitstring *bs1 = new Bitstring(bits);
 	std::cout << bs1->str() << "\n";
 	std::cout << bs1->base64() << "\n";
 
-	for (int i=0; i<N; i++) {
+	for (int i=0; i<bits; i++) {
 		bs1->set(i, 1);
 		assert(bs1->get(i) == 1);
 		assert(bs1->distance(bs1) == 0);
@@ -20,8 +20,8 @@ void run(const int N) {
 	std::cout << bs1->str() << "\n";
 	std::cout << bs1->base64() << "\n";
 
-	Bitstring *bs2 = new Bitstring(N);
-	for (int i=0; i<N; i++) {
+	Bitstring *bs2 = new Bitstring(bits);
+	for (int i=0; i<bits; i++) {
 		bs2->set(i, i%2);
 		assert(bs2->distance(bs2) == 0);
 	}
@@ -29,12 +29,25 @@ void run(const int N) {
 	std::cout << bs2->base64() << "\n";
 
 	int d = bs1->distance(bs2);
-	std::cout << N << "\n";
-	assert(d == N/2);
+	std::cout << bits << "\n";
+	assert(d == bits/2);
+
+	for(int i=0; i<1000; i++) {
+		Bitstring a(bits);
+		Bitstring b(a);
+		assert(a.distance(&b) == 0);
+	}
+
+	for(int i=0; i<1000; i++) {
+		Bitstring a(bits);
+		Bitstring b(bits, a.base64());
+		assert(a.distance(&b) == 0);
+	}
 
 	std::cout << "Success.\n";
 
-	free(bs1);
+	delete bs1;
+	delete bs2;
 }
 
 int main(void) {

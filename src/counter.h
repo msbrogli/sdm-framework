@@ -75,6 +75,7 @@ integer Counter<integer>::get(unsigned int bit) const {
 template <typename integer>
 void Counter<integer>::set(unsigned int bit, integer value) {
     assert(bit <= this->bits);
+    data[bit] = value;
 }
 
 template <typename integer>
@@ -93,20 +94,19 @@ void Counter<integer>::decr(unsigned int bit) {
 
 template <typename integer>
 std::string Counter<integer>::str() const {
+    unsigned int tab = 50;
     unsigned int sz = sizeof(integer);
     std::stringstream ss;
-    char str[this->bits*sz+1];
     for(int i=0; i<this->bits; i++) {
-        if (i % 10 == 0) {
-            ss << i << ": ";
-        } else if (i % 10 == 9) {
-            ss << i << std::endl;
-        } else {
+        if (i % tab == 0) {
             ss << i << ": " << data[i] << ", ";
+        } else if (i % tab == tab - 1) {
+            ss << data[i] << ";" << std::endl;
+        } else {
+            ss << data[i] << ", ";
         }
     }
-    str[this->bits] = '\0';
-    return std::string(str);
+    return ss.str();
 }
 
 template <typename integer>

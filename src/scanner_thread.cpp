@@ -19,8 +19,6 @@ int ThreadScanner::scan(const Bitstring *bs, unsigned int radius, std::vector<Bi
 	qty = (this->addresses->sample)/this->thread_count;
 	extra = (this->addresses->sample)%this->thread_count;
 
-	clock_t begin_time = clock();
-
 	unsigned int i, idx_begin, idx_end, len;
 	for(i=0; i<this->thread_count; i++) {
 		idx_begin = i*qty + std::min(i, extra);
@@ -38,7 +36,6 @@ int ThreadScanner::scan(const Bitstring *bs, unsigned int radius, std::vector<Bi
 	for(i=0; i<this->thread_count; i++) {
 		pthread_join(threads[i], NULL);
 	}
-	std::cout <<  "@@ " << float( clock () - begin_time ) /  CLOCKS_PER_SEC << std::endl;
 	for(i=0; i<this->thread_count; i++) {
 		result->insert(result->end(), params[i].result.begin(), params[i].result.end());
 	}

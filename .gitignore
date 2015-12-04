@@ -1,2 +1,7 @@
 *.swp
-src/*.o
+*.o
+
+src/test_bitstring
+src/test_address_space
+src/test_scanner
+src/test_scanner_thread

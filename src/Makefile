@@ -1,5 +1,5 @@
 
-all: bitstring.o address_space.o scanner.o scanner_thread.o utils.o protocol.o
+all: bitstring.o address_space.o scanner.o scanner_thread.o utils.o protocol.o server.o server
 
 tests: test_bitstring test_address_space test_scanner test_scanner_thread test_counter
 
@@ -41,6 +41,12 @@ utils.o: utils.h utils.cpp
 
 protocol.o: protocol.cpp
 	g++ -c protocol.cpp
+
+server.o: server.cpp server.h
+	g++ -c server.cpp
+
+server: server.o address_space.o bitstring.o scanner.o scanner_thread.o test_scanner_thread.cpp lib/sha256.o utils.o
+	g++ utils.o server.o lib/sha256.o lib/base64.o bitstring.o address_space.o scanner.o scanner_thread.o -o server
 
 clean:
 	rm -f *.o lib/*.o test_address_space test_bitstring test_scanner test_scanner_thread test_counter

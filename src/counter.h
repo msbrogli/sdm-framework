@@ -7,7 +7,8 @@
 #include <sstream>
 #include <stdlib.h>
 #include <assert.h>
-#include <base64.h>
+
+#include "lib/base64.h"
 #include "counter.h"
 
 template <typename integer>

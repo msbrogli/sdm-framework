@@ -21,8 +21,8 @@ test_scanner: address_space.o bitstring.o scanner.o test_scanner.cpp lib/sha256.
 test_scanner_thread: address_space.o bitstring.o scanner.o scanner_thread.o test_scanner_thread.cpp lib/sha256.o
 	g++ lib/sha256.o lib/base64.o bitstring.o address_space.o scanner.o scanner_thread.o test_scanner_thread.cpp -o test_scanner_thread
 
-test_counter: test_counter.cpp
-	g++ -I../lib/ ../lib/base64.o test_counter.cpp -o test_counter
+test_counter: test_counter.cpp lib/base64.o
+	g++ lib/base64.o test_counter.cpp -o test_counter
 
 bitstring.o: bitstring.h bitstring.cpp
 	g++ -c bitstring.cpp

@@ -7,6 +7,7 @@
 
 class ServerConfig {
 public:
+	std::string sock_path;
 	std::string address_spaces_dir;
 	std::string counters_dir;
 };
@@ -16,6 +17,16 @@ public:
 	const ServerConfig *config;
 
 	void run(const ServerConfig &config);
+};
+
+class Client {
+public:
+	int fd;
+	Client(int fd);
+
+	void handle_connection();
+	void parse(const std::string &line);
+	void disconnect();
 };
 
 class Memory {

@@ -8,19 +8,33 @@
 const char msg_busy[] = "Server busy.\n";
 const char msg_invalid_cmd[] = "Invalid command.\n";
 
-void handle_connection(int fd) {
+Client::Client(int fd) {
+	this->fd = fd;
+}
+
+void Client::disconnect() {
+	close(this->fd);
+	std::cout << "Client connection closed." << std::endl;
+	exit(0);
+}
+
+void Client::parse(const std::string &line) {
+	if (line == "BYE") {
+		this->disconnect();
+	}
+}
+
+void Client::handle_connection() {
 	char buffer[256];
 	int len;
-	while((len = read(fd, buffer, 255)) > 0) {
-		buffer[len] = '\0';
-
-		if (!strcmp(buffer, "BYE\n")) {
-			break;
+	while((len = read(this->fd, buffer, 255)) > 0) {
+		if (buffer[len-1] == '\n') {
+			buffer[len-1] = '\0';
+			this->parse(std::string(buffer));
+			write(this->fd, msg_invalid_cmd, sizeof(msg_invalid_cmd));
 		}
-
-		write(fd, msg_invalid_cmd, sizeof(msg_invalid_cmd));
 	}
-	close(fd);
+	this->disconnect();
 }
 
 void Server::run(const ServerConfig &config) {
@@ -35,7 +49,7 @@ void Server::run(const ServerConfig &config) {
 
 	struct sockaddr_un srv_addr;
 	bzero((char *) &srv_addr, sizeof(srv_addr));
-	strncpy(srv_addr.sun_path, "../sdm.sock", sizeof(srv_addr.sun_path)-1);
+	strncpy(srv_addr.sun_path, this->config->sock_path.c_str(), sizeof(srv_addr.sun_path)-1);
 	if (bind(srv_fd, (struct sockaddr*) &srv_addr, sizeof(srv_addr)) != 0) {
 		perror("Error binding");
 		exit(1);
@@ -58,20 +72,19 @@ void Server::run(const ServerConfig &config) {
 			int status;
 			pid_t result = waitpid(pid, &status, WNOHANG);
 			if (result == 0) {
-				std::cout << "New client connection rejected." << std::endl;
+				std::cout << "Client connection rejected." << std::endl;
 				write(cli_fd, msg_busy, sizeof(msg_busy));
 				close(cli_fd);
 				continue;
 			}
 		}
 
-		std::cout << "New client connection accepted." << std::endl;
+		std::cout << "Client connection accepted." << std::endl;
 		pid = fork();
 		if (pid == 0) {
 			// child process
-			handle_connection(cli_fd);
-			std::cout << "Client connection closed." << std::endl;
-			exit(0);
+			Client client(cli_fd);
+			client.handle_connection();
 		} else {
 			// parent process
 			close(cli_fd);
@@ -81,6 +94,7 @@ void Server::run(const ServerConfig &config) {
 
 int main(void) {
 	ServerConfig config;
+	config.sock_path = "./sdm.sock";
 	config.address_spaces_dir = "../data/address_space/";
 	config.counters_dir = "../data/counters/";
 

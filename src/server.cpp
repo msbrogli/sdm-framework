@@ -5,6 +5,7 @@
 
 #include "server.h"
 
+const char msg_greeting[] = "SDM Server v1.0\n";
 const char msg_busy[] = "Server busy.\n";
 const char msg_invalid_cmd[] = "Invalid command.\n";
 
@@ -27,6 +28,7 @@ void Client::parse(const std::string &line) {
 void Client::handle_connection() {
 	char buffer[256];
 	int len;
+	write(this->fd, msg_greeting, sizeof(msg_greeting));
 	while((len = read(this->fd, buffer, 255)) > 0) {
 		if (buffer[len-1] == '\n') {
 			buffer[len-1] = '\0';

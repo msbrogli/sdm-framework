@@ -1,5 +1,5 @@
 
-all: bitstring.o address_space.o scanner.o scanner_thread.o utils.o
+all: bitstring.o address_space.o scanner.o scanner_thread.o utils.o protocol.o
 
 tests: test_bitstring test_address_space test_scanner test_scanner_thread test_counter
 
@@ -38,6 +38,9 @@ scanner_thread.o: scanner_thread.h scanner_thread.cpp
 
 utils.o: utils.h utils.cpp
 	g++ -c utils.cpp
+
+protocol.o: protocol.cpp
+	g++ -c protocol.cpp
 
 clean:
 	rm -f *.o lib/*.o test_address_space test_bitstring test_scanner test_scanner_thread test_counter

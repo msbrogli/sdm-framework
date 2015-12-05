@@ -6,6 +6,7 @@
 #include <assert.h>
 
 #include "lib/sha256.h"
+#include "utils.h"
 
 #include "address_space.h"
 
@@ -17,20 +18,6 @@ AddressSpace::AddressSpace(unsigned int bits, unsigned int sample) {
 		this->addresses.push_back(new Bitstring(this->bits));
 	}
 
-}
-
-// Original code: http://stackoverflow.com/a/21698913/465035
-std::string trim(const std::string &s)
-{
-	std::string::const_iterator it = s.begin();
-	while (it != s.end() && isspace(*it)) {
-		it++;
-	}
-	std::string::const_reverse_iterator rit = s.rbegin();
-	while (rit.base() != it && isspace(*rit)) {
-		rit++;
-	}
-	return std::string(it, rit.base());
 }
 
 AddressSpace::AddressSpace(std::string filename) {

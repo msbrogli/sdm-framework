@@ -17,7 +17,7 @@ void scan(
 		const uint extra = sample%worksize;
 		const uint length = qty + (id < extra ? 1 : 0);
 		start = id*qty + min(id, extra);
-		end = start + length;
+		end = min(sample, start + length);
 	}
 
 	*result = 0;

@@ -209,7 +209,7 @@ int OpenCLScanner::scan(const Bitstring *bs, unsigned int radius, std::vector<Bi
 	assert(error == CL_SUCCESS);
 
 	// Set arg4: worksize
-	size_t worksize = 2;
+	size_t worksize = 500;
 	error = clSetKernelArg(kernel, 4, sizeof(worksize), &worksize);
 	assert(error == CL_SUCCESS);
 
@@ -233,6 +233,9 @@ int OpenCLScanner::scan(const Bitstring *bs, unsigned int radius, std::vector<Bi
 
 	// Run kernel.
 	error = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &worksize, &worksize, 0, NULL, NULL);
+	if (error != CL_SUCCESS) {
+		std::cout << "error code = " << error << std::endl;
+	}
 	assert(error == CL_SUCCESS);
 
 	// Read output.

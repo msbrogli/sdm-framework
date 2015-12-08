@@ -1,7 +1,7 @@
 
-all: bitstring.o address_space.o scanner.o scanner_thread.o utils.o
+all: bitstring.o address_space.o scanner.o scanner_thread.o utils.o scanner_opencl.o
 
-tests: test_bitstring test_address_space test_scanner test_scanner_thread test_counter
+tests: test_bitstring test_address_space test_scanner test_scanner_thread test_counter test_scanner_opencl
 
 lib/base64.o: lib/base64.cpp
 	(cd lib/ ; g++ -c base64.cpp)
@@ -21,6 +21,9 @@ test_scanner: address_space.o bitstring.o scanner.o test_scanner.cpp lib/sha256.
 test_scanner_thread: address_space.o bitstring.o scanner.o scanner_thread.o test_scanner_thread.cpp lib/sha256.o utils.o
 	g++ utils.o lib/sha256.o lib/base64.o bitstring.o address_space.o scanner.o scanner_thread.o test_scanner_thread.cpp -o test_scanner_thread
 
+test_scanner_opencl: test_scanner_opencl.cpp scanner_opencl.o
+	g++ -framework OpenCL utils.o lib/sha256.o lib/base64.o bitstring.o address_space.o scanner.o scanner_thread.o scanner_opencl.o test_scanner_opencl.cpp -o test_scanner_opencl
+
 test_counter: test_counter.cpp lib/base64.o
 	g++ lib/base64.o test_counter.cpp -o test_counter
 
@@ -33,8 +36,11 @@ address_space.o: address_space.h address_space.cpp bitstring.h
 scanner.o: scanner.h scanner.cpp
 	g++ -c scanner.cpp
 
-scanner_thread.o: scanner_thread.h scanner_thread.cpp
+scanner_thread.o: scanner_thread.h scanner_thread.cpp scanner.o
 	g++ -c scanner_thread.cpp
+
+scanner_opencl.o: scanner_opencl.h scanner_opencl.cpp scanner.o
+	g++ -c scanner_opencl.cpp
 
 utils.o: utils.h utils.cpp
 	g++ -c utils.cpp

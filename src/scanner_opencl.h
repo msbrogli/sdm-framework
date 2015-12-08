@@ -29,6 +29,8 @@ class OpenCLScanner : public Scanner {
 		TimeMeasure time;
 
 		OpenCLScanner(AddressSpace *addresses);
+		~OpenCLScanner();
+
 		virtual void devices() const;
 		virtual int scan(const Bitstring *bs, unsigned int radius, std::vector<Bitstring *> *result) const;
 		virtual int scan(const Bitstring *bs, unsigned int radius, std::vector<Bitstring *> *result, TimeMeasure *time) const;

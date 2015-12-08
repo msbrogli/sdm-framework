@@ -20,6 +20,13 @@ AddressSpace::AddressSpace(unsigned int bits, unsigned int sample) {
 
 }
 
+AddressSpace::~AddressSpace() {
+	for(int i=0; i<this->addresses.size(); i++) {
+		delete this->addresses[i];
+	}
+	this->addresses.clear();
+}
+
 AddressSpace::AddressSpace(std::string filename) {
 	std::ifstream file(filename);
 	std::string buffer;

@@ -9,8 +9,6 @@
 // - https://www.khronos.org/registry/cl/sdk/1.0/docs/man/xhtml/scalarDataTypes.html
 // - https://code.google.com/p/simple-opencl/
 
-// TODO Create a destructor with clReleaseContext(this->context), free(this->bitstrings), clReleaseMemObject([buffers]), ...
-
 OpenCLScanner::OpenCLScanner(AddressSpace *addresses) {
 	this->addresses = addresses;
 
@@ -118,6 +116,16 @@ OpenCLScanner::OpenCLScanner(AddressSpace *addresses) {
 	assert(error == CL_SUCCESS);
 	this->selected_buf = clCreateBuffer(this->context, CL_MEM_WRITE_ONLY, sizeof(cl_uint)*this->addresses->sample, NULL, &error);
 	assert(error == CL_SUCCESS);
+}
+
+OpenCLScanner::~OpenCLScanner() {
+	free(this->bitstrings);
+
+	clReleaseMemObject(this->bitcount_table_buf);
+	clReleaseMemObject(this->bitstrings_buf);
+	clReleaseMemObject(this->bs_buf);
+	clReleaseMemObject(this->selected_buf);
+	clReleaseContext(this->context);
 }
 
 void OpenCLScanner::devices() const {

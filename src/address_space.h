@@ -17,6 +17,8 @@ public:
 	AddressSpace(unsigned int bits, unsigned int sample);
 	AddressSpace(std::string filename);
 
+	~AddressSpace();
+
 	int save(std::string filename) const;
 	int scan(const Bitstring *bs, unsigned int radius, std::vector<Bitstring*> *dst) const;
 

@@ -9,7 +9,7 @@
 // - https://www.khronos.org/registry/cl/sdk/1.0/docs/man/xhtml/scalarDataTypes.html
 // - https://code.google.com/p/simple-opencl/
 
-// TODO Create a destructor with clReleaseContext(this->context), free(this->bitstrings).
+// TODO Create a destructor with clReleaseContext(this->context), free(this->bitstrings), clReleaseMemObject([buffers]), ...
 
 OpenCLScanner::OpenCLScanner(AddressSpace *addresses) {
 	this->addresses = addresses;
@@ -100,6 +100,12 @@ OpenCLScanner::OpenCLScanner(AddressSpace *addresses) {
 	this->bitstrings_buf = clCreateBuffer(this->context, CL_MEM_READ_ONLY, bs_size, NULL, &error);
 	assert(error == CL_SUCCESS);
 	error = clEnqueueWriteBuffer(this->queue, this->bitstrings_buf, CL_FALSE, 0, bs_size, this->bitstrings, 0, NULL, NULL);
+	assert(error == CL_SUCCESS);
+
+	// =========================
+	// Allocating other buffers.
+	// =========================
+	this->bs_buf = clCreateBuffer(this->context, CL_MEM_READ_ONLY, sizeof(cl_ulong)*this->bs_len, NULL, &error);
 	assert(error == CL_SUCCESS);
 }
 
@@ -194,11 +200,9 @@ int OpenCLScanner::scan(const Bitstring *bs, unsigned int radius, std::vector<Bi
 	assert(error == CL_SUCCESS);
 
 	// Set arg4: bs
-	cl_mem bs_buf = clCreateBuffer(this->context, CL_MEM_READ_ONLY, sizeof(cl_ulong)*this->bs_len, NULL, &error);
+	error = clEnqueueWriteBuffer(this->queue, this->bs_buf, CL_FALSE, 0, sizeof(cl_ulong)*this->bs_len, bs->data, 0, NULL, NULL);
 	assert(error == CL_SUCCESS);
-	error = clEnqueueWriteBuffer(this->queue, bs_buf, CL_FALSE, 0, sizeof(cl_ulong)*this->bs_len, bs->data, 0, NULL, NULL);
-	assert(error == CL_SUCCESS);
-	error = clSetKernelArg(kernel, 4, sizeof(bs_buf), &bs_buf);
+	error = clSetKernelArg(kernel, 4, sizeof(this->bs_buf), &this->bs_buf);
 	assert(error == CL_SUCCESS);
 
 	// Set arg5: radius
@@ -225,6 +229,14 @@ int OpenCLScanner::scan(const Bitstring *bs, unsigned int radius, std::vector<Bi
 	// Wait until all queue is done.
 	error = clFinish(queue);
 	assert(error == CL_SUCCESS);
+
+	// Release output buffer.
+	error = clReleaseMemObject(output_buf);
+	assert(error == CL_SUCCESS);
+
+	std::cout << "Finished! " << output << std::endl;
+
+	assert(output <= this->addresses->sample);
 
 	for(int i=0; i<output; i++) {
 		result->push_back(this->addresses->addresses[i]);

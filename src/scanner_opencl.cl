@@ -13,7 +13,7 @@ __kernel void scan(
 
 	ulong a;
 	ushort *ptr;
-	for(int i=0; i<sample; i++) {
+	for(uint i=0; i<sample; i++) {
 		uint dist = 0;
 		for(int j=0; j<bs_len; j++) {
 			a = bitstrings[i*bs_len+j] ^ bs[j];

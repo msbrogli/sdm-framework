@@ -6,3 +6,4 @@ src/test_bitstring
 src/test_counter
 src/test_scanner
 src/test_scanner_thread
+src/test_scanner_opencl

@@ -5,6 +5,10 @@
 
 #include "scanner_opencl.h"
 
+// Links:
+// - https://www.khronos.org/registry/cl/sdk/1.0/docs/man/xhtml/scalarDataTypes.html
+// - https://code.google.com/p/simple-opencl/
+
 // TODO Create a destructor with clReleaseContext(this->context), free(this->bitstrings).
 
 OpenCLScanner::OpenCLScanner(AddressSpace *addresses) {
@@ -88,6 +92,7 @@ OpenCLScanner::OpenCLScanner(AddressSpace *addresses) {
 	for(int i=0; i<this->addresses->sample; i++) {
 		Bitstring *bs = this->addresses->addresses[i];
 		assert(bs->len == this->bs_len);
+		assert(sizeof(this->bitstrings[0]) == sizeof(bs->data[0]));
 		for(int j=0; j<bs->len; j++) {
 			this->bitstrings[k++] = bs->data[j];
 		}
@@ -221,7 +226,9 @@ int OpenCLScanner::scan(const Bitstring *bs, unsigned int radius, std::vector<Bi
 	error = clFinish(queue);
 	assert(error == CL_SUCCESS);
 
-	std::cout << "@@ " << output << std::endl;
+	for(int i=0; i<output; i++) {
+		result->push_back(this->addresses->addresses[i]);
+	}
 
 	return 0;
 }

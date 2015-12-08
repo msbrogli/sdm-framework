@@ -8,7 +8,9 @@ __kernel void scan(
 		__global uint *result)
 {
 	int id = get_global_id(0);
-	
+
+	*result = 0;
+
 	ulong a;
 	ushort *ptr;
 	for(int i=0; i<sample; i++) {
@@ -19,7 +21,7 @@ __kernel void scan(
 			dist += bitcount_table[ptr[0]] + bitcount_table[ptr[1]] + bitcount_table[ptr[2]] + bitcount_table[ptr[3]];
 		}
 		if (dist <= radius) {
-			*result++;
+			(*result)++;
 		}
 	}
 }

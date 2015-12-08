@@ -111,7 +111,7 @@ int Bitstring::distance(const Bitstring *bs) const {
 		a = this->data[i] ^ bs->data[i];
 #ifdef SDM_USE_BITCOUNT_TABLE
 		ptr = (uint16_t *)&a;
-		dist += (unsigned int)bitcount_table[ptr[0]] + (unsigned int)bitcount_table[ptr[1]] + bitcount_table[ptr[2]] + bitcount_table[ptr[3]];
+		dist += bitcount_table[ptr[0]] + bitcount_table[ptr[1]] + bitcount_table[ptr[2]] + bitcount_table[ptr[3]];
 #else
 		while(a) {
 			if (a&1) {

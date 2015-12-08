@@ -13,6 +13,9 @@ class OpenCLScanner : public Scanner {
 	public:
 		AddressSpace *addresses;
 
+		std::string kernel_name;
+		size_t worksize;
+
 		cl_context context;
 		cl_device_id device_id;
 		cl_command_queue queue;

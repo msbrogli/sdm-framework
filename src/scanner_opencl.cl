@@ -33,8 +33,9 @@ void scan(
 			dist += bitcount_table[ptr[0]] + bitcount_table[ptr[1]] + bitcount_table[ptr[2]] + bitcount_table[ptr[3]];
 		}
 		if (dist <= radius) {
-			pos = atomic_inc(result);
-			selected[pos] = i;
+			selected[i] = 1;
+		} else {
+			selected[i] = 0;
 		}
 	}
 }
@@ -49,7 +50,7 @@ void single_scan(
 		__global const ulong *bs,
 		const uint radius,
 		__global uint *result,
-		__global uint *selected)
+		__global uchar *selected)
 {
 	uint id = get_global_id(0);
 
@@ -65,7 +66,8 @@ void single_scan(
 		dist += bitcount_table[ptr[0]] + bitcount_table[ptr[1]] + bitcount_table[ptr[2]] + bitcount_table[ptr[3]];
 	}
 	if (dist <= radius) {
-		pos = atomic_inc(result);
-		selected[pos] = id;
+		selected[id] = 1;
+	} else {
+		selected[id] = 0;
 	}
 }

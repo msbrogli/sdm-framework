@@ -7,7 +7,8 @@ void scan(
 		const uint worksize,
 		__global const ulong *bs,
 		const uint radius, 
-		__global uint *result)
+		__global uint *result,
+		__global uint *selected)
 {
 	uint id = get_global_id(0);
 
@@ -22,6 +23,7 @@ void scan(
 
 	*result = 0;
 
+	uint pos;
 	ulong a;
 	uint dist;
 	ushort *ptr;
@@ -33,7 +35,8 @@ void scan(
 			dist += bitcount_table[ptr[0]] + bitcount_table[ptr[1]] + bitcount_table[ptr[2]] + bitcount_table[ptr[3]];
 		}
 		if (dist <= radius) {
-			atomic_inc(result);
+			pos = atomic_inc(result);
+			selected[pos] = i;
 		}
 	}
 }

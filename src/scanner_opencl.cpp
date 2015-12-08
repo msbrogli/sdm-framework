@@ -116,6 +116,8 @@ OpenCLScanner::OpenCLScanner(AddressSpace *addresses) {
 	// =========================
 	this->bs_buf = clCreateBuffer(this->context, CL_MEM_READ_ONLY, sizeof(cl_ulong)*this->bs_len, NULL, &error);
 	assert(error == CL_SUCCESS);
+	this->selected_buf = clCreateBuffer(this->context, CL_MEM_WRITE_ONLY, sizeof(cl_uint)*this->addresses->sample, NULL, &error);
+	assert(error == CL_SUCCESS);
 }
 
 void OpenCLScanner::devices() const {
@@ -224,12 +226,17 @@ int OpenCLScanner::scan(const Bitstring *bs, unsigned int radius, std::vector<Bi
 	error = clSetKernelArg(kernel, 6, sizeof(arg_radius), &arg_radius);
 	assert(error == CL_SUCCESS);
 
-	// Seg arg7: output
-	cl_uint output;
-	cl_mem output_buf;
-	output_buf = clCreateBuffer(this->context, CL_MEM_WRITE_ONLY, sizeof(output), NULL, &error);
+	// Set arg7: counter
+	cl_uint counter;
+	cl_mem counter_buf;
+	counter_buf = clCreateBuffer(this->context, CL_MEM_WRITE_ONLY, sizeof(counter), NULL, &error);
 	assert(error == CL_SUCCESS);
-	error = clSetKernelArg(kernel, 7, sizeof(output_buf), &output_buf);
+	error = clSetKernelArg(kernel, 7, sizeof(counter_buf), &counter_buf);
+	assert(error == CL_SUCCESS);
+
+	// Set arg8: selected
+	error = clSetKernelArg(kernel, 8, sizeof(selected_buf), &selected_buf);
+	assert(error == CL_SUCCESS);
 
 	// Run kernel.
 	error = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &worksize, &worksize, 0, NULL, NULL);
@@ -238,25 +245,30 @@ int OpenCLScanner::scan(const Bitstring *bs, unsigned int radius, std::vector<Bi
 	}
 	assert(error == CL_SUCCESS);
 
-	// Read output.
-	error = clEnqueueReadBuffer(this->queue, output_buf, CL_FALSE, 0, sizeof(output), &output, 0, NULL, NULL);
+	// Read counter.
+	error = clEnqueueReadBuffer(this->queue, counter_buf, CL_FALSE, 0, sizeof(counter), &counter, 0, NULL, NULL);
 	assert(error == CL_SUCCESS);
+
+	// Read selected bitstring indexes.
+	cl_uint *selected = (cl_uint *)malloc(sizeof(cl_uint)*this->addresses->sample);
+	error = clEnqueueReadBuffer(this->queue, selected_buf, CL_FALSE, 0, sizeof(cl_uint)*this->addresses->sample, selected, 0, NULL, NULL);
 
 	// Wait until all queue is done.
 	error = clFinish(queue);
 	assert(error == CL_SUCCESS);
 
-	// Release output buffer.
-	error = clReleaseMemObject(output_buf);
+	// Release counter buffer.
+	error = clReleaseMemObject(counter_buf);
 	assert(error == CL_SUCCESS);
 
-	//std::cout << "Finished! " << output << std::endl;
-
-	assert(output <= this->addresses->sample);
-
-	for(int i=0; i<output; i++) {
-		result->push_back(this->addresses->addresses[i]);
+	// Fill result vector.
+	assert(counter <= this->addresses->sample);
+	unsigned int idx;
+	for(int i=0; i<counter; i++) {
+		idx = selected[i];
+		result->push_back(this->addresses->addresses[idx]);
 	}
+	free(selected);
 
 	return 0;
 }

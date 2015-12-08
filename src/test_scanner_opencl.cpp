@@ -7,14 +7,24 @@
 #include "bitstring.h"
 #include "scanner_thread.h"
 #include "scanner_opencl.h"
+#include "utils.h"
 
 void run(const unsigned int bits, const unsigned int sample, int radius) {
 	std::cout << "bits=" << bits << ", sample=" << sample << ", radius=" << radius << std::endl;
 
+	TimeMeasure *tm = new TimeMeasure();
+	tm->start();
 	AddressSpace *addresses = new AddressSpace(bits, sample);
+	tm->mark("AddressSpace instanciation");
 	LinearScanner *scanner1 = new LinearScanner(addresses);
+	tm->mark("LinearScanner instanciation");
 	ThreadScanner *scanner2 = new ThreadScanner(addresses, 8);
+	tm->mark("ThreadScanner instanciation");
 	OpenCLScanner *scanner3 = new OpenCLScanner(addresses);
+	tm->mark("OpenCLScanner instanciation");
+
+	std::cout << tm->str() << std::endl;
+	delete tm;
 
 	//scanner3->devices();
 
@@ -25,14 +35,23 @@ void run(const unsigned int bits, const unsigned int sample, int radius) {
 		std::vector<Bitstring *> v2;
 		std::vector<Bitstring *> v3;
 
+		tm = new TimeMeasure();
+
+		tm->start();
 		scanner1->scan(bs, radius, &v1);
+		tm->mark("LinearScanner");
 		std::cout << v1.size() << " hard-locations activated." << std::endl;
 
 		scanner2->scan(bs, radius, &v2);
+		tm->mark("ThreadScanner");
 		std::cout << v2.size() << " hard-locations activated." << std::endl;
 
 		scanner3->scan(bs, radius, &v3);
+		tm->mark("OpenCLScanner");
 		std::cout << v3.size() << " hard-locations activated." << std::endl;
+
+		std::cout << tm->str() << std::endl;
+		delete tm;
 
 		assert(v1.size() == v2.size());
 		assert(v2.size() == v3.size());

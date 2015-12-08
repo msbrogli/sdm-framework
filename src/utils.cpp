@@ -41,11 +41,13 @@ std::string TimeMeasure::str() {
 	std::stringstream ss;
 	long long last = this->ref_time;
 	long long dt1, dt2;
+	char buf[1000];
 	for(int i=0; i<this->measures.size(); i++) {
 		std::pair<std::string, long long> *x = &this->measures[i];
 		dt1 = x->second - this->ref_time;
 		dt2 = x->second - last;
-		ss << dt1 << " " << dt2 << " " << x->first << std::endl;
+		sprintf(buf, "[%3.3fs, %3.3fs] %s", dt1/1000.0, dt2/1000.0, x->first.c_str());
+		ss << std::string(buf) << std::endl;
 		last = x->second;
 	}
 	return ss.str();

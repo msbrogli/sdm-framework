@@ -45,7 +45,7 @@ OpenCLScanner::OpenCLScanner(AddressSpace *addresses) {
 	// =======================
 	// Read and build program.
 	// =======================
-	const int MAX_SOURCE_SIZE = 1<<10;
+	const int MAX_SOURCE_SIZE = 1<<20;
 	char *source_str = (char *)malloc(sizeof(char)*MAX_SOURCE_SIZE);
 	size_t source_size;
 	FILE *fp = fopen("scanner_opencl.cl", "r");
@@ -56,6 +56,15 @@ OpenCLScanner::OpenCLScanner(AddressSpace *addresses) {
 	this->program = clCreateProgramWithSource(this->context, 1, (const char **)&source_str, NULL, &error);
 	assert(error == CL_SUCCESS);
 	error = clBuildProgram(this->program, 1, &device_id, NULL, NULL, NULL);
+
+	// Print build log.
+	size_t log_size;
+	clGetProgramBuildInfo(program, this->device_id, CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
+	char *log = (char *) malloc(log_size);
+	clGetProgramBuildInfo(program, this->device_id, CL_PROGRAM_BUILD_LOG, log_size, log, NULL);
+	std::cout << log << std::endl;
+	free(log);
+
 	assert(error == CL_SUCCESS);
 	free(source_str);
 
@@ -199,26 +208,30 @@ int OpenCLScanner::scan(const Bitstring *bs, unsigned int radius, std::vector<Bi
 	error = clSetKernelArg(kernel, 3, sizeof(this->addresses->sample), &this->addresses->sample);
 	assert(error == CL_SUCCESS);
 
-	// Set arg4: bs
+	// Set arg4: worksize
+	size_t worksize = 2;
+	error = clSetKernelArg(kernel, 4, sizeof(worksize), &worksize);
+	assert(error == CL_SUCCESS);
+
+	// Set arg5: bs
 	error = clEnqueueWriteBuffer(this->queue, this->bs_buf, CL_FALSE, 0, sizeof(cl_ulong)*this->bs_len, bs->data, 0, NULL, NULL);
 	assert(error == CL_SUCCESS);
-	error = clSetKernelArg(kernel, 4, sizeof(this->bs_buf), &this->bs_buf);
+	error = clSetKernelArg(kernel, 5, sizeof(this->bs_buf), &this->bs_buf);
 	assert(error == CL_SUCCESS);
 
-	// Set arg5: radius
+	// Set arg6: radius
 	cl_uint arg_radius = radius;
-	error = clSetKernelArg(kernel, 5, sizeof(arg_radius), &arg_radius);
+	error = clSetKernelArg(kernel, 6, sizeof(arg_radius), &arg_radius);
 	assert(error == CL_SUCCESS);
 
-	// Seg arg6: output
+	// Seg arg7: output
 	cl_uint output;
 	cl_mem output_buf;
 	output_buf = clCreateBuffer(this->context, CL_MEM_WRITE_ONLY, sizeof(output), NULL, &error);
 	assert(error == CL_SUCCESS);
-	error = clSetKernelArg(kernel, 6, sizeof(output_buf), &output_buf);
+	error = clSetKernelArg(kernel, 7, sizeof(output_buf), &output_buf);
 
 	// Run kernel.
-	size_t worksize = 1;
 	error = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &worksize, &worksize, 0, NULL, NULL);
 	assert(error == CL_SUCCESS);
 
@@ -234,7 +247,7 @@ int OpenCLScanner::scan(const Bitstring *bs, unsigned int radius, std::vector<Bi
 	error = clReleaseMemObject(output_buf);
 	assert(error == CL_SUCCESS);
 
-	std::cout << "Finished! " << output << std::endl;
+	//std::cout << "Finished! " << output << std::endl;
 
 	assert(output <= this->addresses->sample);
 

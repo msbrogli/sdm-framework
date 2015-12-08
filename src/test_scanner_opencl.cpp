@@ -1,6 +1,7 @@
 
 #include <iostream>
 #include <assert.h>
+#include <set>
 
 #include "address_space.h"
 #include "bitstring.h"
@@ -35,6 +36,13 @@ void run(const unsigned int bits, const unsigned int sample, int radius) {
 
 		assert(v1.size() == v2.size());
 		assert(v2.size() == v3.size());
+
+		std::set<Bitstring *> s1(v1.begin(), v1.end());
+		std::set<Bitstring *> s2(v2.begin(), v2.end());
+		std::set<Bitstring *> s3(v3.begin(), v3.end());
+
+		assert(s1 == s2);
+		assert(s2 == s3);
 
 		delete bs;
 	}

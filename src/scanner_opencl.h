@@ -7,6 +7,7 @@
 #include "scanner.h"
 #include "bitstring.h"
 #include "address_space.h"
+#include "utils.h"
 
 class OpenCLScanner : public Scanner {
 	public:
@@ -25,9 +26,12 @@ class OpenCLScanner : public Scanner {
 		cl_mem bs_buf;
 		cl_mem selected_buf;
 
+		TimeMeasure time;
+
 		OpenCLScanner(AddressSpace *addresses);
 		virtual void devices() const;
 		virtual int scan(const Bitstring *bs, unsigned int radius, std::vector<Bitstring *> *result) const;
+		virtual int scan(const Bitstring *bs, unsigned int radius, std::vector<Bitstring *> *result, TimeMeasure *time) const;
 };
 
 #endif

@@ -13,6 +13,7 @@ public:
 	long long ref_time;
 
 	void start();
+	void restart();
 	void mark(const std::string &name);
 	std::string str();
 

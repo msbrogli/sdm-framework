@@ -188,55 +188,74 @@ void OpenCLScanner::devices() const {
 }
 
 int OpenCLScanner::scan(const Bitstring *bs, unsigned int radius, std::vector<Bitstring *> *result) const {
+	TimeMeasure *time = new TimeMeasure;
+	int ret = this->scan(bs, radius, result, time);
+	delete time;
+	return ret;
+}
+
+int OpenCLScanner::scan(const Bitstring *bs, unsigned int radius, std::vector<Bitstring *> *result, TimeMeasure *time) const {
 	cl_int error;
 
 	// Create kernel.
 	cl_kernel kernel = clCreateKernel(program, "scan", &error);
 	assert(error == CL_SUCCESS);
+	time->mark("OpenCLScanner::scan clCreateKernel");
 
 	// Set arg0: bitcount_table
 	error = clSetKernelArg(kernel, 0, sizeof(this->bitcount_table_buf), &this->bitcount_table_buf);
 	assert(error == CL_SUCCESS);
+	time->mark("OpenCLScanner::scan clSetKernelArg0:bitcount_table");
 
 	// Set arg1: bitstrings
 	error = clSetKernelArg(kernel, 1, sizeof(this->bitstrings_buf), &this->bitstrings_buf);
 	assert(error == CL_SUCCESS);
+	time->mark("OpenCLScanner::scan clSetKernelArg1:bitstrings");
 
 	// Set arg2: bs_len
 	error = clSetKernelArg(kernel, 2, sizeof(this->bs_len), &this->bs_len);
 	assert(error == CL_SUCCESS);
+	time->mark("OpenCLScanner::scan clSetKernelArg2:bs_len");
 
 	// Set arg3: sample
 	error = clSetKernelArg(kernel, 3, sizeof(this->addresses->sample), &this->addresses->sample);
 	assert(error == CL_SUCCESS);
+	time->mark("OpenCLScanner::scan clSetKernelArg3:sample");
 
 	// Set arg4: worksize
 	size_t worksize = 500;
 	error = clSetKernelArg(kernel, 4, sizeof(worksize), &worksize);
 	assert(error == CL_SUCCESS);
+	time->mark("OpenCLScanner::scan clSetKernelArg4:worksize");
 
 	// Set arg5: bs
 	error = clEnqueueWriteBuffer(this->queue, this->bs_buf, CL_FALSE, 0, sizeof(cl_ulong)*this->bs_len, bs->data, 0, NULL, NULL);
 	assert(error == CL_SUCCESS);
+	time->mark("OpenCLScanner::scan clEnqueueWriteBuffer:worksize");
 	error = clSetKernelArg(kernel, 5, sizeof(this->bs_buf), &this->bs_buf);
 	assert(error == CL_SUCCESS);
+	time->mark("OpenCLScanner::scan clSetKernelArg5:bs");
 
 	// Set arg6: radius
 	cl_uint arg_radius = radius;
 	error = clSetKernelArg(kernel, 6, sizeof(arg_radius), &arg_radius);
 	assert(error == CL_SUCCESS);
+	time->mark("OpenCLScanner::scan clSetKernelArg6:radius");
 
 	// Set arg7: counter
 	cl_uint counter;
 	cl_mem counter_buf;
 	counter_buf = clCreateBuffer(this->context, CL_MEM_WRITE_ONLY, sizeof(counter), NULL, &error);
 	assert(error == CL_SUCCESS);
+	time->mark("OpenCLScanner::scan clCreateBuffer:counter_buf");
 	error = clSetKernelArg(kernel, 7, sizeof(counter_buf), &counter_buf);
 	assert(error == CL_SUCCESS);
+	time->mark("OpenCLScanner::scan clSetKernelArg7:counter");
 
 	// Set arg8: selected
 	error = clSetKernelArg(kernel, 8, sizeof(selected_buf), &selected_buf);
 	assert(error == CL_SUCCESS);
+	time->mark("OpenCLScanner::scan clSetKernelArg8:selected");
 
 	// Run kernel.
 	error = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &worksize, &worksize, 0, NULL, NULL);
@@ -244,22 +263,27 @@ int OpenCLScanner::scan(const Bitstring *bs, unsigned int radius, std::vector<Bi
 		std::cout << "error code = " << error << std::endl;
 	}
 	assert(error == CL_SUCCESS);
+	time->mark("OpenCLScanner::scan clEnqueueNDRangeKernel");
 
 	// Read counter.
 	error = clEnqueueReadBuffer(this->queue, counter_buf, CL_FALSE, 0, sizeof(counter), &counter, 0, NULL, NULL);
 	assert(error == CL_SUCCESS);
+	time->mark("OpenCLScanner::scan clEnqueueReadBuffer:counter");
 
 	// Read selected bitstring indexes.
 	cl_uint *selected = (cl_uint *)malloc(sizeof(cl_uint)*this->addresses->sample);
 	error = clEnqueueReadBuffer(this->queue, selected_buf, CL_FALSE, 0, sizeof(cl_uint)*this->addresses->sample, selected, 0, NULL, NULL);
+	time->mark("OpenCLScanner::scan clEnqueueReadBuffer:selected");
 
 	// Wait until all queue is done.
 	error = clFinish(queue);
 	assert(error == CL_SUCCESS);
+	time->mark("OpenCLScanner::scan clFinish");
 
 	// Release counter buffer.
 	error = clReleaseMemObject(counter_buf);
 	assert(error == CL_SUCCESS);
+	time->mark("OpenCLScanner::scan clReleaseMemObject:counter_buf");
 
 	// Fill result vector.
 	assert(counter <= this->addresses->sample);
@@ -269,6 +293,7 @@ int OpenCLScanner::scan(const Bitstring *bs, unsigned int radius, std::vector<Bi
 		result->push_back(this->addresses->addresses[idx]);
 	}
 	free(selected);
+	time->mark("OpenCLScanner::scan Filling result vector");
 
 	return 0;
 }

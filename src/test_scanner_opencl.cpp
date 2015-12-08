@@ -46,7 +46,7 @@ void run(const unsigned int bits, const unsigned int sample, int radius) {
 		tm->mark("ThreadScanner");
 		std::cout << v2.size() << " hard-locations activated." << std::endl;
 
-		scanner3->scan(bs, radius, &v3);
+		scanner3->scan(bs, radius, &v3, tm);
 		tm->mark("OpenCLScanner");
 		std::cout << v3.size() << " hard-locations activated." << std::endl;
 

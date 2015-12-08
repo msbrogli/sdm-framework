@@ -33,6 +33,11 @@ void TimeMeasure::start() {
 	this->ref_time = this->get_time();
 }
 
+void TimeMeasure::restart() {
+	this->ref_time = this->get_time();
+	this->measures.clear();
+}
+
 void TimeMeasure::mark(const std::string &name) {
 	this->measures.push_back(std::make_pair(name, this->get_time()));
 }

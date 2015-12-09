@@ -74,8 +74,8 @@ void run(const unsigned int bits, const unsigned int sample, int radius) {
 }
 
 int main(void) {
-	run(100, 10000, 45);
-	run(256, 100000, 120);
+	//run(100, 10000, 45);
+	//run(256, 100000, 120);
 	run(1000, 1000000, 451);
 	return 0;
 }

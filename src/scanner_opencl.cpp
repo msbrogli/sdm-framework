@@ -12,11 +12,13 @@
 OpenCLScanner::OpenCLScanner(AddressSpace *addresses) {
 	this->addresses = addresses;
 
+	cl_int error;
+
 	// =================
 	// Calculate bs_len.
 	// =================
-	this->bs_len = this->addresses->bits / 64;
-	if (this->addresses->bits % 64 > 0) {
+	this->bs_len = this->addresses->bits / 16;
+	if (this->addresses->bits % 16 > 0) {
 		this->bs_len++;
 	}
 
@@ -36,14 +38,10 @@ OpenCLScanner::OpenCLScanner(AddressSpace *addresses) {
 		this->global_worksize *= this->local_worksize;
 	}
 
-	// Choose the right kernel.
-	if (this->global_worksize >= this->addresses->sample) {
-		this->kernel_name = "single_scan";
-	} else {
-		this->kernel_name = "scan";
-	}
-
-	cl_int error;
+	// ================
+	// Set kernel name.
+	// ================
+	this->kernel_name = "single_scan";
 
 	// ==============
 	// Create context.
@@ -64,6 +62,25 @@ OpenCLScanner::OpenCLScanner(AddressSpace *addresses) {
 	delete [] devices;
 
 	this->device_id = devices[0];
+
+	// ==============================
+	// Split work between work-items.
+	// ==============================
+	cl_ulong local_mem_size;
+	clGetDeviceInfo(this->device_id, CL_DEVICE_LOCAL_MEM_SIZE, sizeof(cl_ulong), &local_mem_size, 0);
+
+	size_t max_work_group_size[1];
+	clGetDeviceInfo(this->device_id, CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(max_work_group_size), max_work_group_size, 0);
+
+	uint bitstrings_by_workgroup = std::min(local_mem_size / bs_len, (unsigned long long)max_work_group_size[0] / bs_len);
+	this->local_worksize = bitstrings_by_workgroup * bs_len;
+
+	uint sample_adjusted = this->addresses->sample / bitstrings_by_workgroup;
+	if (this->addresses->sample % bitstrings_by_workgroup > 0) {
+		sample_adjusted++;
+	}
+	sample_adjusted *= bitstrings_by_workgroup;
+	this->global_worksize = sample_adjusted * bs_len;
 
 	// =============
 	// Create queue.
@@ -116,13 +133,12 @@ OpenCLScanner::OpenCLScanner(AddressSpace *addresses) {
 	// ====================
 	// Generate bitstrings.
 	// ====================
-	size_t bs_size = sizeof(cl_ulong)*this->bs_len*this->addresses->sample;
-	this->bitstrings = (cl_ulong*) malloc(bs_size);
+	size_t bs_size = sizeof(cl_ushort)*this->bs_len*this->addresses->sample;
+	this->bitstrings = (cl_ushort*) malloc(bs_size);
 	int k = 0;
 	for(int i=0; i<this->addresses->sample; i++) {
 		Bitstring *bs = this->addresses->addresses[i];
-		assert(bs->len == this->bs_len);
-		assert(sizeof(this->bitstrings[0]) == sizeof(bs->data[0]));
+		cl_ushort *data = (cl_ushort *)bs->data;
 		for(int j=0; j<bs->len; j++) {
 			this->bitstrings[k++] = bs->data[j];
 		}
@@ -135,7 +151,7 @@ OpenCLScanner::OpenCLScanner(AddressSpace *addresses) {
 	// =========================
 	// Allocating other buffers.
 	// =========================
-	this->bs_buf = clCreateBuffer(this->context, CL_MEM_READ_ONLY, sizeof(cl_ulong)*this->bs_len, NULL, &error);
+	this->bs_buf = clCreateBuffer(this->context, CL_MEM_READ_ONLY, sizeof(cl_ushort)*this->bs_len, NULL, &error);
 	assert(error == CL_SUCCESS);
 	this->selected_buf = clCreateBuffer(this->context, CL_MEM_WRITE_ONLY, sizeof(cl_uchar)*this->addresses->sample, NULL, &error);
 	assert(error == CL_SUCCESS);
@@ -263,34 +279,36 @@ int OpenCLScanner::scan(const Bitstring *bs, unsigned int radius, std::vector<Bi
 	assert(error == CL_SUCCESS);
 	time->mark("OpenCLScanner::scan clSetKernelArg3:sample");
 
-	// Set arg4: global_worksize
-	error = clSetKernelArg(kernel, 4, sizeof(this->global_worksize), &this->global_worksize);
-	assert(error == CL_SUCCESS);
-	time->mark("OpenCLScanner::scan clSetKernelArg4:global_worksize");
-
-	// Set arg5: bs
-	error = clEnqueueWriteBuffer(this->queue, this->bs_buf, CL_FALSE, 0, sizeof(cl_ulong)*this->bs_len, bs->data, 0, NULL, NULL);
+	// Set arg4: bs
+	error = clEnqueueWriteBuffer(this->queue, this->bs_buf, CL_FALSE, 0, sizeof(cl_ushort)*this->bs_len, bs->data, 0, NULL, NULL);
 	assert(error == CL_SUCCESS);
 	time->mark("OpenCLScanner::scan clEnqueueWriteBuffer:bs");
-	error = clSetKernelArg(kernel, 5, sizeof(this->bs_buf), &this->bs_buf);
+	error = clSetKernelArg(kernel, 4, sizeof(this->bs_buf), &this->bs_buf);
 	assert(error == CL_SUCCESS);
 	time->mark("OpenCLScanner::scan clSetKernelArg5:bs");
 
-	// Set arg6: radius
+	// Set arg5: radius
 	cl_uint arg_radius = radius;
-	error = clSetKernelArg(kernel, 6, sizeof(arg_radius), &arg_radius);
+	error = clSetKernelArg(kernel, 5, sizeof(arg_radius), &arg_radius);
 	assert(error == CL_SUCCESS);
 	time->mark("OpenCLScanner::scan clSetKernelArg6:radius");
 
-	// Set arg8: counter
-	error = clSetKernelArg(kernel, 7, sizeof(this->counter_buf), &this->counter_buf);
+	// Set arg6: counter
+	cl_uint counter = 0;
+	error = clEnqueueWriteBuffer(this->queue, this->counter_buf, CL_FALSE, 0, sizeof(counter), &counter, 0, NULL, NULL);
+	assert(error == CL_SUCCESS);
+	error = clSetKernelArg(kernel, 6, sizeof(this->counter_buf), &this->counter_buf);
 	assert(error == CL_SUCCESS);
 	time->mark("OpenCLScanner::scan clSetKernelArg7:counter_buf");
 
-	// Set arg8: selected
-	error = clSetKernelArg(kernel, 8, sizeof(this->selected_buf), &this->selected_buf);
+	// Set arg7: selected
+	error = clSetKernelArg(kernel, 7, sizeof(this->selected_buf), &this->selected_buf);
 	assert(error == CL_SUCCESS);
 	time->mark("OpenCLScanner::scan clSetKernelArg8:selected");
+
+	// Set arg8: __local dist
+	error = clSetKernelArg(kernel, 8, sizeof(cl_uchar)*this->bs_len, NULL);
+	assert(error == CL_SUCCESS);
 
 	// Wait until all queue is done.
 	//error = clFinish(queue);
@@ -315,7 +333,6 @@ int OpenCLScanner::scan(const Bitstring *bs, unsigned int radius, std::vector<Bi
 	//time->mark("OpenCLScanner::scan clFinish (after running)");
 
 	// Read selected bitstring indexes.
-	cl_uint counter;
 	error = clEnqueueReadBuffer(this->queue, this->counter_buf, CL_FALSE, 0, sizeof(cl_uint), &counter, 0, NULL, NULL);
 	time->mark("OpenCLScanner::scan clEnqueueReadBuffer:selected");
 
@@ -330,6 +347,7 @@ int OpenCLScanner::scan(const Bitstring *bs, unsigned int radius, std::vector<Bi
 
 	// Fill result vector.
 	unsigned int idx;
+	std::cout << "@@ counter=" << counter << std::endl;
 	for(int i=0; i<this->addresses->sample; i++) {
 		if (selected[i]) {
 			result->push_back(this->addresses->addresses[i]);

@@ -50,13 +50,11 @@ void single_scan(
 
 	ulong a;
 	uint dist;
-	ushort *ptr;
 
 	dist = 0;
 	for(uint j=0; j<bs_len; j++) {
 		a = bitstrings[id*bs_len+j] ^ bs[j];
-		ptr = (ushort *)&a;
-		dist += bitcount_table[ptr[0]] + bitcount_table[ptr[1]] + bitcount_table[ptr[2]] + bitcount_table[ptr[3]];
+		dist += popcount(a);
 	}
 	selected[id] = (dist <= radius);
 }

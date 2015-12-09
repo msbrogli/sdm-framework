@@ -24,7 +24,7 @@ class OpenCLScanner : public Scanner {
 
 		cl_uchar bitcount_table[1<<16];
 		cl_mem bitcount_table_buf;
-		cl_ushort *bitstrings;
+		cl_ulong *bitstrings;
 		cl_mem bitstrings_buf;
 		cl_uint bs_len;
 		cl_mem bs_buf;

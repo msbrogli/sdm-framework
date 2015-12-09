@@ -1,14 +1,14 @@
 __kernel
 void single_scan(
 		__constant const uchar *bitcount_table,
-		__global const ushort *bitstrings,
+		__global const ulong *bitstrings,
 		const uint bs_len,
 		const uint sample,
-		__constant const ushort *bs,
+		__constant const ulong *bs,
 		const uint radius,
 		__global uint *counter,
 		__global uchar *selected,
-		__local uchar *dist)
+		__local uint *dist)
 {
 
 	uint global_id = get_global_id(0);
@@ -21,23 +21,16 @@ void single_scan(
 	uint j = local_id % bs_len;
 
 	ulong a = bitstrings[global_id] ^ bs[j];
-	dist[local_id] = bitcount_table[a];
+	dist[local_id] = popcount(a);
 
-	//barrier(CLK_LOCAL_MEM_FENCE);
+	barrier(CLK_LOCAL_MEM_FENCE);
 
 	if (j % bs_len == 0) {
-		atomic_inc(counter);
-		//uint idx = local_id / bs_len;
-		//selected[idx] = (idx % 2 == 0);
-	}
-	return;
-
-
-	if (local_id % bs_len == 0) {
+		uint idx = global_id / bs_len;
 		uint total_dist = 0;
 		for(uint i=0; i<bs_len; i++) {
 			total_dist += dist[local_id+i];
 		}
-		selected[global_id] = (total_dist <= radius);
+		selected[idx] = (total_dist <= radius);
 	}
 }

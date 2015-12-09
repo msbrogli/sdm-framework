@@ -17,8 +17,8 @@ OpenCLScanner::OpenCLScanner(AddressSpace *addresses) {
 	// =================
 	// Calculate bs_len.
 	// =================
-	this->bs_len = this->addresses->bits / 16;
-	if (this->addresses->bits % 16 > 0) {
+	this->bs_len = this->addresses->bits / 64;
+	if (this->addresses->bits % 64 > 0) {
 		this->bs_len++;
 	}
 
@@ -133,12 +133,11 @@ OpenCLScanner::OpenCLScanner(AddressSpace *addresses) {
 	// ====================
 	// Generate bitstrings.
 	// ====================
-	size_t bs_size = sizeof(cl_ushort)*this->bs_len*this->addresses->sample;
-	this->bitstrings = (cl_ushort*) malloc(bs_size);
+	size_t bs_size = sizeof(cl_ulong)*this->bs_len*this->addresses->sample;
+	this->bitstrings = (cl_ulong*) malloc(bs_size);
 	int k = 0;
 	for(int i=0; i<this->addresses->sample; i++) {
 		Bitstring *bs = this->addresses->addresses[i];
-		cl_ushort *data = (cl_ushort *)bs->data;
 		for(int j=0; j<bs->len; j++) {
 			this->bitstrings[k++] = bs->data[j];
 		}
@@ -307,7 +306,7 @@ int OpenCLScanner::scan(const Bitstring *bs, unsigned int radius, std::vector<Bi
 	time->mark("OpenCLScanner::scan clSetKernelArg8:selected");
 
 	// Set arg8: __local dist
-	error = clSetKernelArg(kernel, 8, sizeof(cl_uchar)*this->bs_len, NULL);
+	error = clSetKernelArg(kernel, 8, sizeof(cl_uint)*this->bs_len, NULL);
 	assert(error == CL_SUCCESS);
 
 	// Wait until all queue is done.
@@ -332,7 +331,7 @@ int OpenCLScanner::scan(const Bitstring *bs, unsigned int radius, std::vector<Bi
 	//assert(error == CL_SUCCESS);
 	//time->mark("OpenCLScanner::scan clFinish (after running)");
 
-	// Read selected bitstring indexes.
+	// Read counter.
 	error = clEnqueueReadBuffer(this->queue, this->counter_buf, CL_FALSE, 0, sizeof(cl_uint), &counter, 0, NULL, NULL);
 	time->mark("OpenCLScanner::scan clEnqueueReadBuffer:selected");
 

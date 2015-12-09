@@ -7,7 +7,6 @@ void scan(
 		const uint worksize,
 		__global const ulong *bs,
 		const uint radius,
-		__global uint *result,
 		__global uint *selected)
 {
 	uint id = get_global_id(0);
@@ -21,7 +20,6 @@ void scan(
 		end = min(sample, start + length);
 	}
 
-	uint pos;
 	ulong a;
 	uint dist;
 	ushort *ptr;
@@ -32,11 +30,7 @@ void scan(
 			ptr = (ushort *)&a;
 			dist += bitcount_table[ptr[0]] + bitcount_table[ptr[1]] + bitcount_table[ptr[2]] + bitcount_table[ptr[3]];
 		}
-		if (dist <= radius) {
-			selected[i] = 1;
-		} else {
-			selected[i] = 0;
-		}
+		selected[i] = (dist <= radius);
 	}
 }
 
@@ -49,12 +43,10 @@ void single_scan(
 		const uint worksize,
 		__global const ulong *bs,
 		const uint radius,
-		__global uint *result,
 		__global uchar *selected)
 {
 	uint id = get_global_id(0);
 
-	uint pos;
 	ulong a;
 	uint dist;
 	ushort *ptr;
@@ -65,9 +57,5 @@ void single_scan(
 		ptr = (ushort *)&a;
 		dist += bitcount_table[ptr[0]] + bitcount_table[ptr[1]] + bitcount_table[ptr[2]] + bitcount_table[ptr[3]];
 	}
-	if (dist <= radius) {
-		selected[id] = 1;
-	} else {
-		selected[id] = 0;
-	}
+	selected[id] = (dist <= radius);
 }

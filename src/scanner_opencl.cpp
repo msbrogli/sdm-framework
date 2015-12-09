@@ -12,9 +12,20 @@
 OpenCLScanner::OpenCLScanner(AddressSpace *addresses) {
 	this->addresses = addresses;
 
-	//this->worksize = std::min(this->addresses->sample, (unsigned int)5000);
-	this->worksize = this->addresses->sample;
-	if (this->worksize == this->addresses->sample) {
+	this->local_worksize = 0;
+
+	if (this->local_worksize == 0) {
+		this->global_worksize = this->addresses->sample;
+	} else {
+		this->global_worksize = this->addresses->sample/this->local_worksize;
+		if (this->addresses->sample%this->local_worksize > 0) {
+			this->global_worksize++;
+		}
+		this->global_worksize *= this->local_worksize;
+	}
+
+	// Choose the right kernel.
+	if (this->global_worksize >= this->addresses->sample) {
 		this->kernel_name = "single_scan";
 	} else {
 		this->kernel_name = "scan";
@@ -243,10 +254,10 @@ int OpenCLScanner::scan(const Bitstring *bs, unsigned int radius, std::vector<Bi
 	assert(error == CL_SUCCESS);
 	time->mark("OpenCLScanner::scan clSetKernelArg3:sample");
 
-	// Set arg4: worksize
-	error = clSetKernelArg(kernel, 4, sizeof(this->worksize), &this->worksize);
+	// Set arg4: global_worksize
+	error = clSetKernelArg(kernel, 4, sizeof(this->global_worksize), &this->global_worksize);
 	assert(error == CL_SUCCESS);
-	time->mark("OpenCLScanner::scan clSetKernelArg4:worksize");
+	time->mark("OpenCLScanner::scan clSetKernelArg4:global_worksize");
 
 	// Set arg5: bs
 	error = clEnqueueWriteBuffer(this->queue, this->bs_buf, CL_FALSE, 0, sizeof(cl_ulong)*this->bs_len, bs->data, 0, NULL, NULL);
@@ -273,7 +284,11 @@ int OpenCLScanner::scan(const Bitstring *bs, unsigned int radius, std::vector<Bi
 	time->mark("OpenCLScanner::scan clFinish (before running)");
 
 	// Run kernel.
-	error = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &this->worksize, NULL, 0, NULL, NULL);
+	if (this->local_worksize > 0) {
+		error = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &this->global_worksize, &this->local_worksize, 0, NULL, NULL);
+	} else {
+		error = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &this->global_worksize, NULL, 0, NULL, NULL);
+	}
 	if (error != CL_SUCCESS) {
 		std::cout << "error code = " << error << std::endl;
 	}

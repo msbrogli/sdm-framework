@@ -1,11 +1,11 @@
 __kernel
 void scan(
-		__global const uchar *bitcount_table,
+		__constant const uchar *bitcount_table,
 		__global const ulong *bitstrings,
 		const uint bs_len,
 		const uint sample,
 		const uint worksize,
-		__global const ulong *bs,
+		__constant const ulong *bs,
 		const uint radius,
 		__global uint *selected)
 {
@@ -36,13 +36,14 @@ void scan(
 
 __kernel
 void single_scan(
-		__global const uchar *bitcount_table,
+		__constant const uchar *bitcount_table,
 		__global const ulong *bitstrings,
 		const uint bs_len,
 		const uint sample,
 		const uint worksize,
-		__global const ulong *bs,
+		__constant const ulong *bs,
 		const uint radius,
+		__global uint *counter,
 		__global uchar *selected)
 {
 	uint id = get_global_id(0);

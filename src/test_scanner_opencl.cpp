@@ -27,6 +27,7 @@ void run(const unsigned int bits, const unsigned int sample, int radius) {
 	delete tm;
 
 	//scanner3->devices();
+	//return;
 
 	for(int i=0; i<20; i++) {
 		Bitstring *bs = new Bitstring(bits);

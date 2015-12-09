@@ -29,6 +29,8 @@ class OpenCLScanner : public Scanner {
 		cl_uint bs_len;
 		cl_mem bs_buf;
 		cl_mem selected_buf;
+		cl_uchar *selected;
+		cl_mem counter_buf;
 
 		TimeMeasure time;
 

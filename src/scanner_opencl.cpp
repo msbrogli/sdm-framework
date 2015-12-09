@@ -12,6 +12,18 @@
 OpenCLScanner::OpenCLScanner(AddressSpace *addresses) {
 	this->addresses = addresses;
 
+	// =================
+	// Calculate bs_len.
+	// =================
+	this->bs_len = this->addresses->bits / 64;
+	if (this->addresses->bits % 64 > 0) {
+		this->bs_len++;
+	}
+
+
+	// =============================
+	// Set local and group worksize.
+	// =============================
 	this->local_worksize = 0;
 
 	if (this->local_worksize == 0) {
@@ -101,14 +113,6 @@ OpenCLScanner::OpenCLScanner(AddressSpace *addresses) {
 	error = clEnqueueWriteBuffer(this->queue, this->bitcount_table_buf, CL_FALSE, 0, sizeof(this->bitcount_table), this->bitcount_table, 0, NULL, NULL);
 	assert(error == CL_SUCCESS);
 
-	// =================
-	// Calculate bs_len.
-	// =================
-	this->bs_len = this->addresses->bits / 64;
-	if (this->addresses->bits % 64 > 0) {
-		this->bs_len++;
-	}
-
 	// ====================
 	// Generate bitstrings.
 	// ====================
@@ -135,6 +139,9 @@ OpenCLScanner::OpenCLScanner(AddressSpace *addresses) {
 	assert(error == CL_SUCCESS);
 	this->selected_buf = clCreateBuffer(this->context, CL_MEM_WRITE_ONLY, sizeof(cl_uchar)*this->addresses->sample, NULL, &error);
 	assert(error == CL_SUCCESS);
+	this->counter_buf = clCreateBuffer(this->context, CL_MEM_WRITE_ONLY, sizeof(cl_uint), NULL, &error);
+	assert(error == CL_SUCCESS);
+	this->selected = (cl_uchar *)malloc(sizeof(cl_uchar)*this->addresses->sample);
 
 	error = clFinish(queue);
 	assert(error == CL_SUCCESS);
@@ -142,11 +149,13 @@ OpenCLScanner::OpenCLScanner(AddressSpace *addresses) {
 
 OpenCLScanner::~OpenCLScanner() {
 	free(this->bitstrings);
+	free(this->selected);
 
 	clReleaseMemObject(this->bitcount_table_buf);
 	clReleaseMemObject(this->bitstrings_buf);
 	clReleaseMemObject(this->bs_buf);
 	clReleaseMemObject(this->selected_buf);
+	clReleaseMemObject(this->counter_buf);
 	clReleaseProgram(this->program);
 	clReleaseCommandQueue(this->queue);
 	clReleaseContext(this->context);
@@ -273,15 +282,20 @@ int OpenCLScanner::scan(const Bitstring *bs, unsigned int radius, std::vector<Bi
 	assert(error == CL_SUCCESS);
 	time->mark("OpenCLScanner::scan clSetKernelArg6:radius");
 
-	// Set arg7: selected
-	error = clSetKernelArg(kernel, 7, sizeof(selected_buf), &selected_buf);
+	// Set arg8: counter
+	error = clSetKernelArg(kernel, 7, sizeof(this->counter_buf), &this->counter_buf);
+	assert(error == CL_SUCCESS);
+	time->mark("OpenCLScanner::scan clSetKernelArg7:counter_buf");
+
+	// Set arg8: selected
+	error = clSetKernelArg(kernel, 8, sizeof(this->selected_buf), &this->selected_buf);
 	assert(error == CL_SUCCESS);
 	time->mark("OpenCLScanner::scan clSetKernelArg8:selected");
 
 	// Wait until all queue is done.
-	error = clFinish(queue);
-	assert(error == CL_SUCCESS);
-	time->mark("OpenCLScanner::scan clFinish (before running)");
+	//error = clFinish(queue);
+	//assert(error == CL_SUCCESS);
+	//time->mark("OpenCLScanner::scan clFinish (before running)");
 
 	// Run kernel.
 	if (this->local_worksize > 0) {
@@ -296,13 +310,17 @@ int OpenCLScanner::scan(const Bitstring *bs, unsigned int radius, std::vector<Bi
 	time->mark("OpenCLScanner::scan clEnqueueNDRangeKernel");
 
 	// Wait until all queue is done.
-	error = clFinish(queue);
-	assert(error == CL_SUCCESS);
-	time->mark("OpenCLScanner::scan clFinish (after running)");
+	//error = clFinish(queue);
+	//assert(error == CL_SUCCESS);
+	//time->mark("OpenCLScanner::scan clFinish (after running)");
 
 	// Read selected bitstring indexes.
-	cl_uchar *selected = (cl_uchar *)malloc(sizeof(cl_uchar)*this->addresses->sample);
-	error = clEnqueueReadBuffer(this->queue, selected_buf, CL_FALSE, 0, sizeof(cl_uchar)*this->addresses->sample, selected, 0, NULL, NULL);
+	cl_uint counter;
+	error = clEnqueueReadBuffer(this->queue, this->counter_buf, CL_FALSE, 0, sizeof(cl_uint), &counter, 0, NULL, NULL);
+	time->mark("OpenCLScanner::scan clEnqueueReadBuffer:selected");
+
+	// Read selected bitstring indexes.
+	error = clEnqueueReadBuffer(this->queue, this->selected_buf, CL_FALSE, 0, sizeof(cl_uchar)*this->addresses->sample, this->selected, 0, NULL, NULL);
 	time->mark("OpenCLScanner::scan clEnqueueReadBuffer:selected");
 
 	// Wait until all queue is done.
@@ -317,7 +335,6 @@ int OpenCLScanner::scan(const Bitstring *bs, unsigned int radius, std::vector<Bi
 			result->push_back(this->addresses->addresses[i]);
 		}
 	}
-	free(selected);
 	clReleaseKernel(kernel);
 	time->mark("OpenCLScanner::scan Filling result vector");
 

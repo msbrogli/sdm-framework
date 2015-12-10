@@ -66,7 +66,7 @@ OpenCLScanner::OpenCLScanner(AddressSpace *addresses) {
 	sample_adjusted *= bitstrings_by_workgroup;
 	this->global_worksize = sample_adjusted * bs_len;
 
-	std::cout << "@@ global_worksize=" << this->global_worksize << " local_worksize=" << this->local_worksize << " bs_len=" << this->bs_len << std::endl;
+	//std::cout << "@@ global_worksize=" << this->global_worksize << " local_worksize=" << this->local_worksize << " bs_len=" << this->bs_len << std::endl;
 
 	// =============
 	// Create queue.

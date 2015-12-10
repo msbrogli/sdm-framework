@@ -25,12 +25,22 @@ void single_scan(
 
 	barrier(CLK_LOCAL_MEM_FENCE);
 
-	for(uint i=(bs_len>>1); i>0; i>>=1) {
-		dist[local_id] += dist[local_id+i];
+	uint offset = bs_len;
+	while(true) {
+		if (offset == 1) {
+			break;
+		}
+		if (offset&1 && j == 0) {
+			dist[local_id] += dist[offset];
+		}
+		offset >>= 1;
+		if (j < offset) {
+			dist[local_id] += dist[local_id+offset];
+		}
 		barrier(CLK_LOCAL_MEM_FENCE);
 	}
 
-	if (j % bs_len == 0) {
+	if (j == 0) {
 		uint idx = global_id / bs_len;
 		selected[idx] = (dist[local_id] <= radius);
 	}

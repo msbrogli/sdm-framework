@@ -150,7 +150,7 @@ OpenCLScanner::OpenCLScanner(AddressSpace *addresses) {
 	// =========================
 	// Allocating other buffers.
 	// =========================
-	this->bs_buf = clCreateBuffer(this->context, CL_MEM_READ_ONLY, sizeof(cl_ushort)*this->bs_len, NULL, &error);
+	this->bs_buf = clCreateBuffer(this->context, CL_MEM_READ_ONLY, sizeof(cl_ulong)*this->bs_len, NULL, &error);
 	assert(error == CL_SUCCESS);
 	this->selected_buf = clCreateBuffer(this->context, CL_MEM_WRITE_ONLY, sizeof(cl_uchar)*this->addresses->sample, NULL, &error);
 	assert(error == CL_SUCCESS);
@@ -279,7 +279,7 @@ int OpenCLScanner::scan(const Bitstring *bs, unsigned int radius, std::vector<Bi
 	time->mark("OpenCLScanner::scan clSetKernelArg3:sample");
 
 	// Set arg4: bs
-	error = clEnqueueWriteBuffer(this->queue, this->bs_buf, CL_FALSE, 0, sizeof(cl_ushort)*this->bs_len, bs->data, 0, NULL, NULL);
+	error = clEnqueueWriteBuffer(this->queue, this->bs_buf, CL_FALSE, 0, sizeof(cl_ulong)*this->bs_len, bs->data, 0, NULL, NULL);
 	assert(error == CL_SUCCESS);
 	time->mark("OpenCLScanner::scan clEnqueueWriteBuffer:bs");
 	error = clSetKernelArg(kernel, 4, sizeof(this->bs_buf), &this->bs_buf);

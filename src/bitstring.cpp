@@ -59,11 +59,12 @@ Bitstring::Bitstring(unsigned int bits) {
 }
 
 Bitstring::Bitstring(unsigned int bits, std::string const &b64) {
+	this->_init(bits);
+
 	const size_t size = sizeof(uint64_t) * this->len;
 	std::string buffer = base64_decode(b64);
 	assert(size == buffer.length());
 
-	this->_init(bits);
 	memcpy(this->data, buffer.c_str(), size);
 	this->clear_surplus();
 }
@@ -110,7 +111,7 @@ int Bitstring::distance(const Bitstring *bs) const {
 		a = this->data[i] ^ bs->data[i];
 #ifdef SDM_USE_BITCOUNT_TABLE
 		ptr = (uint16_t *)&a;
-		dist += (unsigned int)bitcount_table[ptr[0]] + (unsigned int)bitcount_table[ptr[1]] + bitcount_table[ptr[2]] + bitcount_table[ptr[3]];
+		dist += bitcount_table[ptr[0]] + bitcount_table[ptr[1]] + bitcount_table[ptr[2]] + bitcount_table[ptr[3]];
 #else
 		while(a) {
 			if (a&1) {

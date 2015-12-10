@@ -96,7 +96,6 @@ void Counter<integer>::decr(unsigned int bit) {
 template <typename integer>
 std::string Counter<integer>::str() const {
     unsigned int tab = 50;
-    unsigned int sz = sizeof(integer);
     std::stringstream ss;
     for(int i=0; i<this->bits; i++) {
         if (i % tab == 0) {

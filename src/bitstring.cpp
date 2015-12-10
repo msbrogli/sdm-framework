@@ -141,7 +141,6 @@ std::string Bitstring::base64() const {
 bool Bitstring::operator<(const Bitstring &bs) const {
 	assert(this->bits == bs.bits);
 
-	uint64_t x;
 	for(int i=0; i<this->len; i++) {
 		if (this->data[i] < bs.data[i]) {
 			return true;

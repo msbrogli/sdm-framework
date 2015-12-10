@@ -1,6 +1,9 @@
 
 #include "scanner.h"
 
+Scanner::~Scanner() {
+}
+
 LinearScanner::LinearScanner(AddressSpace *addresses) {
 	this->addresses = addresses;
 }

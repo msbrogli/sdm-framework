@@ -329,7 +329,6 @@ int OpenCLScanner::scan(const Bitstring *bs, unsigned int radius, std::vector<Bi
 	time->mark("OpenCLScanner::scan clFinish (after reading)");
 
 	// Fill result vector.
-	unsigned int idx;
 	for(int i=0; i<this->addresses->sample; i++) {
 		if (selected[i]) {
 			result->push_back(this->addresses->addresses[i]);

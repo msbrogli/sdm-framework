@@ -1,4 +1,5 @@
 
+CXX=g++
 CXXFLAGS=-O2 -Wall
 CLFLAGS=-framework OpenCL
 
@@ -30,49 +31,49 @@ tests: test_bitstring \
 	   test_performance_scanners
 
 lib/base64.o: lib/base64.cpp
-	(cd lib/ ; g++ -c base64.cpp)
+	(cd lib/ ; ${CXX} -c base64.cpp)
 
 lib/sha256.o: lib/sha256.cpp
-	(cd lib/ ; g++ -c sha256.cpp)
+	(cd lib/ ; ${CXX} -c sha256.cpp)
 
 test_bitstring: bitstring.o test_bitstring.cpp lib/base64.o
-	g++ ${CXXFLAGS} lib/base64.o bitstring.o test_bitstring.cpp -o test_bitstring
+	${CXX} ${CXXFLAGS} lib/base64.o bitstring.o test_bitstring.cpp -o test_bitstring
 
 test_address_space: bitstring.o address_space.o test_address_space.cpp lib/sha256.o utils.o
-	g++ ${CXXFLAGS} utils.o lib/sha256.o lib/base64.o bitstring.o address_space.o test_address_space.cpp -o test_address_space
+	${CXX} ${CXXFLAGS} utils.o lib/sha256.o lib/base64.o bitstring.o address_space.o test_address_space.cpp -o test_address_space
 
 test_scanner: address_space.o bitstring.o scanner.o test_scanner.cpp lib/sha256.o utils.o
-	g++ ${CXXFLAGS} utils.o lib/sha256.o lib/base64.o bitstring.o address_space.o scanner.o test_scanner.cpp -o test_scanner
+	${CXX} ${CXXFLAGS} utils.o lib/sha256.o lib/base64.o bitstring.o address_space.o scanner.o test_scanner.cpp -o test_scanner
 
 test_scanner_thread: address_space.o bitstring.o scanner.o scanner_thread.o test_scanner_thread.cpp lib/sha256.o utils.o
-	g++ ${CXXFLAGS} utils.o lib/sha256.o lib/base64.o bitstring.o address_space.o scanner.o scanner_thread.o test_scanner_thread.cpp -o test_scanner_thread
+	${CXX} ${CXXFLAGS} utils.o lib/sha256.o lib/base64.o bitstring.o address_space.o scanner.o scanner_thread.o test_scanner_thread.cpp -o test_scanner_thread
 
 test_scanner_opencl: test_scanner_opencl.cpp $(OBJS)
-	g++ ${CXXFLAGS} ${CLFLAGS} ${OBJS} ${LIB_OBJS} test_scanner_opencl.cpp -o test_scanner_opencl
+	${CXX} ${CXXFLAGS} ${CLFLAGS} ${OBJS} ${LIB_OBJS} test_scanner_opencl.cpp -o test_scanner_opencl
 
 test_performance_scanners: test_performance_scanners.cpp $(OBJS) $(LIB_OBJS)
-	g++ ${CXXFLAGS} ${CLFLAGS} ${OBJS} ${LIB_OBJS} test_performance_scanners.cpp -o test_performance_scanners
+	${CXX} ${CXXFLAGS} ${CLFLAGS} ${OBJS} ${LIB_OBJS} test_performance_scanners.cpp -o test_performance_scanners
 
 test_counter: test_counter.cpp lib/base64.o
-	g++ ${CXXFLAGS} lib/base64.o test_counter.cpp -o test_counter
+	${CXX} ${CXXFLAGS} lib/base64.o test_counter.cpp -o test_counter
 
 bitstring.o: bitstring.h bitstring.cpp
-	g++ ${CXXFLAGS} -c bitstring.cpp
+	${CXX} ${CXXFLAGS} -c bitstring.cpp
 
 address_space.o: address_space.h address_space.cpp bitstring.h lib/base64.h lib/sha256.h
-	g++ ${CXXFLAGS} -c address_space.cpp
+	${CXX} ${CXXFLAGS} -c address_space.cpp
 
 scanner.o: scanner.h scanner.cpp lib/base64.h
-	g++ ${CXXFLAGS} -c scanner.cpp
+	${CXX} ${CXXFLAGS} -c scanner.cpp
 
 scanner_thread.o: scanner_thread.h scanner_thread.cpp bitstring.h
-	g++ ${CXXFLAGS} -c scanner_thread.cpp
+	${CXX} ${CXXFLAGS} -c scanner_thread.cpp
 
 scanner_opencl.o: scanner_opencl.h scanner_opencl.cpp $(HEADERS)
-	g++ ${CXXFLAGS} -c scanner_opencl.cpp
+	${CXX} ${CXXFLAGS} -c scanner_opencl.cpp
 
 utils.o: utils.h utils.cpp
-	g++ ${CXXFLAGS} -c utils.cpp
+	${CXX} ${CXXFLAGS} -c utils.cpp
 
 clean:
 	rm -f *.o lib/*.o test_address_space test_bitstring test_scanner test_scanner_thread test_counter test_scanner_opencl test_performance_scanners

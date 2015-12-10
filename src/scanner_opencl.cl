@@ -12,12 +12,11 @@ void single_scan(
 {
 
 	uint global_id = get_global_id(0);
-	uint local_id = get_local_id(0);
-
 	if (global_id >= sample*bs_len) {
 		return;
 	}
 
+	uint local_id = get_local_id(0);
 	uint j = local_id % bs_len;
 
 	ulong a = bitstrings[global_id] ^ bs[j];

@@ -22,22 +22,6 @@ OpenCLScanner::OpenCLScanner(AddressSpace *addresses) {
 		this->bs_len++;
 	}
 
-
-	// =============================
-	// Set local and group worksize.
-	// =============================
-	this->local_worksize = 0;
-
-	if (this->local_worksize == 0) {
-		this->global_worksize = this->addresses->sample;
-	} else {
-		this->global_worksize = this->addresses->sample/this->local_worksize;
-		if (this->addresses->sample%this->local_worksize > 0) {
-			this->global_worksize++;
-		}
-		this->global_worksize *= this->local_worksize;
-	}
-
 	// ================
 	// Set kernel name.
 	// ================
@@ -72,7 +56,7 @@ OpenCLScanner::OpenCLScanner(AddressSpace *addresses) {
 	size_t max_work_group_size[1];
 	clGetDeviceInfo(this->device_id, CL_DEVICE_MAX_WORK_GROUP_SIZE, sizeof(max_work_group_size), max_work_group_size, 0);
 
-	uint bitstrings_by_workgroup = std::min(local_mem_size / bs_len, (unsigned long long)max_work_group_size[0] / bs_len);
+	uint bitstrings_by_workgroup = std::min(local_mem_size / (sizeof(cl_uint)*bs_len), (unsigned long long)max_work_group_size[0] / bs_len);
 	this->local_worksize = bitstrings_by_workgroup * bs_len;
 
 	uint sample_adjusted = this->addresses->sample / bitstrings_by_workgroup;
@@ -81,6 +65,8 @@ OpenCLScanner::OpenCLScanner(AddressSpace *addresses) {
 	}
 	sample_adjusted *= bitstrings_by_workgroup;
 	this->global_worksize = sample_adjusted * bs_len;
+
+	std::cout << "@@ global_worksize=" << this->global_worksize << " local_worksize=" << this->local_worksize << " bs_len=" << this->bs_len << std::endl;
 
 	// =============
 	// Create queue.
@@ -306,7 +292,7 @@ int OpenCLScanner::scan(const Bitstring *bs, unsigned int radius, std::vector<Bi
 	time->mark("OpenCLScanner::scan clSetKernelArg8:selected");
 
 	// Set arg8: __local dist
-	error = clSetKernelArg(kernel, 8, sizeof(cl_uint)*this->bs_len, NULL);
+	error = clSetKernelArg(kernel, 8, sizeof(cl_uint)*this->local_worksize, NULL);
 	assert(error == CL_SUCCESS);
 
 	// Wait until all queue is done.
@@ -345,8 +331,6 @@ int OpenCLScanner::scan(const Bitstring *bs, unsigned int radius, std::vector<Bi
 	time->mark("OpenCLScanner::scan clFinish (after reading)");
 
 	// Fill result vector.
-	unsigned int idx;
-	std::cout << "@@ counter=" << counter << std::endl;
 	for(int i=0; i<this->addresses->sample; i++) {
 		if (selected[i]) {
 			result->push_back(this->addresses->addresses[i]);

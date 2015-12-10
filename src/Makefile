@@ -20,8 +20,10 @@ HEADERS=bitstring.h \
 		scanner_opencl.h \
 		utils.h
 
+.PHONY: all
 all: bitstring.o address_space.o scanner.o scanner_thread.o utils.o scanner_opencl.o
 
+.PHONY: tests
 tests: test_bitstring \
 	   test_address_space \
 	   test_scanner \
@@ -75,5 +77,6 @@ scanner_opencl.o: scanner_opencl.h scanner_opencl.cpp $(HEADERS)
 utils.o: utils.h utils.cpp
 	${CXX} ${CXXFLAGS} -c utils.cpp
 
+.PHONY: clean
 clean:
 	rm -f *.o lib/*.o test_address_space test_bitstring test_scanner test_scanner_thread test_counter test_scanner_opencl test_performance_scanners

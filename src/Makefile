@@ -1,7 +1,7 @@
 
 all: bitstring.o address_space.o scanner.o scanner_thread.o utils.o scanner_opencl.o
 
-tests: test_bitstring test_address_space test_scanner test_scanner_thread test_counter test_scanner_opencl
+tests: test_bitstring test_address_space test_scanner test_scanner_thread test_counter test_scanner_opencl test_performance_scanners
 
 lib/base64.o: lib/base64.cpp
 	(cd lib/ ; g++ -c base64.cpp)

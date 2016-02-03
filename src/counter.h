@@ -9,7 +9,6 @@
 #include <assert.h>
 
 #include "lib/base64.h"
-#include "counter.h"
 
 template <typename integer>
 class Counter {
@@ -35,7 +34,7 @@ public:
 };
 
 template <typename integer>
-void Counter<integer>::_init(unsigned int bits) {
+virtual void Counter<integer>::_init(unsigned int bits) {
     this->bits = bits;
     this->data = (integer *) malloc(sizeof(integer) * this->bits);
 }

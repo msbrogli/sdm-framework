@@ -38,7 +38,8 @@ int main(void) {
 	opencl_scanner_init(&opencl, &as);
 	as_scan_opencl(&opencl, bs1, 451, NULL);
 
-	counter_init(&counter, bits, sample);
+	//counter_init(&counter, bits, sample);
+	counter_init_file("test1_counter.bin", &counter, bits, sample);
 	//printf("Before\n");
 	//counter_print(&counter, 0);
 	counter_add_bitstring(&counter, 0, bs1);

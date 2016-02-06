@@ -2,12 +2,15 @@
 #include <stdio.h>
 #include <stdlib.h>
 #include <string.h>
+#include <fcntl.h>
+#include <sys/mman.h>
 #include "bitstring.h"
 #include "counter.h"
 
 int counter_init(struct counter_s *this, unsigned int bits, unsigned int sample) {
 	this->bits = bits;
 	this->sample = sample;
+	this->fd = -1;
 	this->data = (int *) malloc(sizeof(int) * this->bits * this->sample);
 	if (this->data == NULL) {
 		return -1;
@@ -16,8 +19,30 @@ int counter_init(struct counter_s *this, unsigned int bits, unsigned int sample)
 	return 0;
 }
 
+int counter_init_file(char *filename, struct counter_s *this, unsigned int bits, unsigned int sample) {
+	this->bits = bits;
+	this->sample = sample;
+	this->filename = filename;
+	this->fd = open(this->filename, O_RDWR);
+	if (this->fd == -1) {
+		return -1;
+	}
+	// FIXME Possible problem with big-endian and little-endian format.
+	this->data = (int *) mmap(0, sizeof(int) * this->bits * this->sample, PROT_READ | PROT_WRITE, MAP_SHARED, this->fd, 0);
+	if (this->data == MAP_FAILED) {
+		close(this->fd);
+		return -1;
+	}
+	return 0;
+}
+
 void counter_free(struct counter_s *this) {
-	free(this->data);
+	if (this->fd != -1) {
+		munmap(this->data, sizeof(int) * this->bits * this->sample);
+		close(this->fd);
+	} else {
+		free(this->data);
+	}
 }
 
 void counter_print(struct counter_s *this, unsigned int index) {

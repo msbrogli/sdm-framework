@@ -3,34 +3,16 @@
 #define SDM_BITSTRING_H
 
 #include <stdint.h>
-#include <string>
 
-#define SDM_USE_BITCOUNT_TABLE
+typedef uint64_t bitstring_t;
 
-class Bitstring {
-public:
-	unsigned int bits;
-	unsigned int len;
-	uint64_t *data;
+void bs_init_bitcount_table();
 
-	Bitstring(unsigned int bits);
-	Bitstring(unsigned int bits, std::string const &b64);
-	Bitstring(Bitstring const &bs);
-	~Bitstring();
-
-	void _init(unsigned int bits);
-	void clear_surplus();
-
-	unsigned int get(unsigned int bit) const;
-	void set(unsigned int bit, unsigned int value);
-
-	int distance(const Bitstring *bs) const;
-
-	std::string str() const;
-	std::string base64() const;
-
-	bool operator<(const Bitstring &bs) const;
-};
-
+bitstring_t* bs_alloc(const unsigned int len);
+void bs_init_ones(bitstring_t *bs, unsigned int len, unsigned int bits_remaining);
+void bs_init_random(bitstring_t *bs, unsigned int len, unsigned int bits_remaining);
+void bs_to_hex(char *buf, bitstring_t *bs, unsigned int len);
+void bs_to_b64(char *buf, bitstring_t *bs, unsigned int len);
+int bs_distance(const bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len);
 
 #endif

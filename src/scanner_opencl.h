@@ -7,39 +7,30 @@
 #include "scanner.h"
 #include "bitstring.h"
 #include "address_space.h"
-#include "utils.h"
 
-class OpenCLScanner : public Scanner {
-	public:
-		AddressSpace *addresses;
+struct opencl_scanner_s {
+	struct address_space_s *as;
 
-		std::string kernel_name;
-		size_t global_worksize;
-		size_t local_worksize;
+	char* kernel_name;
+	size_t global_worksize;
+	size_t local_worksize;
 
-		cl_context context;
-		cl_device_id device_id;
-		cl_command_queue queue;
-		cl_program program;
+	cl_context context;
+	cl_device_id device_id;
+	cl_command_queue queue;
+	cl_program program;
 
-		cl_uchar bitcount_table[1<<16];
-		cl_mem bitcount_table_buf;
-		cl_ulong *bitstrings;
-		cl_mem bitstrings_buf;
-		cl_uint bs_len;
-		cl_mem bs_buf;
-		cl_mem selected_buf;
-		cl_uchar *selected;
-		cl_mem counter_buf;
+	cl_uchar bitcount_table[1<<16];
+	cl_mem bitcount_table_buf;
+	cl_ulong *bitstrings;
+	cl_mem bitstrings_buf;
+	cl_uint bs_len;
+	cl_mem bs_buf;
+	cl_mem selected_buf;
+	cl_uchar *selected;
+	cl_mem counter_buf;
 
-		TimeMeasure time;
-
-		OpenCLScanner(AddressSpace *addresses);
-		~OpenCLScanner();
-
-		virtual void devices() const;
-		virtual int scan(const Bitstring *bs, unsigned int radius, std::vector<Bitstring *> *result) const;
-		virtual int scan(const Bitstring *bs, unsigned int radius, std::vector<Bitstring *> *result, TimeMeasure *time) const;
+	//TimeMeasure time;
 };
 
 #endif

@@ -1,27 +1,22 @@
 
-CXX=g++
-CXXFLAGS=-O2 -Wall
+CC=cc
+CCFLAGS=-O2 -Wall -Wno-gnu -pedantic -DSDM_USE_BITCOUNT_TABLE -fPIC
+
 CLFLAGS=-framework OpenCL
 
-LIB_OBJS=lib/base64.o \
-		 lib/sha256.o
+LIB_OBJS=lib/base64.o
 
 OBJS=bitstring.o \
 	 address_space.o \
-	 scanner.o \
-	 scanner_thread.o \
-	 scanner_opencl.o \
-	 utils.o
+	 scanner_thread.o
 
 HEADERS=bitstring.h \
 		address_space.h \
-		scanner.h \
-		scanner_thread.h \
-		scanner_opencl.h \
-		utils.h
+		scanner_thread.h
 
 .PHONY: all
-all: bitstring.o address_space.o scanner.o scanner_thread.o utils.o scanner_opencl.o
+all: bitstring.o
+#address_space.o scanner.o scanner_thread.o utils.o scanner_opencl.o
 
 .PHONY: tests
 tests: test_bitstring \
@@ -32,8 +27,32 @@ tests: test_bitstring \
 	   test_scanner_opencl \
 	   test_performance_scanners
 
-lib/base64.o: lib/base64.cpp
-	(cd lib/ ; ${CXX} -c base64.cpp)
+libsdm.so: ${OBJS} ${LIB_OBJS}
+	${CC} -shared -o libsdm.so ${OBJS} ${LIB_OBJS}
+
+libsdm.a: ${OBJS} ${LIB_OBJS}
+	ar -cvr libsdm.a ${OBJS} ${LIB_OBJS}
+	ranlib libsdm.a
+
+test1: test1.c libsdm.a
+	${CC} ${CCFLAGS} libsdm.a test1.c -o test1
+
+test1-dyn: test1.c libsdm.so
+	${CC} ${CCFLAGS} libsdm.so test1.c -o test1-dyn
+
+lib/base64.o: lib/base64.c lib/base64.h
+	(cd lib/ ; ${CC} ${CCFLAGS} -c base64.c)
+
+address_space.o: address_space.h address_space.c
+	${CC} ${CCFLAGS} -c address_space.c
+
+bitstring.o: bitstring.h bitstring.c
+	${CC} ${CCFLAGS} -c bitstring.c
+
+scanner_thread.o: scanner_thread.c
+	${CC} ${CCFLAGS} -c scanner_thread.c
+
+#-------- OLD ----
 
 lib/sha256.o: lib/sha256.cpp
 	(cd lib/ ; ${CXX} -c sha256.cpp)
@@ -59,17 +78,8 @@ test_performance_scanners: test_performance_scanners.cpp $(OBJS) $(LIB_OBJS)
 test_counter: test_counter.cpp lib/base64.o
 	${CXX} ${CXXFLAGS} lib/base64.o test_counter.cpp -o test_counter
 
-bitstring.o: bitstring.h bitstring.cpp
-	${CXX} ${CXXFLAGS} -c bitstring.cpp
-
-address_space.o: address_space.h address_space.cpp bitstring.h lib/base64.h lib/sha256.h
-	${CXX} ${CXXFLAGS} -c address_space.cpp
-
 scanner.o: scanner.h scanner.cpp lib/base64.h
 	${CXX} ${CXXFLAGS} -c scanner.cpp
-
-scanner_thread.o: scanner_thread.h scanner_thread.cpp bitstring.h
-	${CXX} ${CXXFLAGS} -c scanner_thread.cpp
 
 scanner_opencl.o: scanner_opencl.h scanner_opencl.cpp $(HEADERS)
 	${CXX} ${CXXFLAGS} -c scanner_opencl.cpp
@@ -80,3 +90,4 @@ utils.o: utils.h utils.cpp
 .PHONY: clean
 clean:
 	rm -f *.o lib/*.o test_address_space test_bitstring test_scanner test_scanner_thread test_counter test_scanner_opencl test_performance_scanners
+	rm -f libsdm.a test1 test1-dyn

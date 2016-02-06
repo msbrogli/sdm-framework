@@ -8,15 +8,16 @@ LIB_OBJS=lib/base64.o
 
 OBJS=bitstring.o \
 	 address_space.o \
-	 scanner_thread.o
+	 scanner_thread.o \
+	 scanner_opencl.o
 
 HEADERS=bitstring.h \
 		address_space.h \
-		scanner_thread.h
+		scanner_thread.h \
+		scanner_opencl.h
 
 .PHONY: all
-all: bitstring.o
-#address_space.o scanner.o scanner_thread.o utils.o scanner_opencl.o
+all: libsdm.a libsdm.so
 
 .PHONY: tests
 tests: test_bitstring \
@@ -35,10 +36,10 @@ libsdm.a: ${OBJS} ${LIB_OBJS}
 	ranlib libsdm.a
 
 test1: test1.c libsdm.a
-	${CC} ${CCFLAGS} libsdm.a test1.c -o test1
+	${CC} ${CCFLAGS} ${CLFLAGS} libsdm.a test1.c -o test1
 
 test1-dyn: test1.c libsdm.so
-	${CC} ${CCFLAGS} libsdm.so test1.c -o test1-dyn
+	${CC} ${CCFLAGS} ${CLFLAGS} libsdm.so test1.c -o test1-dyn
 
 lib/base64.o: lib/base64.c lib/base64.h
 	(cd lib/ ; ${CC} ${CCFLAGS} -c base64.c)
@@ -51,6 +52,9 @@ bitstring.o: bitstring.h bitstring.c
 
 scanner_thread.o: scanner_thread.c
 	${CC} ${CCFLAGS} -c scanner_thread.c
+
+scanner_opencl.o: scanner_opencl.c scanner_opencl.h
+	${CC} ${CCFLAGS} -c scanner_opencl.c
 
 #-------- OLD ----
 
@@ -80,9 +84,6 @@ test_counter: test_counter.cpp lib/base64.o
 
 scanner.o: scanner.h scanner.cpp lib/base64.h
 	${CXX} ${CXXFLAGS} -c scanner.cpp
-
-scanner_opencl.o: scanner_opencl.h scanner_opencl.cpp $(HEADERS)
-	${CXX} ${CXXFLAGS} -c scanner_opencl.cpp
 
 utils.o: utils.h utils.cpp
 	${CXX} ${CXXFLAGS} -c utils.cpp

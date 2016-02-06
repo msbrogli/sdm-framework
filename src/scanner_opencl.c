@@ -1,6 +1,6 @@
 
-#include <iostream>
-#include <cassert>
+#include <stdio.h>
+#include <assert.h>
 #include <OpenCL/cl.h>
 
 #include "scanner_opencl.h"
@@ -9,17 +9,8 @@
 // - https://www.khronos.org/registry/cl/sdk/1.0/docs/man/xhtml/scalarDataTypes.html
 // - https://code.google.com/p/simple-opencl/
 
-OpenCLScanner::OpenCLScanner(AddressSpace *addresses) {
-	this->addresses = addresses;
-
-	// =================
-	// Calculate bs_len.
-	// =================
-	this->bs_len = this->addresses->bits / 64;
-	if (this->addresses->bits % 64 > 0) {
-		this->bs_len++;
-	}
-
+int opencl_scanner_init(struct opencl_scanner_s *this, struct address_space_s *as) {
+	this->address_space = as;
 
 	// =============================
 	// Set local and group worksize.
@@ -27,17 +18,17 @@ OpenCLScanner::OpenCLScanner(AddressSpace *addresses) {
 	this->local_worksize = 0;
 
 	if (this->local_worksize == 0) {
-		this->global_worksize = this->addresses->sample;
+		this->global_worksize = this->address_space->sample;
 	} else {
-		this->global_worksize = this->addresses->sample/this->local_worksize;
-		if (this->addresses->sample%this->local_worksize > 0) {
+		this->global_worksize = this->address_space->sample/this->local_worksize;
+		if (this->address_space->sample%this->local_worksize > 0) {
 			this->global_worksize++;
 		}
 		this->global_worksize *= this->local_worksize;
 	}
 
 	// Choose the right kernel.
-	if (this->global_worksize >= this->addresses->sample) {
+	if (this->global_worksize >= this->address_space->sample) {
 		this->kernel_name = "single_scan";
 	} else {
 		this->kernel_name = "scan";
@@ -58,10 +49,10 @@ OpenCLScanner::OpenCLScanner(AddressSpace *addresses) {
 	error = clGetContextInfo(this->context, CL_CONTEXT_DEVICES, 0, NULL, &deviceBufferSize);
 	assert(error == CL_SUCCESS);
 
-	cl_device_id *devices = new cl_device_id[deviceBufferSize / sizeof(cl_device_id)];
+	cl_device_id *devices = (cl_device_id *) malloc(deviceBufferSize);
 	error = clGetContextInfo(this->context, CL_CONTEXT_DEVICES, deviceBufferSize, devices, NULL);
 	assert(error == CL_SUCCESS);
-	delete [] devices;
+	free(devices);
 
 	this->device_id = devices[0];
 
@@ -84,14 +75,14 @@ OpenCLScanner::OpenCLScanner(AddressSpace *addresses) {
 
 	this->program = clCreateProgramWithSource(this->context, 1, (const char **)&source_str, NULL, &error);
 	assert(error == CL_SUCCESS);
-	error = clBuildProgram(this->program, 1, &device_id, NULL, NULL, NULL);
+	error = clBuildProgram(this->program, 1, &this->device_id, NULL, NULL, NULL);
 
 	// Print build log.
 	size_t log_size;
-	clGetProgramBuildInfo(program, this->device_id, CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
+	clGetProgramBuildInfo(this->program, this->device_id, CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
 	char *log = (char *) malloc(log_size);
-	clGetProgramBuildInfo(program, this->device_id, CL_PROGRAM_BUILD_LOG, log_size, log, NULL);
-	std::cout << log << std::endl;
+	clGetProgramBuildInfo(this->program, this->device_id, CL_PROGRAM_BUILD_LOG, log_size, log, NULL);
+	printf("=== LOG\n%s\n=== END\n", log);
 	free(log);
 
 	assert(error == CL_SUCCESS);
@@ -116,39 +107,32 @@ OpenCLScanner::OpenCLScanner(AddressSpace *addresses) {
 	// ====================
 	// Generate bitstrings.
 	// ====================
-	size_t bs_size = sizeof(cl_ulong)*this->bs_len*this->addresses->sample;
-	this->bitstrings = (cl_ulong*) malloc(bs_size);
-	int k = 0;
-	for(int i=0; i<this->addresses->sample; i++) {
-		Bitstring *bs = this->addresses->addresses[i];
-		assert(bs->len == this->bs_len);
-		assert(sizeof(this->bitstrings[0]) == sizeof(bs->data[0]));
-		for(int j=0; j<bs->len; j++) {
-			this->bitstrings[k++] = bs->data[j];
-		}
-	}
+	this->bs_len = this->address_space->bs_len;
+	assert(sizeof(cl_bitstring_t) == sizeof(bitstring_t));
+	size_t bs_size = sizeof(cl_bitstring_t)*this->bs_len*this->address_space->sample;
 	this->bitstrings_buf = clCreateBuffer(this->context, CL_MEM_READ_ONLY, bs_size, NULL, &error);
 	assert(error == CL_SUCCESS);
-	error = clEnqueueWriteBuffer(this->queue, this->bitstrings_buf, CL_FALSE, 0, bs_size, this->bitstrings, 0, NULL, NULL);
+	error = clEnqueueWriteBuffer(this->queue, this->bitstrings_buf, CL_FALSE, 0, bs_size, this->address_space->bs_data, 0, NULL, NULL);
 	assert(error == CL_SUCCESS);
 
 	// =========================
 	// Allocating other buffers.
 	// =========================
-	this->bs_buf = clCreateBuffer(this->context, CL_MEM_READ_ONLY, sizeof(cl_ulong)*this->bs_len, NULL, &error);
+	this->bs_buf = clCreateBuffer(this->context, CL_MEM_READ_ONLY, sizeof(cl_bitstring_t)*this->bs_len, NULL, &error);
 	assert(error == CL_SUCCESS);
-	this->selected_buf = clCreateBuffer(this->context, CL_MEM_WRITE_ONLY, sizeof(cl_uchar)*this->addresses->sample, NULL, &error);
+	this->selected_buf = clCreateBuffer(this->context, CL_MEM_WRITE_ONLY, sizeof(cl_uchar)*this->address_space->sample, NULL, &error);
 	assert(error == CL_SUCCESS);
 	this->counter_buf = clCreateBuffer(this->context, CL_MEM_WRITE_ONLY, sizeof(cl_uint), NULL, &error);
 	assert(error == CL_SUCCESS);
-	this->selected = (cl_uchar *)malloc(sizeof(cl_uchar)*this->addresses->sample);
+	this->selected = (cl_uchar *)malloc(sizeof(cl_uchar)*this->address_space->sample);
 
-	error = clFinish(queue);
+	error = clFinish(this->queue);
 	assert(error == CL_SUCCESS);
+
+	return 0;
 }
 
-OpenCLScanner::~OpenCLScanner() {
-	free(this->bitstrings);
+void opencl_scanner_free(struct opencl_scanner_s *this) {
 	free(this->selected);
 
 	clReleaseMemObject(this->bitcount_table_buf);
@@ -161,7 +145,7 @@ OpenCLScanner::~OpenCLScanner() {
 	clReleaseContext(this->context);
 }
 
-void OpenCLScanner::devices() const {
+void opencl_scanner_devices(struct opencl_scanner_s *this) {
 	int i, j;
 	char* value;
 	size_t valueSize;
@@ -228,69 +212,62 @@ void OpenCLScanner::devices() const {
 	free(platforms);
 }
 
-int OpenCLScanner::scan(const Bitstring *bs, unsigned int radius, std::vector<Bitstring *> *result) const {
-	TimeMeasure *time = new TimeMeasure;
-	int ret = this->scan(bs, radius, result, time);
-	delete time;
-	return ret;
-}
-
-int OpenCLScanner::scan(const Bitstring *bs, unsigned int radius, std::vector<Bitstring *> *result, TimeMeasure *time) const {
+int as_scan_opencl(struct opencl_scanner_s *this, bitstring_t *bs, unsigned int radius, void *result) {
 	cl_int error;
 
 	// Create kernel.
-	cl_kernel kernel = clCreateKernel(program, this->kernel_name.c_str(), &error);
+	cl_kernel kernel = clCreateKernel(this->program, this->kernel_name, &error);
 	assert(error == CL_SUCCESS);
-	time->mark("OpenCLScanner::scan clCreateKernel");
+	//time->mark("OpenCLScanner::scan clCreateKernel");
 
 	// Set arg0: bitcount_table
 	error = clSetKernelArg(kernel, 0, sizeof(this->bitcount_table_buf), &this->bitcount_table_buf);
 	assert(error == CL_SUCCESS);
-	time->mark("OpenCLScanner::scan clSetKernelArg0:bitcount_table");
+	//time->mark("OpenCLScanner::scan clSetKernelArg0:bitcount_table");
 
 	// Set arg1: bitstrings
 	error = clSetKernelArg(kernel, 1, sizeof(this->bitstrings_buf), &this->bitstrings_buf);
 	assert(error == CL_SUCCESS);
-	time->mark("OpenCLScanner::scan clSetKernelArg1:bitstrings");
+	//time->mark("OpenCLScanner::scan clSetKernelArg1:bitstrings");
 
 	// Set arg2: bs_len
 	error = clSetKernelArg(kernel, 2, sizeof(this->bs_len), &this->bs_len);
 	assert(error == CL_SUCCESS);
-	time->mark("OpenCLScanner::scan clSetKernelArg2:bs_len");
+	//time->mark("OpenCLScanner::scan clSetKernelArg2:bs_len");
 
 	// Set arg3: sample
-	error = clSetKernelArg(kernel, 3, sizeof(this->addresses->sample), &this->addresses->sample);
+	error = clSetKernelArg(kernel, 3, sizeof(this->address_space->sample), &this->address_space->sample);
 	assert(error == CL_SUCCESS);
-	time->mark("OpenCLScanner::scan clSetKernelArg3:sample");
+	//time->mark("OpenCLScanner::scan clSetKernelArg3:sample");
 
 	// Set arg4: global_worksize
 	error = clSetKernelArg(kernel, 4, sizeof(this->global_worksize), &this->global_worksize);
 	assert(error == CL_SUCCESS);
-	time->mark("OpenCLScanner::scan clSetKernelArg4:global_worksize");
+	//time->mark("OpenCLScanner::scan clSetKernelArg4:global_worksize");
 
 	// Set arg5: bs
-	error = clEnqueueWriteBuffer(this->queue, this->bs_buf, CL_FALSE, 0, sizeof(cl_ulong)*this->bs_len, bs->data, 0, NULL, NULL);
+	error = clEnqueueWriteBuffer(this->queue, this->bs_buf, CL_FALSE, 0, sizeof(cl_bitstring_t)*this->bs_len, bs, 0, NULL, NULL);
 	assert(error == CL_SUCCESS);
-	time->mark("OpenCLScanner::scan clEnqueueWriteBuffer:bs");
+	//time->mark("OpenCLScanner::scan clEnqueueWriteBuffer:bs");
 	error = clSetKernelArg(kernel, 5, sizeof(this->bs_buf), &this->bs_buf);
 	assert(error == CL_SUCCESS);
-	time->mark("OpenCLScanner::scan clSetKernelArg5:bs");
+	//time->mark("OpenCLScanner::scan clSetKernelArg5:bs");
 
 	// Set arg6: radius
 	cl_uint arg_radius = radius;
 	error = clSetKernelArg(kernel, 6, sizeof(arg_radius), &arg_radius);
 	assert(error == CL_SUCCESS);
-	time->mark("OpenCLScanner::scan clSetKernelArg6:radius");
+	//time->mark("OpenCLScanner::scan clSetKernelArg6:radius");
 
 	// Set arg8: counter
 	error = clSetKernelArg(kernel, 7, sizeof(this->counter_buf), &this->counter_buf);
 	assert(error == CL_SUCCESS);
-	time->mark("OpenCLScanner::scan clSetKernelArg7:counter_buf");
+	//time->mark("OpenCLScanner::scan clSetKernelArg7:counter_buf");
 
 	// Set arg8: selected
 	error = clSetKernelArg(kernel, 8, sizeof(this->selected_buf), &this->selected_buf);
 	assert(error == CL_SUCCESS);
-	time->mark("OpenCLScanner::scan clSetKernelArg8:selected");
+	//time->mark("OpenCLScanner::scan clSetKernelArg8:selected");
 
 	// Wait until all queue is done.
 	//error = clFinish(queue);
@@ -299,15 +276,15 @@ int OpenCLScanner::scan(const Bitstring *bs, unsigned int radius, std::vector<Bi
 
 	// Run kernel.
 	if (this->local_worksize > 0) {
-		error = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &this->global_worksize, &this->local_worksize, 0, NULL, NULL);
+		error = clEnqueueNDRangeKernel(this->queue, kernel, 1, NULL, &this->global_worksize, &this->local_worksize, 0, NULL, NULL);
 	} else {
-		error = clEnqueueNDRangeKernel(queue, kernel, 1, NULL, &this->global_worksize, NULL, 0, NULL, NULL);
+		error = clEnqueueNDRangeKernel(this->queue, kernel, 1, NULL, &this->global_worksize, NULL, 0, NULL, NULL);
 	}
 	if (error != CL_SUCCESS) {
-		std::cout << "error code = " << error << std::endl;
+		printf("error code = %d\n", error);
 	}
 	assert(error == CL_SUCCESS);
-	time->mark("OpenCLScanner::scan clEnqueueNDRangeKernel");
+	//time->mark("OpenCLScanner::scan clEnqueueNDRangeKernel");
 
 	// Wait until all queue is done.
 	//error = clFinish(queue);
@@ -317,25 +294,29 @@ int OpenCLScanner::scan(const Bitstring *bs, unsigned int radius, std::vector<Bi
 	// Read selected bitstring indexes.
 	cl_uint counter;
 	error = clEnqueueReadBuffer(this->queue, this->counter_buf, CL_FALSE, 0, sizeof(cl_uint), &counter, 0, NULL, NULL);
-	time->mark("OpenCLScanner::scan clEnqueueReadBuffer:selected");
+	//time->mark("OpenCLScanner::scan clEnqueueReadBuffer:selected");
 
 	// Read selected bitstring indexes.
-	error = clEnqueueReadBuffer(this->queue, this->selected_buf, CL_FALSE, 0, sizeof(cl_uchar)*this->addresses->sample, this->selected, 0, NULL, NULL);
-	time->mark("OpenCLScanner::scan clEnqueueReadBuffer:selected");
+	error = clEnqueueReadBuffer(this->queue, this->selected_buf, CL_FALSE, 0, sizeof(cl_uchar)*this->address_space->sample, this->selected, 0, NULL, NULL);
+	//time->mark("OpenCLScanner::scan clEnqueueReadBuffer:selected");
 
 	// Wait until all queue is done.
-	error = clFinish(queue);
+	error = clFinish(this->queue);
 	assert(error == CL_SUCCESS);
-	time->mark("OpenCLScanner::scan clFinish (after reading)");
+	//time->mark("OpenCLScanner::scan clFinish (after reading)");
 
 	// Fill result vector.
-	for(int i=0; i<this->addresses->sample; i++) {
-		if (selected[i]) {
-			result->push_back(this->addresses->addresses[i]);
+	int cnt = 0;
+	for(int i=0; i<this->address_space->sample; i++) {
+		if (this->selected[i]) {
+			cnt++;
+			//result->push_back(this->addresses->addresses[i]);
 		}
 	}
 	clReleaseKernel(kernel);
-	time->mark("OpenCLScanner::scan Filling result vector");
+	//time->mark("OpenCLScanner::scan Filling result vector");
+	
+	printf("@@ OpenCL %d\n", cnt);
 
 	return 0;
 }

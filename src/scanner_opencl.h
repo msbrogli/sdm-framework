@@ -34,6 +34,7 @@ struct opencl_scanner_s {
 };
 
 int opencl_scanner_init(struct opencl_scanner_s *this, struct address_space_s *as);
-int as_scan_opencl(struct opencl_scanner_s *this, bitstring_t *bs, unsigned int radius, void *result);
+void opencl_scanner_free(struct opencl_scanner_s *this);
+int as_scan_opencl(struct opencl_scanner_s *this, bitstring_t *bs, unsigned int radius, uint8_t *result);
 
 #endif

@@ -15,7 +15,8 @@ struct thread_params_t {
 	int id;
 	const bitstring_t* bs;
 	const struct address_space_s *address_space;
-	int result;
+	uint8_t *selected;
+	int cnt;
 	unsigned int radius;
 	unsigned int idx_begin;
 	unsigned int idx_end;
@@ -23,7 +24,7 @@ struct thread_params_t {
 
 void* scan_task(void *ptr);
 
-int as_scan_thread(const struct address_space_s *this, const bitstring_t *bs, unsigned int radius, void *buf, unsigned int thread_count) {
+int as_scan_thread(const struct address_space_s *this, const bitstring_t *bs, unsigned int radius, uint8_t *selected, unsigned int thread_count) {
 	pthread_t threads[thread_count];
 	struct thread_params_t *params;
 	unsigned int qty, extra;
@@ -46,21 +47,19 @@ int as_scan_thread(const struct address_space_s *this, const bitstring_t *bs, un
 		params[i].radius = radius;
 		params[i].idx_begin = idx_begin;
 		params[i].idx_end = idx_end;
-		params[i].result = 0;
+		params[i].selected = selected;
+		params[i].cnt = 0;
 		pthread_create(&threads[i], NULL, scan_task, (void*) &params[i]);
 	}
 	for(i=0; i<thread_count; i++) {
 		pthread_join(threads[i], NULL);
 	}
 	for(i=0; i<thread_count; i++) {
-		//result->insert(result->end(), params[i].result.begin(), params[i].result.end());
-		cnt += params[i].result;
+		cnt += params[i].cnt;
 	}
 
-	printf("@@ Thread %d\n", cnt);
-
 	free(params);
-	return 0;
+	return cnt;
 }
 
 void* scan_task(void *ptr) {
@@ -71,7 +70,14 @@ void* scan_task(void *ptr) {
 
 	for(unsigned int i=params->idx_begin; i<idx_end; i++) {
 		if (bs_distance(params->bs, params->address_space->addresses[i], params->address_space->bs_len) <= radius) {
-			params->result++;
+			params->cnt++;
+			if (params->selected) {
+				params->selected[i] = 1;
+			}
+		} else {
+			if (params->selected) {
+				params->selected[i] = 0;
+			}
 		}
 	}
 	return NULL;

@@ -35,8 +35,8 @@ int as_init(struct address_space_s *this, unsigned int bits, unsigned int sample
 void as_print_summary(struct address_space_s *this);
 void as_print_addresses_b64(struct address_space_s *this);
 void as_print_addresses_hex(struct address_space_s *this);
-int as_scan_linear(const struct address_space_s *this, const bitstring_t *bs, unsigned int radius, void *buf);
+int as_scan_linear(const struct address_space_s *this, const bitstring_t *bs, unsigned int radius, uint8_t *buf);
 
-int as_scan_thread(const struct address_space_s *this, const bitstring_t *bs, unsigned int radius, void *buf, unsigned int thread_count);
+int as_scan_thread(const struct address_space_s *this, const bitstring_t *bs, unsigned int radius, uint8_t *buf, unsigned int thread_count);
 
 #endif

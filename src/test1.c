@@ -1,6 +1,7 @@
 
 #include <stdio.h>
 #include <assert.h>
+#include <string.h>
 #include "address_space.h"
 #include "scanner_opencl.h"
 #include "counter.h"
@@ -11,7 +12,7 @@ int main(void) {
 	char buf[1000];
 	struct opencl_scanner_s opencl;
 	struct counter_s counter;
-	//int i;
+	int i;
 
 	int bits = 1000;
 	int sample = 1000000;
@@ -32,11 +33,21 @@ int main(void) {
 	//}
 	//printf("\n");
 
-	as_scan_linear(&as, bs1, 451, NULL);
-	as_scan_thread(&as, bs1, 451, NULL, 4);
+	uint8_t selected_linear[sample];
+	printf("@@ Linear %d\n", as_scan_linear(&as, bs1, 451, selected_linear));
+
+	uint8_t selected_thread[sample];
+	printf("@@ Thread %d\n", as_scan_thread(&as, bs1, 451, selected_thread, 4));
 
 	opencl_scanner_init(&opencl, &as);
-	as_scan_opencl(&opencl, bs1, 451, NULL);
+	uint8_t selected_opencl[sample];
+	printf("@@ OpenCL %d\n", as_scan_opencl(&opencl, bs1, 451, selected_opencl));
+	opencl_scanner_free(&opencl);
+
+	for(i=0; i<sample; i++) {
+		assert(selected_linear[i] == selected_thread[i]);
+		assert(selected_linear[i] == selected_opencl[i]);
+	}
 
 	//counter_init(&counter, bits, sample);
 	counter_init_file("test1_counter.bin", &counter, bits, sample);

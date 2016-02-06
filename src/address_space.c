@@ -83,15 +83,21 @@ int as_free(struct address_space_s *this) {
 	return 0;
 }
 
-int as_scan_linear(const struct address_space_s *this, const bitstring_t *bs, unsigned int radius, void *buf) {
+int as_scan_linear(const struct address_space_s *this, const bitstring_t *bs, unsigned int radius, uint8_t *selected) {
 	int cnt = 0;
 	for(int i=0; i<this->sample; i++) {
 		if (bs_distance(this->addresses[i], bs, this->bs_len) <= radius) {
 			cnt++;
+			if (selected) {
+				selected[i] = 1;
+			}
+		} else {
+			if (selected) {
+				selected[i] = 0;
+			}
 		}
 	}
-	printf("@@ Linear %d\n", cnt);
-	return 0;
+	return cnt;
 }
 
 /*

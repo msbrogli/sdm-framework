@@ -1,5 +1,6 @@
 
 #include <stdio.h>
+#include <string.h>
 #include <assert.h>
 #include <OpenCL/cl.h>
 
@@ -82,7 +83,9 @@ int opencl_scanner_init(struct opencl_scanner_s *this, struct address_space_s *a
 	clGetProgramBuildInfo(this->program, this->device_id, CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
 	char *log = (char *) malloc(log_size);
 	clGetProgramBuildInfo(this->program, this->device_id, CL_PROGRAM_BUILD_LOG, log_size, log, NULL);
-	printf("=== LOG\n%s\n=== END\n", log);
+	if (strlen(log) > 0) {
+		printf("=== LOG\n%s\n=== END\n", log);
+	}
 	free(log);
 
 	assert(error == CL_SUCCESS);
@@ -124,7 +127,8 @@ int opencl_scanner_init(struct opencl_scanner_s *this, struct address_space_s *a
 	assert(error == CL_SUCCESS);
 	this->counter_buf = clCreateBuffer(this->context, CL_MEM_WRITE_ONLY, sizeof(cl_uint), NULL, &error);
 	assert(error == CL_SUCCESS);
-	this->selected = (cl_uchar *)malloc(sizeof(cl_uchar)*this->address_space->sample);
+	assert(sizeof(cl_uchar) == sizeof(uint8_t));
+	//this->selected = (cl_uchar *)malloc(sizeof(cl_uchar)*this->address_space->sample);
 
 	error = clFinish(this->queue);
 	assert(error == CL_SUCCESS);
@@ -133,7 +137,7 @@ int opencl_scanner_init(struct opencl_scanner_s *this, struct address_space_s *a
 }
 
 void opencl_scanner_free(struct opencl_scanner_s *this) {
-	free(this->selected);
+	//free(this->selected);
 
 	clReleaseMemObject(this->bitcount_table_buf);
 	clReleaseMemObject(this->bitstrings_buf);
@@ -212,7 +216,7 @@ void opencl_scanner_devices(struct opencl_scanner_s *this) {
 	free(platforms);
 }
 
-int as_scan_opencl(struct opencl_scanner_s *this, bitstring_t *bs, unsigned int radius, void *result) {
+int as_scan_opencl(struct opencl_scanner_s *this, bitstring_t *bs, unsigned int radius, uint8_t *selected) {
 	cl_int error;
 
 	// Create kernel.
@@ -265,6 +269,7 @@ int as_scan_opencl(struct opencl_scanner_s *this, bitstring_t *bs, unsigned int 
 	//time->mark("OpenCLScanner::scan clSetKernelArg7:counter_buf");
 
 	// Set arg8: selected
+	this->selected = (cl_uchar *)selected;
 	error = clSetKernelArg(kernel, 8, sizeof(this->selected_buf), &this->selected_buf);
 	assert(error == CL_SUCCESS);
 	//time->mark("OpenCLScanner::scan clSetKernelArg8:selected");
@@ -310,13 +315,10 @@ int as_scan_opencl(struct opencl_scanner_s *this, bitstring_t *bs, unsigned int 
 	for(int i=0; i<this->address_space->sample; i++) {
 		if (this->selected[i]) {
 			cnt++;
-			//result->push_back(this->addresses->addresses[i]);
 		}
 	}
 	clReleaseKernel(kernel);
 	//time->mark("OpenCLScanner::scan Filling result vector");
 	
-	printf("@@ OpenCL %d\n", cnt);
-
-	return 0;
+	return cnt;
 }

@@ -9,12 +9,14 @@ LIB_OBJS=lib/base64.o
 OBJS=bitstring.o \
 	 address_space.o \
 	 scanner_thread.o \
-	 scanner_opencl.o
+	 scanner_opencl.o \
+	 counter.o
 
 HEADERS=bitstring.h \
 		address_space.h \
 		scanner_thread.h \
-		scanner_opencl.h
+		scanner_opencl.h \
+		counter.h
 
 .PHONY: all
 all: libsdm.a libsdm.so
@@ -55,6 +57,9 @@ scanner_thread.o: scanner_thread.c
 
 scanner_opencl.o: scanner_opencl.c scanner_opencl.h
 	${CC} ${CCFLAGS} -c scanner_opencl.c
+
+counter.o: counter.c counter.h
+	${CC} ${CCFLAGS} -c counter.c
 
 #-------- OLD ----
 

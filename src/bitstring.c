@@ -30,6 +30,10 @@ bitstring_t* bs_alloc(const unsigned int len) {
 	return (bitstring_t*) malloc(sizeof(bitstring_t) * len);
 }
 
+void bs_free(bitstring_t *bs) {
+	free(bs);
+}
+
 void bs_init_ones(bitstring_t *bs, unsigned int len, unsigned int bits_remaining) {
 	for (int i=0; i<len; i++) {
 		bs[i] = -1;
@@ -110,6 +114,12 @@ int bs_distance(const bitstring_t *bs1, const bitstring_t *bs2, const unsigned i
 #endif
 	}
 	return dist;
+}
+
+unsigned int bs_get_bit(bitstring_t *bs, unsigned int bit) {
+	unsigned int offset = bit / 8 / sizeof(bitstring_t);
+	unsigned int idx = 8*sizeof(bitstring_t) - 1 - bit % (8*sizeof(bitstring_t));
+	return (bs[offset] & ((bitstring_t)1<<idx) ? 1 : 0);
 }
 
 /*

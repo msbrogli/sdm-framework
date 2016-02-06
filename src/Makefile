@@ -29,7 +29,7 @@ tests: test_bitstring \
 	   test_performance_scanners
 
 libsdm.so: ${OBJS} ${LIB_OBJS}
-	${CC} -shared -o libsdm.so ${OBJS} ${LIB_OBJS}
+	${CC} ${CLFLAGS} -shared -o libsdm.so ${OBJS} ${LIB_OBJS}
 
 libsdm.a: ${OBJS} ${LIB_OBJS}
 	ar -cvr libsdm.a ${OBJS} ${LIB_OBJS}
@@ -91,4 +91,4 @@ utils.o: utils.h utils.cpp
 .PHONY: clean
 clean:
 	rm -f *.o lib/*.o test_address_space test_bitstring test_scanner test_scanner_thread test_counter test_scanner_opencl test_performance_scanners
-	rm -f libsdm.a test1 test1-dyn
+	rm -f libsdm.a libsdm.so test1 test1-dyn

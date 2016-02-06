@@ -1,12 +1,14 @@
 #ifndef SDM_COUNTER_H
 #define SDM_COUNTER_H
 
+typedef int counter_t;
+
 struct counter_s {
 	unsigned int bits;
 	unsigned int sample;
 	int fd;
 	char *filename;
-	int *data;
+	counter_t *data;
 };
 
 int counter_init(struct counter_s *this, unsigned int bits, unsigned int sample);

@@ -11,11 +11,11 @@ int counter_init(struct counter_s *this, unsigned int bits, unsigned int sample)
 	this->bits = bits;
 	this->sample = sample;
 	this->fd = -1;
-	this->data = (int *) malloc(sizeof(int) * this->bits * this->sample);
+	this->data = (counter_t *) malloc(sizeof(counter_t) * this->bits * this->sample);
 	if (this->data == NULL) {
 		return -1;
 	}
-	memset(this->data, 0, sizeof(int) * this->bits * this->sample);
+	memset(this->data, 0, sizeof(counter_t) * this->bits * this->sample);
 	return 0;
 }
 
@@ -28,7 +28,7 @@ int counter_init_file(char *filename, struct counter_s *this, unsigned int bits,
 		return -1;
 	}
 	// FIXME Possible problem with big-endian and little-endian format.
-	this->data = (int *) mmap(0, sizeof(int) * this->bits * this->sample, PROT_READ | PROT_WRITE, MAP_SHARED, this->fd, 0);
+	this->data = (counter_t *) mmap(0, sizeof(counter_t) * this->bits * this->sample, PROT_READ | PROT_WRITE, MAP_SHARED, this->fd, 0);
 	if (this->data == MAP_FAILED) {
 		close(this->fd);
 		return -1;
@@ -38,7 +38,7 @@ int counter_init_file(char *filename, struct counter_s *this, unsigned int bits,
 
 void counter_free(struct counter_s *this) {
 	if (this->fd != -1) {
-		munmap(this->data, sizeof(int) * this->bits * this->sample);
+		munmap(this->data, sizeof(counter_t) * this->bits * this->sample);
 		close(this->fd);
 	} else {
 		free(this->data);
@@ -47,7 +47,7 @@ void counter_free(struct counter_s *this) {
 
 void counter_print(struct counter_s *this, unsigned int index) {
 	int i, cols = 20;
-	int *ptr = &this->data[index*this->bits];
+	counter_t *ptr = &this->data[index*this->bits];
 	for(i=0; i<this->bits; i++) {
 		if(i%cols == 0) {
 			if (i > 0) printf("\n");
@@ -60,7 +60,7 @@ void counter_print(struct counter_s *this, unsigned int index) {
 
 int counter_add_bitstring(struct counter_s *this, unsigned int index, bitstring_t *bs) {
 	int i;
-	int *ptr = &this->data[index*this->bits];
+	counter_t *ptr = &this->data[index*this->bits];
 	for(i=0; i<this->bits; i++) {
 		if (bs_get_bit(bs, i)) {
 			ptr[i]++;

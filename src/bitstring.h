@@ -18,5 +18,6 @@ void bs_to_b64(char *buf, bitstring_t *bs, unsigned int len);
 int bs_distance(const bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len);
 
 unsigned int bs_get_bit(bitstring_t *this, unsigned int bit);
+void bs_set_bit(bitstring_t *bs, unsigned int bit, unsigned int value);
 
 #endif

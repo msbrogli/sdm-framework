@@ -122,6 +122,16 @@ unsigned int bs_get_bit(bitstring_t *bs, unsigned int bit) {
 	return (bs[offset] & ((bitstring_t)1<<idx) ? 1 : 0);
 }
 
+void bs_set_bit(bitstring_t *bs, unsigned int bit, unsigned int value) {
+	unsigned int offset = bit / 8 / sizeof(bitstring_t);
+	unsigned int idx = 8*sizeof(bitstring_t) - 1 - bit % (8*sizeof(bitstring_t));
+	if (value == 0) {
+		bs[offset] &= ~((bitstring_t)1<<idx);
+	} else {
+		bs[offset] |= ((bitstring_t)1<<idx);
+	}
+}
+
 /*
 void bs_clear_surplus(struct bitstring_s *this) {
 	int last = this->bits % 64;
@@ -143,23 +153,6 @@ void bs_init_from_bs(struct bitstring_s *this, const struct bitstring_s *other) 
 	bs_init(this, other->bits);
 	memcpy(this->data, other->data, sizeof(uint64_t) * this->len);
 	bs_clear_surplus(this);
-}
-
-unsigned int bs_get_bit(struct bitstring_s *this, unsigned int bit) const {
-	assert(bit <= this->bits);
-	unsigned int offset = bit / 64;
-	unsigned int idx = bit % 64;
-	return (data[offset] & ((uint64_t)1<<idx) ? 1 : 0);
-}
-
-unsigned int bs_set_bit(struct bitstring_s *this, unsigned int bit, unsigned int value) {
-	unsigned int offset = bit / 64;
-	unsigned int idx = bit % 64;
-	if (value == 0) {
-		data[offset] &= ~((uint64_t)1<<idx);
-	} else {
-		data[offset] |= ((uint64_t)1<<idx);
-	}
 }
 
 int bs_str(struct bitstring_s *this, char *str) const {

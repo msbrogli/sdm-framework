@@ -19,5 +19,8 @@ int bs_distance(const bitstring_t *bs1, const bitstring_t *bs2, const unsigned i
 
 unsigned int bs_get_bit(bitstring_t *this, unsigned int bit);
 void bs_set_bit(bitstring_t *bs, unsigned int bit, unsigned int value);
+void bs_flip_bit(bitstring_t *bs, unsigned int bit);
+
+void bs_flip_random_bits(bitstring_t *bs, unsigned int bits, unsigned int flips);
 
 #endif

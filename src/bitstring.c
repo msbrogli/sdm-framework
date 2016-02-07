@@ -35,6 +35,10 @@ void bs_free(bitstring_t *bs) {
 	free(bs);
 }
 
+void bs_copy(bitstring_t *dst, const bitstring_t *src, unsigned int len) {
+	memcpy(dst, src, sizeof(bitstring_t) * len);
+}
+
 void bs_init_ones(bitstring_t *bs, unsigned int len, unsigned int bits_remaining) {
 	for (int i=0; i<len; i++) {
 		bs[i] = -1;
@@ -53,6 +57,10 @@ void bs_init_random(bitstring_t *bs, unsigned int len, unsigned int bits_remaini
 	if (bits_remaining > 0) {
 		bs[len-1] &= (v << bits_remaining);
 	}
+}
+
+void bs_init_b64(bitstring_t *bs, char *b64) {
+	Base64decode((char *)bs, b64);
 }
 
 /*
@@ -77,20 +85,7 @@ void bs_to_hex(char *buf, bitstring_t *bs, unsigned int len) {
 }
 
 void bs_to_b64(char *buf, bitstring_t *bs, unsigned int len) {
-	int i, j;
-	bitstring_t a;
-	uint8_t a_hi;
-	for (i=0; i<len; i++) {
-		a = bs[i];
-		for (j=0; j<sizeof(bitstring_t); j++) {
-			// Get the highest byte.
-			a_hi = a>>(sizeof(bitstring_t)*8-8);
-			Base64encode(buf, (const char*)&a_hi, 1);
-			buf++;
-			a <<= 8;
-		}
-	}
-	*buf = '\0';
+	Base64encode(buf, (char *)bs, sizeof(bitstring_t) * len);
 }
 
 int bs_distance(const bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len) {

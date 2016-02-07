@@ -48,6 +48,9 @@ test1-dyn: test1.c libsdm.so
 test2: test2.c libsdm.a
 	${CC} ${CCFLAGS} ${CLFLAGS} libsdm.a test2.c -o test2
 
+test3: test3.c libsdm.a
+	${CC} ${CCFLAGS} ${CLFLAGS} libsdm.a test3.c -o test3
+
 lib/base64.o: lib/base64.c lib/base64.h
 	(cd lib/ ; ${CC} ${CCFLAGS} -c base64.c)
 
@@ -104,4 +107,4 @@ utils.o: utils.h utils.cpp
 .PHONY: clean
 clean:
 	rm -f *.o lib/*.o test_address_space test_bitstring test_scanner test_scanner_thread test_counter test_scanner_opencl test_performance_scanners
-	rm -f libsdm.a libsdm.so test1 test1-dyn test2
+	rm -f libsdm.a libsdm.so test1 test1-dyn test2 test3

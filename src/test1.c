@@ -12,14 +12,18 @@ int main(void) {
 	char buf[1000];
 	struct opencl_scanner_s opencl;
 	struct counter_s counter;
-	int i;
+	int i, status;
 
 	int bits = 1000;
 	int sample = 1000000;
 
-	assert(!as_init_random(&as, bits, sample));
+	status = as_init_from_b64_file(&as, "test1_address_space_b64.as");
+	assert(status == 0);
+
+	//assert(!as_init_random(&as, bits, sample));
+	//as_save_b64_file(&as, "test1_address_space_b64.as");
+
 	as_print_summary(&as);
-	//as_print_addresses_b64(&as);
 	
 	bs_init_bitcount_table();
 
@@ -44,13 +48,15 @@ int main(void) {
 	printf("@@ OpenCL %d\n", as_scan_opencl(&opencl, bs1, 451, selected_opencl));
 	opencl_scanner_free(&opencl);
 
+	return 0;
+
 	for(i=0; i<sample; i++) {
 		assert(selected_linear[i] == selected_thread[i]);
 		assert(selected_linear[i] == selected_opencl[i]);
 	}
 
-	//counter_init(&counter, bits, sample);
-	counter_init_file("test1_counter.bin", &counter, bits, sample);
+	counter_init(&counter, bits, sample);
+	//counter_init_file("test1_counter.bin", &counter, bits, sample);
 	//printf("Before\n");
 	//counter_print(&counter, 0);
 	counter_add_bitstring(&counter, 0, bs1);

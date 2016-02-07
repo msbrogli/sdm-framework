@@ -1,6 +1,9 @@
 
 #include <stdio.h>
 #include <stdlib.h>
+#include <string.h>
+#include <ctype.h>
+#include "assert.h"
 #include "bitstring.h"
 #include "address_space.h"
 
@@ -100,19 +103,107 @@ int as_scan_linear(const struct address_space_s *this, const bitstring_t *bs, un
 	return cnt;
 }
 
-/*
-int AddressSpace::save(std::string filename) const {
-	std::ofstream file(filename);
-	file << "SDM:ADDRESS SPACE\nSDM-Version: v0.0.1\nFormat: base64-v1\n";
-	file << "Bits: " << this->bits << "\nSample: " << this->sample << "\nHash: " << this->hash() << "\n\n";
-	const unsigned int n = this->sample;
-	for(int i=0; i<n; i++) {
-		Bitstring *addr = this->addresses[i];
-		// It does not depend on whether the computer is big-endian or little-endian. [msbrogli 2015-12-01]
-		file << addr->base64() << "\n";
+int as_save_b64_file(const struct address_space_s *this, char *filename) {
+	int i;
+	char buf[1000];
+	FILE *fp = fopen(filename, "w");
+	if (fp == NULL) {
+		return -1;
 	}
-	file.close();
+	fprintf(fp, "SDM ADDRESS SPACE\n");
+	fprintf(fp, "SDM-Version: v0.0.1\n");
+	fprintf(fp, "Format: base64\n");
+	fprintf(fp, "Bits-per-Bitstring: %lu\n", this->bs_len * 8 * sizeof(bitstring_t));
+	fprintf(fp, "Bits: %d\n", this->bits);
+	fprintf(fp, "Sample: %d\n", this->sample);
+	fprintf(fp, "\n");
+	for(i=0; i<this->sample; i++) {
+		bs_to_b64(buf, this->addresses[i], this->bs_len);
+		fprintf(fp, "%s\n", buf);
+	}
+	fclose(fp);
 	return 0;
 }
-*/
+
+int as_init_from_b64_file(struct address_space_s *this, char *filename) {
+	FILE *fp;
+	char line[2000], *key, *value;
+	int ret = 0;
+	int len, cnt;
+	unsigned int bits = 0, sample = 0, bits_per_bitstring = 0;
+	fp = fopen(filename, "r");
+	fgets(line, sizeof(line), fp);
+	if (strcmp(line, "SDM ADDRESS SPACE\n")) {
+		return -1;
+	}
+	while(fgets(line, sizeof(line), fp)) {
+		len = strlen(line);
+		if (len <= 1) {
+			break;
+		}
+		assert(line[len-1] == '\n');
+		line[len-1] = '\0';
+		key = line;
+		value = strchr(line, ':');
+		value[0] = '\0';
+		value++;
+		while(isspace(*value)) value++;
+		//printf("!! [%s] \"%s\"\n", key, value);
+
+		if (!strcmp(key, "SDM-Version")) {
+			// Check version.
+			if (strcmp(value, "v0.0.1")) {
+				ret = -2;
+				goto exit;
+			}
+		} else if (!strcmp(key, "Format")) {
+			// Check format.
+			if (strcmp(value, "base64")) {
+				ret = -3;
+				goto exit;
+			}
+		} else if (!strcmp(key, "Bits-per-Bitstring")) {
+			// Check bits per bitstring.
+			bits_per_bitstring = atoi(value);
+		} else if (!strcmp(key, "Bits")) {
+			// Check bits.
+			bits = atoi(value);
+		} else if (!strcmp(key, "Sample")) {
+			// Check sample.
+			sample = atoi(value);
+		} else {
+			// Unknown header.
+			ret = -4;
+			goto exit;
+		}
+	}
+	if (bits == 0 || sample == 0 || bits_per_bitstring == 0) {
+		ret = -5;
+		goto exit;
+	}
+	if (bits_per_bitstring % (8 * sizeof(bitstring_t)) != 0) {
+		ret = -6;
+		goto exit;
+	}
+	if (as_init(this, bits, sample)) {
+		ret = -7;
+		goto exit;
+	}
+
+	// Read address space (this->bs_data).
+	cnt = 0;
+	while(fgets(line, sizeof(line), fp)) {
+		bs_init_b64(this->addresses[cnt], line);
+		cnt++;
+	}
+	if (cnt != sample) {
+		as_free(this);
+		ret = -8;
+		goto exit;
+	}
+
+exit:
+	fclose(fp);
+	return ret;
+}
 

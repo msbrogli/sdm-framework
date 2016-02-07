@@ -13,6 +13,8 @@ void bs_free(bitstring_t *bs);
 
 void bs_init_ones(bitstring_t *bs, unsigned int len, unsigned int bits_remaining);
 void bs_init_random(bitstring_t *bs, unsigned int len, unsigned int bits_remaining);
+void bs_init_b64(bitstring_t *bs, char *b64);
+void bs_copy(bitstring_t *dst, const bitstring_t *src, unsigned int len);
 void bs_to_hex(char *buf, bitstring_t *bs, unsigned int len);
 void bs_to_b64(char *buf, bitstring_t *bs, unsigned int len);
 int bs_distance(const bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len);

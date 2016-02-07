@@ -112,7 +112,7 @@ int counter_to_bitstring(struct counter_s *this, unsigned int index, bitstring_t
 	for(i=0; i<this->bits; i++) {
 		if (ptr[i] > 0) {
 			bs_set_bit(bs, i, 1);
-		} if (ptr[i] < 0) {
+		} else if (ptr[i] < 0) {
 			bs_set_bit(bs, i, 0);
 		} else {
 			// Flip a coin! :)

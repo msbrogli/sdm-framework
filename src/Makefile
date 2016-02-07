@@ -80,31 +80,10 @@ lib/sha256.o: lib/sha256.cpp
 test_bitstring: bitstring.o test_bitstring.cpp lib/base64.o
 	${CXX} ${CXXFLAGS} lib/base64.o bitstring.o test_bitstring.cpp -o test_bitstring
 
-test_address_space: bitstring.o address_space.o test_address_space.cpp lib/sha256.o utils.o
-	${CXX} ${CXXFLAGS} utils.o lib/sha256.o lib/base64.o bitstring.o address_space.o test_address_space.cpp -o test_address_space
-
-test_scanner: address_space.o bitstring.o scanner.o test_scanner.cpp lib/sha256.o utils.o
-	${CXX} ${CXXFLAGS} utils.o lib/sha256.o lib/base64.o bitstring.o address_space.o scanner.o test_scanner.cpp -o test_scanner
-
-test_scanner_thread: address_space.o bitstring.o scanner.o scanner_thread.o test_scanner_thread.cpp lib/sha256.o utils.o
-	${CXX} ${CXXFLAGS} utils.o lib/sha256.o lib/base64.o bitstring.o address_space.o scanner.o scanner_thread.o test_scanner_thread.cpp -o test_scanner_thread
-
 test_scanner_opencl: test_scanner_opencl.cpp $(OBJS)
 	${CXX} ${CXXFLAGS} ${CLFLAGS} ${OBJS} ${LIB_OBJS} test_scanner_opencl.cpp -o test_scanner_opencl
 
-test_performance_scanners: test_performance_scanners.cpp $(OBJS) $(LIB_OBJS)
-	${CXX} ${CXXFLAGS} ${CLFLAGS} ${OBJS} ${LIB_OBJS} test_performance_scanners.cpp -o test_performance_scanners
-
-test_counter: test_counter.cpp lib/base64.o
-	${CXX} ${CXXFLAGS} lib/base64.o test_counter.cpp -o test_counter
-
-scanner.o: scanner.h scanner.cpp lib/base64.h
-	${CXX} ${CXXFLAGS} -c scanner.cpp
-
-utils.o: utils.h utils.cpp
-	${CXX} ${CXXFLAGS} -c utils.cpp
-
 .PHONY: clean
 clean:
-	rm -f *.o lib/*.o test_address_space test_bitstring test_scanner test_scanner_thread test_counter test_scanner_opencl test_performance_scanners
+	rm -f *.o lib/*.o test_bitstring test_scanner_opencl
 	rm -f libsdm.a libsdm.so test1 test1-dyn test2 test3

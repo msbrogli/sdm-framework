@@ -10,4 +10,7 @@ struct sdm_s {
 	struct counter_s *counter;
 };
 
+int sdm_read(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstring_t *output);
+int sdm_write(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstring_t *datum);
+
 #endif

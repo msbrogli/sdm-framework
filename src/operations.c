@@ -4,6 +4,27 @@
 #include "counter.h"
 #include "operations.h"
 
+int sdm_iter_read(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, unsigned int max_iter, bitstring_t *output) {
+	int i;
+	bitstring_t *bs1, *bs2, *tmp;
+	bs1 = bs_alloc(sdm->address_space->bs_len);
+	bs2 = bs_alloc(sdm->address_space->bs_len);
+	bs_copy(bs1, addr, sdm->address_space->bs_len);
+	for(i=0; i<max_iter; i++) {
+		sdm_read(sdm, bs1, radius, bs2);
+		if (bs_distance(bs1, bs2, sdm->address_space->bs_len) == 0) {
+			break;
+		}
+		tmp = bs1;
+		bs1 = bs2;
+		bs2 = tmp;
+	}
+	bs_copy(output, bs1, sdm->address_space->bs_len);
+	bs_free(bs1);
+	bs_free(bs2);
+	return i;
+}
+
 int sdm_read(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstring_t *output) {
 	uint8_t selected[sdm->sample];
 	struct counter_s counter;

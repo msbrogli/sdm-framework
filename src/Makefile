@@ -24,13 +24,7 @@ HEADERS=bitstring.h \
 all: libsdm.a libsdm.so
 
 .PHONY: tests
-tests: test_bitstring \
-	   test_address_space \
-	   test_scanner \
-	   test_scanner_thread \
-	   test_counter \
-	   test_scanner_opencl \
-	   test_performance_scanners
+tests: test/test_bitstring
 
 libsdm.so: ${OBJS} ${LIB_OBJS}
 	${CC} ${CLFLAGS} -shared -o libsdm.so ${OBJS} ${LIB_OBJS}
@@ -75,6 +69,9 @@ scanner_opencl.o: scanner_opencl.c scanner_opencl.h
 counter.o: counter.c counter.h version.h
 	${CC} ${CCFLAGS} -c counter.c
 
+test/test_bitstring: test/test_bitstring.c libsdm.a
+	${CC} ${CCFLAGS} -I. libsdm.a test/test_bitstring.c -o test/test_bitstring
+
 #-------- OLD ----
 
 lib/sha256.o: lib/sha256.cpp
@@ -90,3 +87,4 @@ test_scanner_opencl: test_scanner_opencl.cpp $(OBJS)
 clean:
 	rm -f *.o lib/*.o test_bitstring test_scanner_opencl
 	rm -f libsdm.a libsdm.so test1 test1-dyn test2 test3 test4
+	rm -f test/test_bitstring

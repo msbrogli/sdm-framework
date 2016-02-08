@@ -23,6 +23,6 @@ unsigned int bs_get_bit(bitstring_t *this, unsigned int bit);
 void bs_set_bit(bitstring_t *bs, unsigned int bit, unsigned int value);
 void bs_flip_bit(bitstring_t *bs, unsigned int bit);
 
-void bs_flip_random_bits(bitstring_t *bs, unsigned int bits, unsigned int flips);
+int bs_flip_random_bits(bitstring_t *bs, unsigned int bits, unsigned int flips);
 
 #endif

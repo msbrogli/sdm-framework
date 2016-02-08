@@ -2,6 +2,7 @@
 #include <stdlib.h>
 #include <stdio.h>
 #include <string.h>
+#include <assert.h>
 #include "lib/base64.h"
 #include "bitstring.h"
 
@@ -132,10 +133,10 @@ void bs_set_bit(bitstring_t *bs, unsigned int bit, unsigned int value) {
 void bs_flip_bit(bitstring_t *bs, unsigned int bit) {
 	unsigned int offset = bit / 8 / sizeof(bitstring_t);
 	unsigned int idx = 8*sizeof(bitstring_t) - 1 - bit % (8*sizeof(bitstring_t));
-	bs[offset] ^= ~((bitstring_t)1<<idx);
+	bs[offset] ^= ((bitstring_t)1<<idx);
 }
 
-void bs_flip_random_bits(bitstring_t *bs, unsigned int bits, unsigned int flips) {
+int bs_flip_random_bits(bitstring_t *bs, unsigned int bits, unsigned int flips) {
 	int i, idx;
 	int cnt = 0;
 	uint8_t v[bits];
@@ -150,10 +151,13 @@ void bs_flip_random_bits(bitstring_t *bs, unsigned int bits, unsigned int flips)
 			cnt += v[i];
 		}
 	} while(cnt < flips);
+	cnt = 0;
 	for(i=0; i<bits; i++) {
 		if (v[i] == 1) {
 			bs_flip_bit(bs, i);
+			cnt++;
 		}
 	}
+	return cnt;
 }
 

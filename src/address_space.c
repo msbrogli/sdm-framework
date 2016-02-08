@@ -7,6 +7,7 @@
 #include "bitstring.h"
 #include "address_space.h"
 #include "utils.h"
+#include "version.h"
 
 void as_print_summary(struct address_space_s *this) {
 	double alloc = this->bs_len * sizeof(bitstring_t) * this->sample / 1024.0;
@@ -112,7 +113,7 @@ int as_save_b64_file(const struct address_space_s *this, char *filename) {
 		return -1;
 	}
 	fprintf(fp, "SDM ADDRESS SPACE\n");
-	fprintf(fp, "SDM-Version: v0.0.1\n");
+	fprintf(fp, "SDM-Version: " SDM_VERSION_STR "\n");
 	fprintf(fp, "Format: base64\n");
 	fprintf(fp, "Order-of-bytes: %s\n", (is_little_endian() ? "little-endian" : "big-endian"));
 	fprintf(fp, "Bits-per-Bitstring: %lu\n", this->bs_len * 8 * sizeof(bitstring_t));
@@ -154,7 +155,7 @@ int as_init_from_b64_file(struct address_space_s *this, char *filename) {
 
 		if (!strcmp(key, "SDM-Version")) {
 			// Check version.
-			if (strcmp(value, "v0.0.1")) {
+			if (strcmp(value, SDM_VERSION_STR)) {
 				ret = -2;
 				goto exit;
 			}

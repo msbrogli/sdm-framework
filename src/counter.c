@@ -10,6 +10,7 @@
 #include "bitstring.h"
 #include "counter.h"
 #include "utils.h"
+#include "version.h"
 
 int _post_init(struct counter_s *this) {
 	int i;
@@ -66,7 +67,7 @@ int counter_create_file(char *filename, unsigned int bits, unsigned int sample) 
 	}
 
 	fprintf(fp1, "SDM COUNTER\n");
-	fprintf(fp1, "SDM-Version: v0.0.1\n");
+	fprintf(fp1, "SDM-Version: " SDM_VERSION_STR "\n");
 	fprintf(fp1, "Format: binary\n");
 	fprintf(fp1, "Bytes-per-counter: %lu\n", sizeof(counter_t));
 	fprintf(fp1, "Order-of-bytes: %s\n", (is_little_endian() ? "little-endian" : "big-endian"));
@@ -108,7 +109,7 @@ int counter_check_meta_file(char *filename, unsigned int *bits, unsigned int *sa
 
 		if (!strcmp(key, "SDM-Version")) {
 			// Check version.
-			if (strcmp(value, "v0.0.1")) {
+			if (strcmp(value, SDM_VERSION_STR)) {
 				ret = -2;
 				goto exit;
 			}

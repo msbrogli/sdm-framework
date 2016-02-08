@@ -60,7 +60,7 @@ lib/base64.o: lib/base64.c lib/base64.h
 operations.o: operations.c operations.h
 	${CC} ${CCFLAGS} -c operations.c
 
-address_space.o: address_space.h address_space.c
+address_space.o: address_space.h address_space.c version.h
 	${CC} ${CCFLAGS} -c address_space.c
 
 bitstring.o: bitstring.h bitstring.c
@@ -72,7 +72,7 @@ scanner_thread.o: scanner_thread.c
 scanner_opencl.o: scanner_opencl.c scanner_opencl.h
 	${CC} ${CCFLAGS} -c scanner_opencl.c
 
-counter.o: counter.c counter.h
+counter.o: counter.c counter.h version.h
 	${CC} ${CCFLAGS} -c counter.c
 
 #-------- OLD ----

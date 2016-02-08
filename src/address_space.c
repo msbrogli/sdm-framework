@@ -6,6 +6,7 @@
 #include "assert.h"
 #include "bitstring.h"
 #include "address_space.h"
+#include "utils.h"
 
 void as_print_summary(struct address_space_s *this) {
 	double alloc = this->bs_len * sizeof(bitstring_t) * this->sample / 1024.0;
@@ -113,6 +114,7 @@ int as_save_b64_file(const struct address_space_s *this, char *filename) {
 	fprintf(fp, "SDM ADDRESS SPACE\n");
 	fprintf(fp, "SDM-Version: v0.0.1\n");
 	fprintf(fp, "Format: base64\n");
+	fprintf(fp, "Order-of-bytes: %s\n", (is_little_endian() ? "little-endian" : "big-endian"));
 	fprintf(fp, "Bits-per-Bitstring: %lu\n", this->bs_len * 8 * sizeof(bitstring_t));
 	fprintf(fp, "Bits: %d\n", this->bits);
 	fprintf(fp, "Sample: %d\n", this->sample);
@@ -162,6 +164,12 @@ int as_init_from_b64_file(struct address_space_s *this, char *filename) {
 				ret = -3;
 				goto exit;
 			}
+		} else if (!strcmp(key, "Order-of-bytes")) {
+			// Check byte order.
+			if (strcmp(value, (is_little_endian() ? "little-endian" : "big-endian"))) {
+				ret = -4;
+				goto exit;
+			}
 		} else if (!strcmp(key, "Bits-per-Bitstring")) {
 			// Check bits per bitstring.
 			bits_per_bitstring = atoi(value);
@@ -173,20 +181,20 @@ int as_init_from_b64_file(struct address_space_s *this, char *filename) {
 			sample = atoi(value);
 		} else {
 			// Unknown header.
-			ret = -4;
+			ret = -5;
 			goto exit;
 		}
 	}
 	if (bits == 0 || sample == 0 || bits_per_bitstring == 0) {
-		ret = -5;
-		goto exit;
-	}
-	if (bits_per_bitstring % (8 * sizeof(bitstring_t)) != 0) {
 		ret = -6;
 		goto exit;
 	}
-	if (as_init(this, bits, sample)) {
+	if (bits_per_bitstring % (8 * sizeof(bitstring_t)) != 0) {
 		ret = -7;
+		goto exit;
+	}
+	if (as_init(this, bits, sample)) {
+		ret = -8;
 		goto exit;
 	}
 
@@ -198,7 +206,7 @@ int as_init_from_b64_file(struct address_space_s *this, char *filename) {
 	}
 	if (cnt != sample) {
 		as_free(this);
-		ret = -8;
+		ret = -9;
 		goto exit;
 	}
 

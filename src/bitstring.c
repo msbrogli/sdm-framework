@@ -85,6 +85,7 @@ void bs_to_hex(char *buf, bitstring_t *bs, unsigned int len) {
 }
 
 void bs_to_b64(char *buf, bitstring_t *bs, unsigned int len) {
+	// TODO Handle little-endian and big-endian.
 	Base64encode(buf, (char *)bs, sizeof(bitstring_t) * len);
 }
 
@@ -156,54 +157,3 @@ void bs_flip_random_bits(bitstring_t *bs, unsigned int bits, unsigned int flips)
 	}
 }
 
-/*
-void bs_clear_surplus(struct bitstring_s *this) {
-	int last = this->bits % 64;
-	if (last > 0) {
-		this->data[this->len-1] &= ~((uint64_t)0xFFFFFFFFFFFFFFFF << last);
-	}
-}
-
-void bs_init_from_base64(struct bitstring_s *this, unsigned int bits, const char *b64) {
-	bs_init(this, bits);
-
-	const size_t size = sizeof(uint64_t) * this->len;
-	//std::string buffer = base64_decode(b64);
-	bs_clear_surplus(this);
-}
-
-
-void bs_init_from_bs(struct bitstring_s *this, const struct bitstring_s *other) {
-	bs_init(this, other->bits);
-	memcpy(this->data, other->data, sizeof(uint64_t) * this->len);
-	bs_clear_surplus(this);
-}
-
-int bs_str(struct bitstring_s *this, char *str) const {
-	for(int i=0; i<this->bits; i++) {
-		str[i] = bs_get_bit(this, i) ? '1' : '0';
-	}
-	str[this->bits] = '\0';
-	return std::string(str);
-}
-*/
-
-/*
-std::string Bitstring::base64() const {
-	// FIXME It cannot depend on whether the computer is big-endian or little-endian. [msbrogli 2015-12-01]
-	return base64_encode((const unsigned char *)this->data, sizeof(uint64_t)*this->len);
-}
-
-bool Bitstring::operator<(const Bitstring &bs) const {
-	assert(this->bits == bs.bits);
-
-	for(int i=0; i<this->len; i++) {
-		if (this->data[i] < bs.data[i]) {
-			return true;
-		} else if (this->data[i] > bs.data[i]) {
-			return false;
-		}
-	}
-	return false;
-}
-*/

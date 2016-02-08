@@ -51,6 +51,9 @@ test2: test2.c libsdm.a
 test3: test3.c libsdm.a
 	${CC} ${CCFLAGS} ${CLFLAGS} libsdm.a test3.c -o test3
 
+test4: test4.c libsdm.a
+	${CC} ${CCFLAGS} ${CLFLAGS} libsdm.a test4.c -o test4
+
 lib/base64.o: lib/base64.c lib/base64.h
 	(cd lib/ ; ${CC} ${CCFLAGS} -c base64.c)
 
@@ -86,4 +89,4 @@ test_scanner_opencl: test_scanner_opencl.cpp $(OBJS)
 .PHONY: clean
 clean:
 	rm -f *.o lib/*.o test_bitstring test_scanner_opencl
-	rm -f libsdm.a libsdm.so test1 test1-dyn test2 test3
+	rm -f libsdm.a libsdm.so test1 test1-dyn test2 test3 test4

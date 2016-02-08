@@ -5,8 +5,11 @@
 #include <fcntl.h>
 #include <unistd.h>
 #include <sys/mman.h>
+#include <ctype.h>
+#include <assert.h>
 #include "bitstring.h"
 #include "counter.h"
+#include "utils.h"
 
 int _post_init(struct counter_s *this) {
 	int i;
@@ -36,24 +39,144 @@ int counter_init(struct counter_s *this, unsigned int bits, unsigned int sample)
 	return 0;
 }
 
-int counter_init_file(char *filename, struct counter_s *this, unsigned int bits, unsigned int sample) {
+void counter_print_summary(struct counter_s *this) {
+	printf("Dimension: %d\n", this->bits);
+	printf("Numer of hardlocations: %d\n", this->sample);
+	if (this->fd != -1) {
+		printf("Filename: %s\n", this->filename);
+	}
+}
+
+int counter_create_file(char *filename, unsigned int bits, unsigned int sample) {
+	FILE *fp1, *fp2;
+	int i;
+	counter_t v[bits];
+
+	char meta[1000], bin[1000];
+	sprintf(meta, "%s.meta", filename);
+	sprintf(bin, "%s.bin", filename);
+
+	fp1 = fopen(meta, "w");
+	if (fp1 == NULL) {
+		return -1;
+	}
+	fp2 = fopen(bin, "w");
+	if (fp2 == NULL) {
+		return -2;
+	}
+
+	fprintf(fp1, "SDM COUNTER\n");
+	fprintf(fp1, "SDM-Version: v0.0.1\n");
+	fprintf(fp1, "Format: binary\n");
+	fprintf(fp1, "Bytes-per-counter: %lu\n", sizeof(counter_t));
+	fprintf(fp1, "Order-of-bytes: %s\n", (is_little_endian() ? "little-endian" : "big-endian"));
+	fprintf(fp1, "Bits: %d\n", bits);
+	fprintf(fp1, "Sample: %d\n", sample);
+
+	memset(v, 0, sizeof(v));
+	for(i=0; i<sample; i++) {
+		fwrite(v, sizeof(v), 1, fp2);
+	}
+
+	fclose(fp1);
+	fclose(fp2);
+	return 0;
+}
+
+int counter_check_meta_file(char *filename, unsigned int *bits, unsigned int *sample) {
+	FILE *fp;
+	char line[2000], *key, *value;
+	int ret = 0;
+	int len;
+	*bits = 0;
+	*sample = 0;
+	fp = fopen(filename, "r");
+	fgets(line, sizeof(line), fp);
+	if (strcmp(line, "SDM COUNTER\n")) {
+		return -1;
+	}
+	while(fgets(line, sizeof(line), fp)) {
+		len = strlen(line);
+		assert(line[len-1] == '\n');
+		line[len-1] = '\0';
+		key = line;
+		value = strchr(line, ':');
+		value[0] = '\0';
+		value++;
+		while(isspace(*value)) value++;
+		//printf("!! [%s] \"%s\"\n", key, value);
+
+		if (!strcmp(key, "SDM-Version")) {
+			// Check version.
+			if (strcmp(value, "v0.0.1")) {
+				ret = -2;
+				goto exit;
+			}
+		} else if (!strcmp(key, "Format")) {
+			// Check format.
+			if (strcmp(value, "binary")) {
+				ret = -3;
+				goto exit;
+			}
+		} else if (!strcmp(key, "Order-of-bytes")) {
+			// Check byte order.
+			if (strcmp(value, (is_little_endian() ? "little-endian" : "big-endian"))) {
+				ret = -4;
+				goto exit;
+			}
+		} else if (!strcmp(key, "Bytes-per-counter")) {
+			// Check bits per bitstring.
+			if (sizeof(counter_t) != atoi(value)) {
+				ret = -4;
+				goto exit;
+			}
+		} else if (!strcmp(key, "Bits")) {
+			// Check bits.
+			*bits = atoi(value);
+		} else if (!strcmp(key, "Sample")) {
+			// Check sample.
+			*sample = atoi(value);
+		} else {
+			// Unknown header.
+			ret = -4;
+			goto exit;
+		}
+	}
+	if (bits == 0 || sample == 0) {
+		ret = -5;
+		goto exit;
+	}
+exit:
+	fclose(fp);
+	return ret;
+}
+
+int counter_init_file(char *filename, struct counter_s *this) {
+	char meta[1000], bin[1000];
+	unsigned int bits, sample;
+	sprintf(meta, "%s.meta", filename);
+	sprintf(bin, "%s.bin", filename);
+
+	if(counter_check_meta_file(meta, &bits, &sample)) {
+		return -1;
+	}
+
 	this->bits = bits;
 	this->sample = sample;
 	this->filename = filename;
-	this->fd = open(this->filename, O_RDWR);
+	this->fd = open(bin, O_RDWR);
 	if (this->fd == -1) {
-		return -1;
+		return -2;
 	}
-	// FIXME Possible problem with big-endian and little-endian format.
 	this->data = (counter_t *) mmap(0, sizeof(counter_t) * this->bits * this->sample, PROT_READ | PROT_WRITE, MAP_SHARED, this->fd, 0);
 	if (this->data == MAP_FAILED) {
 		close(this->fd);
-		return -2;
+		return -3;
 	}
 	if (_post_init(this)) {
 		munmap(this->data, sizeof(counter_t) * this->bits * this->sample);
 		close(this->fd);
-		return -3;
+		return -4;
 	}
 	return 0;
 }

@@ -13,8 +13,9 @@ struct counter_s {
 };
 
 int counter_init(struct counter_s *this, unsigned int bits, unsigned int sample);
-int counter_init_file(char *filename, struct counter_s *this, unsigned int bits, unsigned int sample);
+int counter_init_file(char *filename, struct counter_s *this);
 void counter_free(struct counter_s *this);
+void counter_print_summary(struct counter_s *this);
 
 void counter_print(struct counter_s *this, unsigned int index);
 
@@ -22,5 +23,7 @@ int counter_add_bitstring(struct counter_s *this, unsigned int index, bitstring_
 int counter_add_counter(struct counter_s *c1, unsigned int idx1, struct counter_s *c2, unsigned int idx2);
 
 int counter_to_bitstring(struct counter_s *this, unsigned int index, bitstring_t *bs);
+
+int counter_create_file(char *filename, unsigned int bits, unsigned int sample);
 
 #endif

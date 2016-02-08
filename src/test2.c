@@ -22,8 +22,10 @@ int main(void) {
 	assert(!as_init_random(as, bits, sample));
 	as_print_summary(as);
 	
-	assert(!counter_init(counter, bits, sample));
-	//counter_init_file("test1_counter.bin", counter, bits, sample);
+	//assert(!counter_init(counter, bits, sample));
+	counter_init_file("test2_counter.bin", counter);
+	assert(counter->bits == bits);
+	assert(counter->sample == sample);
 
 	bs_init_bitcount_table();
 	bs1 = bs_alloc(as->bs_len);

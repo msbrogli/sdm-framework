@@ -4,7 +4,7 @@ void single_scan(
 		__global const ulong *bitstrings,
 		const uint bs_len,
 		const uint sample,
-		const uint worksize,
+		/*const uint worksize,*/
 		__constant const ulong *bs,
 		const uint radius,
 		__global uint *counter,

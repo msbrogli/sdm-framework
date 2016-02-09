@@ -46,7 +46,19 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 	 * Create context.
 	 * ==============
 	 */
-	this->context = clCreateContextFromType(NULL, CL_DEVICE_TYPE_GPU, NULL, NULL, &error);
+   // query the number of platforms
+   cl_uint numPlatforms;
+   error = clGetPlatformIDs(0, NULL, &numPlatforms);
+	assert(error == CL_SUCCESS);
+
+   // now get all the platform IDs
+   cl_platform_id platforms[numPlatforms];
+   error = clGetPlatformIDs(numPlatforms, platforms, NULL);
+	assert(error == CL_SUCCESS);
+
+   // set platform property - we just pick the first one
+   cl_context_properties properties[] = {CL_CONTEXT_PLATFORM, (int) platforms[0], 0};
+	this->context = clCreateContextFromType(properties, CL_DEVICE_TYPE_GPU, NULL, NULL, &error);
 	assert(error == CL_SUCCESS);
 
 	/* =================
@@ -59,9 +71,8 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 	devices = (cl_device_id *) malloc(deviceBufferSize);
 	error = clGetContextInfo(this->context, CL_CONTEXT_DEVICES, deviceBufferSize, devices, NULL);
 	assert(error == CL_SUCCESS);
-	free(devices);
-
 	this->device_id = devices[0];
+	free(devices);
 
 	/* =============
 	 * Create queue.
@@ -258,32 +269,33 @@ int as_scan_opencl(struct opencl_scanner_s *this, bitstring_t *bs, unsigned int 
 	/*time->mark("OpenCLScanner::scan clSetKernelArg3:sample");*/
 
 	/* Set arg4: global_worksize */
-	error = clSetKernelArg(kernel, 4, sizeof(this->global_worksize), &this->global_worksize);
-	assert(error == CL_SUCCESS);
+	//error = clSetKernelArg(kernel, 4, sizeof(this->global_worksize), &this->global_worksize);
+//printf("@@ error = %d\n", error);
+	//assert(error == CL_SUCCESS);
 	/*time->mark("OpenCLScanner::scan clSetKernelArg4:global_worksize");*/
 
 	/* Set arg5: bs */
 	error = clEnqueueWriteBuffer(this->queue, this->bs_buf, CL_FALSE, 0, sizeof(cl_bitstring_t)*this->bs_len, bs, 0, NULL, NULL);
 	assert(error == CL_SUCCESS);
 	/*time->mark("OpenCLScanner::scan clEnqueueWriteBuffer:bs");*/
-	error = clSetKernelArg(kernel, 5, sizeof(this->bs_buf), &this->bs_buf);
+	error = clSetKernelArg(kernel, 4, sizeof(this->bs_buf), &this->bs_buf);
 	assert(error == CL_SUCCESS);
 	/*time->mark("OpenCLScanner::scan clSetKernelArg5:bs");*/
 
 	/* Set arg6: radius */
 	cl_uint arg_radius = radius;
-	error = clSetKernelArg(kernel, 6, sizeof(arg_radius), &arg_radius);
+	error = clSetKernelArg(kernel, 5, sizeof(arg_radius), &arg_radius);
 	assert(error == CL_SUCCESS);
 	/*time->mark("OpenCLScanner::scan clSetKernelArg6:radius");*/
 
 	/* Set arg8: counter */
-	error = clSetKernelArg(kernel, 7, sizeof(this->counter_buf), &this->counter_buf);
+	error = clSetKernelArg(kernel, 6, sizeof(this->counter_buf), &this->counter_buf);
 	assert(error == CL_SUCCESS);
 	/*time->mark("OpenCLScanner::scan clSetKernelArg7:counter_buf");*/
 
 	/* Set arg8: selected */
 	this->selected = (cl_uchar *)selected;
-	error = clSetKernelArg(kernel, 8, sizeof(this->selected_buf), &this->selected_buf);
+	error = clSetKernelArg(kernel, 7, sizeof(this->selected_buf), &this->selected_buf);
 	assert(error == CL_SUCCESS);
 	/*time->mark("OpenCLScanner::scan clSetKernelArg8:selected");*/
 

@@ -38,14 +38,14 @@ all: libsdm.a libsdm.so
 tests: test/test_bitstring
 
 libsdm.so: ${OBJS} ${LIB_OBJS}
-	${CC} ${CLFLAGS} -shared -o libsdm.so ${OBJS} ${LIB_OBJS}
+	${CC} ${CLFLAGS} -shared -o libsdm.so ${OBJS} ${LIB_OBJS} -lOpenCL -lpthread -lbsd ~/libbsd-0.4.2/src/.libs/libbsd.so
 
 libsdm.a: ${OBJS} ${LIB_OBJS}
 	ar -cvr libsdm.a ${OBJS} ${LIB_OBJS}
 	ranlib libsdm.a
 
 test1: test1.c libsdm.a
-	${CC} ${CCFLAGS} ${CLFLAGS} libsdm.a test1.c -o test1
+	${CC} ${CCFLAGS} ${CLFLAGS} -o test1 test1.c libsdm.a -lOpenCL -lpthread -lbsd ~/libbsd-0.4.2/src/.libs/libbsd.so
 
 test1-dyn: test1.c libsdm.so
 	${CC} ${CCFLAGS} ${CLFLAGS} libsdm.so test1.c -o test1-dyn

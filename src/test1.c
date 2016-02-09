@@ -17,10 +17,10 @@ int main(void) {
 	int bits = 1000;
 	int sample = 1000000;
 
-	status = as_init_from_b64_file(&as, "test1_address_space_b64.as");
-	assert(status == 0);
+	//status = as_init_from_b64_file(&as, "test1_address_space_b64.as");
+	//assert(status == 0);
 
-	//assert(!as_init_random(&as, bits, sample));
+	assert(!as_init_random(&as, bits, sample));
 	//as_save_b64_file(&as, "test1_address_space_b64.as");
 
 	as_print_summary(&as);
@@ -43,10 +43,10 @@ int main(void) {
 	uint8_t selected_thread[sample];
 	printf("@@ Thread %d\n", as_scan_thread(&as, bs1, 451, selected_thread, 4));
 
-	opencl_scanner_init(&opencl, &as);
+	as_scanner_opencl_init(&opencl, &as, "scanner_opencl.cl");
 	uint8_t selected_opencl[sample];
 	printf("@@ OpenCL %d\n", as_scan_opencl(&opencl, bs1, 451, selected_opencl));
-	opencl_scanner_free(&opencl);
+	as_scanner_opencl_free(&opencl);
 
 	return 0;
 

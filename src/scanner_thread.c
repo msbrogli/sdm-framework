@@ -5,7 +5,7 @@
 #include "bitstring.h"
 #include "address_space.h"
 
-// Prevent the double evaluation problem.
+/* Prevent the double evaluation problem. */
 #define min(a,b) \
 	({ __typeof__ (a) _a = (a); \
 	   __typeof__ (b) _b = (b); \
@@ -65,12 +65,13 @@ int as_scan_thread(const struct address_space_s *this, const bitstring_t *bs, un
 
 static
 void* scan_task(void *ptr) {
+	unsigned int i;
 	struct thread_params_t *params = (struct thread_params_t*) ptr;
 
 	const unsigned int idx_end = params->idx_end;
 	const unsigned int radius = params->radius;
 
-	for(unsigned int i=params->idx_begin; i<idx_end; i++) {
+	for(i=params->idx_begin; i<idx_end; i++) {
 		if (bs_distance(params->bs, params->address_space->addresses[i], params->address_space->bs_len) <= radius) {
 			params->cnt++;
 			if (params->selected) {

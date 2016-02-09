@@ -6,17 +6,24 @@
 
 #include "scanner_opencl.h"
 
-// Links:
-// - https://www.khronos.org/registry/cl/sdk/1.0/docs/man/xhtml/scalarDataTypes.html
-// - https://code.google.com/p/simple-opencl/
+/*
+ * Links:
+ * - https://www.khronos.org/registry/cl/sdk/1.0/docs/man/xhtml/scalarDataTypes.html
+ * - https://code.google.com/p/simple-opencl/
+ */
 
 int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s *as, char *opencl_source) {
+	cl_int error;
+	size_t deviceBufferSize;
+	cl_device_id *devices;
+
 	this->address_space = as;
 	this->opencl_source = opencl_source;
 
-	// =============================
-	// Set local and group worksize.
-	// =============================
+	/* =============================
+	 * Set local and group worksize.
+	 * =============================
+	 */
 	this->local_worksize = 0;
 
 	if (this->local_worksize == 0) {
@@ -29,44 +36,45 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 		this->global_worksize *= this->local_worksize;
 	}
 
-	// Choose the right kernel.
+	/* Choose the right kernel. */
 	if (this->global_worksize >= this->address_space->sample) {
 		this->kernel_name = "single_scan";
 	} else {
 		this->kernel_name = "scan";
 	}
 
-	cl_int error;
-
-	// ==============
-	// Create context.
-	// ==============
+	/* ==============
+	 * Create context.
+	 * ==============
+	 */
 	this->context = clCreateContextFromType(NULL, CL_DEVICE_TYPE_GPU, NULL, NULL, &error);
 	assert(error == CL_SUCCESS);
 
-	// =================
-	// Select device_id.
-	// =================
-	size_t deviceBufferSize;
+	/* =================
+	 * Select device_id.
+	 * =================
+	 */
 	error = clGetContextInfo(this->context, CL_CONTEXT_DEVICES, 0, NULL, &deviceBufferSize);
 	assert(error == CL_SUCCESS);
 
-	cl_device_id *devices = (cl_device_id *) malloc(deviceBufferSize);
+	devices = (cl_device_id *) malloc(deviceBufferSize);
 	error = clGetContextInfo(this->context, CL_CONTEXT_DEVICES, deviceBufferSize, devices, NULL);
 	assert(error == CL_SUCCESS);
 	free(devices);
 
 	this->device_id = devices[0];
 
-	// =============
-	// Create queue.
-	// =============
+	/* =============
+	 * Create queue.
+	 * =============
+	 */
 	this->queue = clCreateCommandQueue(this->context, this->device_id, 0, &error);
 	assert(error == CL_SUCCESS);
 
-	// =======================
-	// Read and build program.
-	// =======================
+	/* =======================
+	 * Read and build program.
+	 * =======================
+	 */
 	const int MAX_SOURCE_SIZE = 1<<20;
 	char *source_str = (char *)malloc(sizeof(char)*MAX_SOURCE_SIZE);
 	size_t source_size;
@@ -80,7 +88,7 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 	assert(error == CL_SUCCESS);
 	error = clBuildProgram(this->program, 1, &this->device_id, NULL, NULL, NULL);
 
-	// Print build log.
+	/* Print build log. */
 	size_t log_size;
 	clGetProgramBuildInfo(this->program, this->device_id, CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
 	char *log = (char *) malloc(log_size);
@@ -93,10 +101,12 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 	assert(error == CL_SUCCESS);
 	free(source_str);
 
-	// ========================
-	// Generate bitcount_table.
-	// ========================
-	for(int i=0; i<(1<<16); i++) {
+	/* ========================
+	 * Generate bitcount_table.
+	 * ========================
+	 */
+	int i;
+	for(i=0; i<(1<<16); i++) {
 		int a = i, d = 0;
 		while(a) {
 			if (a&1) d++;
@@ -109,9 +119,10 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 	error = clEnqueueWriteBuffer(this->queue, this->bitcount_table_buf, CL_FALSE, 0, sizeof(this->bitcount_table), this->bitcount_table, 0, NULL, NULL);
 	assert(error == CL_SUCCESS);
 
-	// ====================
-	// Generate bitstrings.
-	// ====================
+	/* ====================
+	 * Generate bitstrings.
+	 * ====================
+	 */
 	this->bs_len = this->address_space->bs_len;
 	assert(sizeof(cl_bitstring_t) == sizeof(bitstring_t));
 	size_t bs_size = sizeof(cl_bitstring_t)*this->bs_len*this->address_space->sample;
@@ -120,9 +131,10 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 	error = clEnqueueWriteBuffer(this->queue, this->bitstrings_buf, CL_FALSE, 0, bs_size, this->address_space->bs_data, 0, NULL, NULL);
 	assert(error == CL_SUCCESS);
 
-	// =========================
-	// Allocating other buffers.
-	// =========================
+	/* =========================
+	 * Allocating other buffers.
+	 * =========================
+	 */
 	this->bs_buf = clCreateBuffer(this->context, CL_MEM_READ_ONLY, sizeof(cl_bitstring_t)*this->bs_len, NULL, &error);
 	assert(error == CL_SUCCESS);
 	this->selected_buf = clCreateBuffer(this->context, CL_MEM_WRITE_ONLY, sizeof(cl_uchar)*this->address_space->sample, NULL, &error);
@@ -130,7 +142,7 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 	this->counter_buf = clCreateBuffer(this->context, CL_MEM_WRITE_ONLY, sizeof(cl_uint), NULL, &error);
 	assert(error == CL_SUCCESS);
 	assert(sizeof(cl_uchar) == sizeof(uint8_t));
-	//this->selected = (cl_uchar *)malloc(sizeof(cl_uchar)*this->address_space->sample);
+	/*this->selected = (cl_uchar *)malloc(sizeof(cl_uchar)*this->address_space->sample);*/
 
 	error = clFinish(this->queue);
 	assert(error == CL_SUCCESS);
@@ -139,8 +151,7 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 }
 
 void as_scanner_opencl_free(struct opencl_scanner_s *this) {
-	//free(this->selected);
-
+	/*free(this->selected);*/
 	clReleaseMemObject(this->bitcount_table_buf);
 	clReleaseMemObject(this->bitstrings_buf);
 	clReleaseMemObject(this->bs_buf);
@@ -161,50 +172,50 @@ void opencl_scanner_devices(struct opencl_scanner_s *this) {
 	cl_device_id* devices;
 	cl_uint maxComputeUnits;
 
-	// get all platforms
+	/* get all platforms */
 	clGetPlatformIDs(0, NULL, &platformCount);
 	platforms = (cl_platform_id*) malloc(sizeof(cl_platform_id) * platformCount);
 	clGetPlatformIDs(platformCount, platforms, NULL);
 
 	for (i = 0; i < platformCount; i++) {
 
-		// get all devices
+		/* get all devices */
 		clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_ALL, 0, NULL, &deviceCount);
 		devices = (cl_device_id*) malloc(sizeof(cl_device_id) * deviceCount);
 		clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_ALL, deviceCount, devices, NULL);
 
-		// for each device print critical attributes
+		/* for each device print critical attributes */
 		for (j = 0; j < deviceCount; j++) {
 
-			// print device name
+			/* print device name */
 			clGetDeviceInfo(devices[j], CL_DEVICE_NAME, 0, NULL, &valueSize);
 			value = (char*) malloc(valueSize);
 			clGetDeviceInfo(devices[j], CL_DEVICE_NAME, valueSize, value, NULL);
 			printf("%d. Device: %s\n", j+1, value);
 			free(value);
 
-			// print hardware device version
+			/* print hardware device version */
 			clGetDeviceInfo(devices[j], CL_DEVICE_VERSION, 0, NULL, &valueSize);
 			value = (char*) malloc(valueSize);
 			clGetDeviceInfo(devices[j], CL_DEVICE_VERSION, valueSize, value, NULL);
 			printf(" %d.%d Hardware version: %s\n", j+1, 1, value);
 			free(value);
 
-			// print software driver version
+			/* print software driver version */
 			clGetDeviceInfo(devices[j], CL_DRIVER_VERSION, 0, NULL, &valueSize);
 			value = (char*) malloc(valueSize);
 			clGetDeviceInfo(devices[j], CL_DRIVER_VERSION, valueSize, value, NULL);
 			printf(" %d.%d Software version: %s\n", j+1, 2, value);
 			free(value);
 
-			// print c version supported by compiler for device
+			/* print c version supported by compiler for device */
 			clGetDeviceInfo(devices[j], CL_DEVICE_OPENCL_C_VERSION, 0, NULL, &valueSize);
 			value = (char*) malloc(valueSize);
 			clGetDeviceInfo(devices[j], CL_DEVICE_OPENCL_C_VERSION, valueSize, value, NULL);
 			printf(" %d.%d OpenCL C version: %s\n", j+1, 3, value);
 			free(value);
 
-			// print parallel compute units
+			/* print parallel compute units */
 			clGetDeviceInfo(devices[j], CL_DEVICE_MAX_COMPUTE_UNITS,
 					sizeof(maxComputeUnits), &maxComputeUnits, NULL);
 			printf(" %d.%d Parallel compute units: %d\n", j+1, 4, maxComputeUnits);
@@ -219,69 +230,72 @@ void opencl_scanner_devices(struct opencl_scanner_s *this) {
 }
 
 int as_scan_opencl(struct opencl_scanner_s *this, bitstring_t *bs, unsigned int radius, uint8_t *selected) {
+	int i, cnt;
 	cl_int error;
 
-	// Create kernel.
+	/* Create kernel. */
 	cl_kernel kernel = clCreateKernel(this->program, this->kernel_name, &error);
 	assert(error == CL_SUCCESS);
-	//time->mark("OpenCLScanner::scan clCreateKernel");
+	/*time->mark("OpenCLScanner::scan clCreateKernel");*/
 
-	// Set arg0: bitcount_table
+	/* Set arg0: bitcount_table */
 	error = clSetKernelArg(kernel, 0, sizeof(this->bitcount_table_buf), &this->bitcount_table_buf);
 	assert(error == CL_SUCCESS);
-	//time->mark("OpenCLScanner::scan clSetKernelArg0:bitcount_table");
+	/*time->mark("OpenCLScanner::scan clSetKernelArg0:bitcount_table");*/
 
-	// Set arg1: bitstrings
+	/* Set arg1: bitstrings */
 	error = clSetKernelArg(kernel, 1, sizeof(this->bitstrings_buf), &this->bitstrings_buf);
 	assert(error == CL_SUCCESS);
-	//time->mark("OpenCLScanner::scan clSetKernelArg1:bitstrings");
+	/*time->mark("OpenCLScanner::scan clSetKernelArg1:bitstrings");*/
 
-	// Set arg2: bs_len
+	/* Set arg2: bs_len */
 	error = clSetKernelArg(kernel, 2, sizeof(this->bs_len), &this->bs_len);
 	assert(error == CL_SUCCESS);
-	//time->mark("OpenCLScanner::scan clSetKernelArg2:bs_len");
+	/*time->mark("OpenCLScanner::scan clSetKernelArg2:bs_len");*/
 
-	// Set arg3: sample
+	/* Set arg3: sample */
 	error = clSetKernelArg(kernel, 3, sizeof(this->address_space->sample), &this->address_space->sample);
 	assert(error == CL_SUCCESS);
-	//time->mark("OpenCLScanner::scan clSetKernelArg3:sample");
+	/*time->mark("OpenCLScanner::scan clSetKernelArg3:sample");*/
 
-	// Set arg4: global_worksize
+	/* Set arg4: global_worksize */
 	error = clSetKernelArg(kernel, 4, sizeof(this->global_worksize), &this->global_worksize);
 	assert(error == CL_SUCCESS);
-	//time->mark("OpenCLScanner::scan clSetKernelArg4:global_worksize");
+	/*time->mark("OpenCLScanner::scan clSetKernelArg4:global_worksize");*/
 
-	// Set arg5: bs
+	/* Set arg5: bs */
 	error = clEnqueueWriteBuffer(this->queue, this->bs_buf, CL_FALSE, 0, sizeof(cl_bitstring_t)*this->bs_len, bs, 0, NULL, NULL);
 	assert(error == CL_SUCCESS);
-	//time->mark("OpenCLScanner::scan clEnqueueWriteBuffer:bs");
+	/*time->mark("OpenCLScanner::scan clEnqueueWriteBuffer:bs");*/
 	error = clSetKernelArg(kernel, 5, sizeof(this->bs_buf), &this->bs_buf);
 	assert(error == CL_SUCCESS);
-	//time->mark("OpenCLScanner::scan clSetKernelArg5:bs");
+	/*time->mark("OpenCLScanner::scan clSetKernelArg5:bs");*/
 
-	// Set arg6: radius
+	/* Set arg6: radius */
 	cl_uint arg_radius = radius;
 	error = clSetKernelArg(kernel, 6, sizeof(arg_radius), &arg_radius);
 	assert(error == CL_SUCCESS);
-	//time->mark("OpenCLScanner::scan clSetKernelArg6:radius");
+	/*time->mark("OpenCLScanner::scan clSetKernelArg6:radius");*/
 
-	// Set arg8: counter
+	/* Set arg8: counter */
 	error = clSetKernelArg(kernel, 7, sizeof(this->counter_buf), &this->counter_buf);
 	assert(error == CL_SUCCESS);
-	//time->mark("OpenCLScanner::scan clSetKernelArg7:counter_buf");
+	/*time->mark("OpenCLScanner::scan clSetKernelArg7:counter_buf");*/
 
-	// Set arg8: selected
+	/* Set arg8: selected */
 	this->selected = (cl_uchar *)selected;
 	error = clSetKernelArg(kernel, 8, sizeof(this->selected_buf), &this->selected_buf);
 	assert(error == CL_SUCCESS);
-	//time->mark("OpenCLScanner::scan clSetKernelArg8:selected");
+	/*time->mark("OpenCLScanner::scan clSetKernelArg8:selected");*/
 
-	// Wait until all queue is done.
-	//error = clFinish(queue);
-	//assert(error == CL_SUCCESS);
-	//time->mark("OpenCLScanner::scan clFinish (before running)");
+	/* Wait until all queue is done. */
+	/*
+	error = clFinish(queue);
+	assert(error == CL_SUCCESS);
+	time->mark("OpenCLScanner::scan clFinish (before running)");
+	*/
 
-	// Run kernel.
+	/* Run kernel. */
 	if (this->local_worksize > 0) {
 		error = clEnqueueNDRangeKernel(this->queue, kernel, 1, NULL, &this->global_worksize, &this->local_worksize, 0, NULL, NULL);
 	} else {
@@ -291,36 +305,38 @@ int as_scan_opencl(struct opencl_scanner_s *this, bitstring_t *bs, unsigned int 
 		printf("error code = %d\n", error);
 	}
 	assert(error == CL_SUCCESS);
-	//time->mark("OpenCLScanner::scan clEnqueueNDRangeKernel");
+	/*time->mark("OpenCLScanner::scan clEnqueueNDRangeKernel");*/
 
-	// Wait until all queue is done.
-	//error = clFinish(queue);
-	//assert(error == CL_SUCCESS);
-	//time->mark("OpenCLScanner::scan clFinish (after running)");
+	/* Wait until all queue is done. */
+	/*
+	error = clFinish(queue);
+	assert(error == CL_SUCCESS);
+	time->mark("OpenCLScanner::scan clFinish (after running)");
+	*/
 
-	// Read selected bitstring indexes.
+	/* Read selected bitstring indexes. */
 	cl_uint counter;
 	error = clEnqueueReadBuffer(this->queue, this->counter_buf, CL_FALSE, 0, sizeof(cl_uint), &counter, 0, NULL, NULL);
-	//time->mark("OpenCLScanner::scan clEnqueueReadBuffer:selected");
+	/*time->mark("OpenCLScanner::scan clEnqueueReadBuffer:selected");*/
 
-	// Read selected bitstring indexes.
+	/* Read selected bitstring indexes. */
 	error = clEnqueueReadBuffer(this->queue, this->selected_buf, CL_FALSE, 0, sizeof(cl_uchar)*this->address_space->sample, this->selected, 0, NULL, NULL);
-	//time->mark("OpenCLScanner::scan clEnqueueReadBuffer:selected");
+	/*time->mark("OpenCLScanner::scan clEnqueueReadBuffer:selected");*/
 
-	// Wait until all queue is done.
+	/* Wait until all queue is done. */
 	error = clFinish(this->queue);
 	assert(error == CL_SUCCESS);
-	//time->mark("OpenCLScanner::scan clFinish (after reading)");
+	/*time->mark("OpenCLScanner::scan clFinish (after reading)");*/
 
-	// Fill result vector.
-	int cnt = 0;
-	for(int i=0; i<this->address_space->sample; i++) {
+	/* Fill result vector. */
+	cnt = 0;
+	for(i=0; i<this->address_space->sample; i++) {
 		if (this->selected[i]) {
 			cnt++;
 		}
 	}
 	clReleaseKernel(kernel);
-	//time->mark("OpenCLScanner::scan Filling result vector");
+	/*time->mark("OpenCLScanner::scan Filling result vector");*/
 	
 	return cnt;
 }

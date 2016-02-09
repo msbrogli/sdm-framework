@@ -5,10 +5,10 @@
 #include "bitstring.h"
 
 struct address_space_s {
-	// SDM dimension
+	/* SDM dimension */
 	unsigned int bits;
 
-	// Number of hard-locations.
+	/* Number of hard-locations. */
 	unsigned int sample;
 
 	/*

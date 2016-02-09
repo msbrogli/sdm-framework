@@ -30,8 +30,6 @@ struct opencl_scanner_s {
 	cl_mem selected_buf;
 	cl_uchar *selected;
 	cl_mem counter_buf;
-
-	//TimeMeasure time;
 };
 
 int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s *as, char *opencl_source);

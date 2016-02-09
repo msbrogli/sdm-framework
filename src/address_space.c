@@ -89,8 +89,9 @@ int as_free(struct address_space_s *this) {
 }
 
 int as_scan_linear(const struct address_space_s *this, const bitstring_t *bs, unsigned int radius, uint8_t *selected) {
-	int cnt = 0;
-	for(int i=0; i<this->sample; i++) {
+	int i, cnt;
+	cnt = 0;
+	for(i=0; i<this->sample; i++) {
 		if (bs_distance(this->addresses[i], bs, this->bs_len) <= radius) {
 			cnt++;
 			if (selected) {
@@ -151,37 +152,37 @@ int as_init_from_b64_file(struct address_space_s *this, char *filename) {
 		value[0] = '\0';
 		value++;
 		while(isspace(*value)) value++;
-		//printf("!! [%s] \"%s\"\n", key, value);
+		/*printf("!! [%s] \"%s\"\n", key, value);*/
 
 		if (!strcmp(key, "SDM-Version")) {
-			// Check version.
+			/* Check version. */
 			if (strcmp(value, SDM_VERSION_STR)) {
 				ret = -2;
 				goto exit;
 			}
 		} else if (!strcmp(key, "Format")) {
-			// Check format.
+			/* Check format. */
 			if (strcmp(value, "base64")) {
 				ret = -3;
 				goto exit;
 			}
 		} else if (!strcmp(key, "Order-of-bytes")) {
-			// Check byte order.
+			/* Check byte order. */
 			if (strcmp(value, (is_little_endian() ? "little-endian" : "big-endian"))) {
 				ret = -4;
 				goto exit;
 			}
 		} else if (!strcmp(key, "Bits-per-Bitstring")) {
-			// Check bits per bitstring.
+			/* Check bits per bitstring. */
 			bits_per_bitstring = atoi(value);
 		} else if (!strcmp(key, "Bits")) {
-			// Check bits.
+			/* Check bits. */
 			bits = atoi(value);
 		} else if (!strcmp(key, "Sample")) {
-			// Check sample.
+			/* Check sample. */
 			sample = atoi(value);
 		} else {
-			// Unknown header.
+			/* Unknown header. */
 			ret = -5;
 			goto exit;
 		}
@@ -199,7 +200,7 @@ int as_init_from_b64_file(struct address_space_s *this, char *filename) {
 		goto exit;
 	}
 
-	// Read address space (this->bs_data).
+	/* Read address space (this->bs_data). */
 	cnt = 0;
 	while(fgets(line, sizeof(line), fp)) {
 		bs_init_b64(this->addresses[cnt], line);

@@ -11,9 +11,9 @@ uint8_t bitcount_table[1<<16];
 uint8_t bitcount_table_ready = 0;
 
 void bs_init_bitcount_table() {
-	unsigned int a;
+	unsigned int a, i;
 	uint8_t cnt;
-	for(unsigned int i=0; i<(1<<16); i++) {
+	for(i=0; i<(1<<16); i++) {
 		a = i;
 		cnt = 0;
 		while(a) {
@@ -41,20 +41,23 @@ void bs_copy(bitstring_t *dst, const bitstring_t *src, unsigned int len) {
 }
 
 void bs_init_ones(bitstring_t *bs, unsigned int len, unsigned int bits_remaining) {
-	for (int i=0; i<len; i++) {
+	int i;
+	bitstring_t v;
+	for (i=0; i<len; i++) {
 		bs[i] = -1;
 	}
-	// Clear the remaining bits.
-	bitstring_t v = -1;
+	/* Clear the remaining bits. */
+	v = -1;
 	if (bits_remaining > 0) {
 		bs[len-1] &= (v << bits_remaining);
 	}
 }
 
 void bs_init_random(bitstring_t *bs, unsigned int len, unsigned int bits_remaining) {
+	bitstring_t v;
 	arc4random_buf(bs, sizeof(bitstring_t) * len);
-	// Clear the remaining bits.
-	bitstring_t v = -1;
+	/* Clear the remaining bits. */
+	v = -1;
 	if (bits_remaining > 0) {
 		bs[len-1] &= (v << bits_remaining);
 	}
@@ -86,18 +89,19 @@ void bs_to_hex(char *buf, bitstring_t *bs, unsigned int len) {
 }
 
 void bs_to_b64(char *buf, bitstring_t *bs, unsigned int len) {
-	// TODO Handle little-endian and big-endian.
+	/* TODO Handle little-endian and big-endian. */
 	Base64encode(buf, (char *)bs, sizeof(bitstring_t) * len);
 }
 
 int bs_distance(const bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len) {
+	int i;
 #ifdef SDM_USE_BITCOUNT_TABLE
 	uint16_t *ptr;
 #endif
 
 	bitstring_t a;
 	unsigned int dist = 0;
-	for(int i=0; i<len; i++) {
+	for(i=0; i<len; i++) {
 		a = bs1[i] ^ bs2[i];
 #ifdef SDM_USE_BITCOUNT_TABLE
 		ptr = (uint16_t *)&a;

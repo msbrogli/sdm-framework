@@ -2,11 +2,15 @@
 #ifndef SDM_OPERATIONS_H
 #define SDM_OPERATIONS_H
 
+#ifdef SDM_ENABLE_OPENCL
 #include "scanner_opencl.h"
+#endif
 
 #define SDM_SCANNER_LINEAR 1
 #define SDM_SCANNER_THREAD 2
+#ifdef SDM_ENABLE_OPENCL
 #define SDM_SCANNER_OPENCL 3
+#endif
 
 struct sdm_s {
 	unsigned int bits;
@@ -14,10 +18,12 @@ struct sdm_s {
 
 	unsigned int scanner_type;
 
-	// Options for SDM_SCANNER_OPENCL.
+#ifdef SDM_ENABLE_OPENCL
+	/* Options for SDM_SCANNER_OPENCL. */
 	struct opencl_scanner_s *opencl_opts;
+#endif
 
-	// Number of threads for SDM_SCANNER_THREAD.
+	/* Number of threads for SDM_SCANNER_THREAD. */
 	unsigned int thread_count;
 
 	struct address_space_s *address_space;
@@ -26,7 +32,9 @@ struct sdm_s {
 
 int sdm_init_linear(struct sdm_s *sdm, struct address_space_s *address_space, struct counter_s *counter);
 int sdm_init_thread(struct sdm_s *sdm, struct address_space_s *address_space, struct counter_s *counter, unsigned int thread_count);
+#ifdef SDM_ENABLE_OPENCL
 int sdm_init_opencl(struct sdm_s *sdm, struct address_space_s *address_space, struct counter_s *counter, char *opencl_source);
+#endif
 
 void sdm_free(struct sdm_s *sdm);
 

@@ -8,6 +8,7 @@ CCFLAGS += -D SDM_ENABLE_OPENCL
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
 	CCFLAGS += -D OS_LINUX
+	CCFLAGS += -lOpenCL -lpthread -lbsd ~/libbsd-0.4.2/src/.libs/libbsd.so
 endif
 ifeq ($(UNAME_S),Darwin)
 	CCFLAGS += -D OS_OSX
@@ -38,50 +39,47 @@ all: libsdm.a libsdm.so
 tests: test/test_bitstring
 
 libsdm.so: ${OBJS} ${LIB_OBJS}
-	${CC} ${CLFLAGS} -shared -o libsdm.so ${OBJS} ${LIB_OBJS} -lOpenCL -lpthread -lbsd ~/libbsd-0.4.2/src/.libs/libbsd.so
+	${CC} -shared -o libsdm.so ${CLFLAGS} ${OBJS} ${LIB_OBJS}
 
 libsdm.a: ${OBJS} ${LIB_OBJS}
 	ar -cvr libsdm.a ${OBJS} ${LIB_OBJS}
 	ranlib libsdm.a
 
 test1: test1.c libsdm.a
-	${CC} ${CCFLAGS} ${CLFLAGS} -o test1 test1.c libsdm.a -lOpenCL -lpthread -lbsd ~/libbsd-0.4.2/src/.libs/libbsd.so
-
-test1-dyn: test1.c libsdm.so
-	${CC} ${CCFLAGS} ${CLFLAGS} libsdm.so test1.c -o test1-dyn
+	${CC} -o test1 test1.c ${CCFLAGS} ${CLFLAGS} libsdm.a
 
 test2: test2.c libsdm.a
-	${CC} ${CCFLAGS} ${CLFLAGS} libsdm.a test2.c -o test2
+	${CC} -o test2 test2.c ${CCFLAGS} ${CLFLAGS} libsdm.a
 
 test3: test3.c libsdm.a
-	${CC} ${CCFLAGS} ${CLFLAGS} libsdm.a test3.c -o test3
+	${CC} -o test3 test3.c ${CCFLAGS} ${CLFLAGS} libsdm.a
 
 test4: test4.c libsdm.a
-	${CC} ${CCFLAGS} ${CLFLAGS} libsdm.a test4.c -o test4
+	${CC} -o test4 test4.c ${CCFLAGS} ${CLFLAGS} libsdm.a
 
 lib/base64.o: lib/base64.c lib/base64.h
-	(cd lib/ ; ${CC} ${CCFLAGS} -c base64.c)
+	(cd lib/ ; ${CC} -c base64.c ${CCFLAGS})
 
 operations.o: operations.c operations.h
-	${CC} ${CCFLAGS} -c operations.c
+	${CC} -c operations.c ${CCFLAGS}
 
 address_space.o: address_space.h address_space.c version.h
-	${CC} ${CCFLAGS} -c address_space.c
+	${CC} -c address_space.c ${CCFLAGS}
 
 bitstring.o: bitstring.h bitstring.c
-	${CC} ${CCFLAGS} -c bitstring.c
+	${CC} -c bitstring.c ${CCFLAGS}
 
 scanner_thread.o: scanner_thread.c
-	${CC} ${CCFLAGS} -c scanner_thread.c
+	${CC} -c scanner_thread.c ${CCFLAGS}
 
 scanner_opencl.o: scanner_opencl.c scanner_opencl.h
-	${CC} ${CCFLAGS} -c scanner_opencl.c
+	${CC} -c scanner_opencl.c ${CCFLAGS}
 
 counter.o: counter.c counter.h version.h
-	${CC} ${CCFLAGS} -c counter.c
+	${CC} -c counter.c ${CCFLAGS}
 
 test/test_bitstring: test/test_bitstring.c libsdm.a
-	${CC} ${CCFLAGS} -I. libsdm.a test/test_bitstring.c -o test/test_bitstring
+	${CC} -I. libsdm.a test/test_bitstring.c -o test/test_bitstring ${CCFLAGS}
 
 #-------- OLD ----
 

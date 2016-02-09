@@ -2,7 +2,6 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
-#include <OpenCL/cl.h>
 
 #include "scanner_opencl.h"
 

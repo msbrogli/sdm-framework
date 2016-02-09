@@ -2,7 +2,13 @@
 #ifndef SDM_SCANNER_OPENCL_H
 #define SDM_SCANNER_OPENCL_H
 
+#ifdef OS_OSX
 #include <OpenCL/cl.h>
+#endif
+
+#ifdef OS_LINUX
+#include <CL/cl.h>
+#endif
 
 #include "bitstring.h"
 #include "address_space.h"

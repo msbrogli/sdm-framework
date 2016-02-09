@@ -1,24 +1,35 @@
 
 CC=cc
-CCFLAGS=-O2 -Wall -Wno-gnu -pedantic -fPIC -DSDM_USE_BITCOUNT_TABLE -DSDM_ENABLE_OPENCL -std=c99
+CCFLAGS=-O2 -Wall -Wno-gnu -pedantic -fPIC -std=c99
 
-CLFLAGS=-framework OpenCL
+CCFLAGS += -D SDM_USE_BITCOUNT_TABLE
+CCFLAGS += -D SDM_ENABLE_OPENCL
 
-LIB_OBJS=lib/base64.o
+UNAME_S := $(shell uname -s)
+ifeq ($(UNAME_S),Linux)
+	CCFLAGS += -D OS_LINUX
+endif
+ifeq ($(UNAME_S),Darwin)
+	CCFLAGS += -D OS_OSX
+	CLFLAGS += -framework OpenCL
+endif
 
-OBJS=bitstring.o \
-	 address_space.o \
-	 scanner_thread.o \
-	 scanner_opencl.o \
-	 counter.o \
-	 operations.o
 
-HEADERS=bitstring.h \
-		address_space.h \
-		scanner_thread.h \
-		scanner_opencl.h \
-		counter.h \
-		operations.h
+LIB_OBJS += lib/base64.o
+
+OBJS += bitstring.o
+OBJS += address_space.o
+OBJS += scanner_thread.o
+OBJS += scanner_opencl.o
+OBJS += counter.o
+OBJS += operations.o
+
+HEADERS += bitstring.h
+HEADERS += address_space.h
+HEADERS += scanner_thread.h
+HEADERS += scanner_opencl.h
+HEADERS += counter.h
+HEADERS += operations.h
 
 .PHONY: all
 all: libsdm.a libsdm.so

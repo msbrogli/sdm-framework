@@ -12,12 +12,12 @@ int main(void) {
 	char buf[1000];
 	struct opencl_scanner_s opencl;
 	struct counter_s counter;
-	int i, status;
+	int i;
 
 	int bits = 1000;
 	int sample = 1000000;
 
-	//status = as_init_from_b64_file(&as, "test1_address_space_b64.as");
+	//int status = as_init_from_b64_file(&as, "test1_address_space_b64.as");
 	//assert(status == 0);
 
 	assert(!as_init_random(&as, bits, sample));

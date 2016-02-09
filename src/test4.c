@@ -1,4 +1,5 @@
 
+#include <stdio.h>
 #include "sdm.h"
 
 int main(void) {

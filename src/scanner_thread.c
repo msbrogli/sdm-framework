@@ -22,6 +22,7 @@ struct thread_params_t {
 	unsigned int idx_end;
 };
 
+static
 void* scan_task(void *ptr);
 
 int as_scan_thread(const struct address_space_s *this, const bitstring_t *bs, unsigned int radius, uint8_t *selected, unsigned int thread_count) {
@@ -62,6 +63,7 @@ int as_scan_thread(const struct address_space_s *this, const bitstring_t *bs, un
 	return cnt;
 }
 
+static
 void* scan_task(void *ptr) {
 	struct thread_params_t *params = (struct thread_params_t*) ptr;
 

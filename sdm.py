@@ -1,7 +1,7 @@
 
 from ctypes import cdll, cast, sizeof
 from ctypes import Structure, POINTER, pointer, create_string_buffer
-from ctypes import c_uint, c_uint64, c_char_p, c_int
+from ctypes import c_uint, c_uint64, c_char_p, c_int, c_void_p
 
 bitstring_t = c_uint64
 counter_t = c_int
@@ -143,23 +143,35 @@ class Bitstring(object):
     def __eq__(self, other):
         return self.distance_to(other) == 0
 
+SDM_SCANNER_LINEAR = 1
+SDM_SCANNER_THREAD = 2
+SDM_SCANNER_OPENCL = 3
+
 class SDM(Structure):
     _fields_ = [
         ('bits', c_uint),
         ('sample', c_uint),
+        ('scanner_type', c_uint),
+        ('opencl_opts', POINTER(c_void_p)),
+        ('thread_count', c_uint),
         ('c_address_space_p', POINTER(AddressSpace)),
         ('c_counter_p', POINTER(Counter)),
     ]
 
-    def __init__(self, address_space, counter, radius):
+    def __init__(self, address_space, counter, radius, scanner_type, thread_count=8):
         if address_space.bits != counter.bits:
             raise Exception('Dimensions must be equal.')
         if address_space.sample != counter.sample:
             raise Exception('Sample must be equal.')
         self.c_address_space_p = pointer(address_space)
         self.c_counter_p = pointer(counter)
-        self.bits = counter.bits
-        self.sample = counter.sample
+
+        if scanner_type == SDM_SCANNER_LINEAR:
+            libsdm.sdm_init_linear(pointer(self), pointer(address_space), pointer(counter))
+        elif scanner_type == SDM_SCANNER_THREAD:
+            libsdm.sdm_init_thread(pointer(self), pointer(address_space), pointer(counter), thread_count)
+        elif scanner_type == SDM_SCANNER_OPENCL:
+            libsdm.sdm_init_opencl(pointer(self), pointer(address_space), pointer(counter))
 
         self.address_space = address_space
         self.counter = counter
@@ -185,16 +197,25 @@ class SDM(Structure):
         libsdm.sdm_write(pointer(self), addr.bs_data, c_uint(radius), datum.bs_data)
 
 
-def test():
+def gen_sdm(scanner_type):
     bits = 1000
     sample = 1000000
     address_space = AddressSpace.init_random(bits, sample)
     counter = Counter.init_zero(bits, sample)
-    sdm = SDM(address_space, counter, 451)
+    sdm = SDM(address_space, counter, 451, scanner_type)
+    return sdm
 
+def test_read_write(sdm):
     bs1 = Bitstring(bits)
     print bs1.to_b64()
     sdm.write(bs1, bs1)
     bs2 = sdm.read(bs1)
     print bs2.to_b64()
+
+
+def gen_all():
+    sdm_linear = gen_sdm(SDM_SCANNER_LINEAR)
+    sdm_thread = gen_sdm(SDM_SCANNER_THREAD)
+    sdm_opencl = gen_sdm(SDM_SCANNER_OPENCL)
+    return sdm_linear, sdm_thread, sdm_opencl
 

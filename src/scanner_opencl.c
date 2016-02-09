@@ -10,7 +10,7 @@
 // - https://www.khronos.org/registry/cl/sdk/1.0/docs/man/xhtml/scalarDataTypes.html
 // - https://code.google.com/p/simple-opencl/
 
-int opencl_scanner_init(struct opencl_scanner_s *this, struct address_space_s *as) {
+int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s *as) {
 	this->address_space = as;
 
 	// =============================
@@ -70,6 +70,7 @@ int opencl_scanner_init(struct opencl_scanner_s *this, struct address_space_s *a
 	char *source_str = (char *)malloc(sizeof(char)*MAX_SOURCE_SIZE);
 	size_t source_size;
 	FILE *fp = fopen("scanner_opencl.cl", "r");
+	assert(fp != NULL);
 	source_size = fread(source_str, 1, MAX_SOURCE_SIZE, fp);
 	source_str[source_size] = '\0';
 	fclose(fp);
@@ -136,7 +137,7 @@ int opencl_scanner_init(struct opencl_scanner_s *this, struct address_space_s *a
 	return 0;
 }
 
-void opencl_scanner_free(struct opencl_scanner_s *this) {
+void as_scanner_opencl_free(struct opencl_scanner_s *this) {
 	//free(this->selected);
 
 	clReleaseMemObject(this->bitcount_table_buf);

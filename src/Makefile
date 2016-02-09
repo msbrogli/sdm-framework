@@ -1,6 +1,6 @@
 
 CC=cc
-CCFLAGS=-O2 -Wall -Wno-gnu -pedantic -fPIC -DSDM_USE_BITCOUNT_TABLE -DSDM_ENABLE_OPENCL #-std=c90
+CCFLAGS=-O2 -Wall -Wno-gnu -pedantic -fPIC -DSDM_USE_BITCOUNT_TABLE -DSDM_ENABLE_OPENCL -std=c99
 
 CLFLAGS=-framework OpenCL
 

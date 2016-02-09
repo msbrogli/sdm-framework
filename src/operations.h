@@ -26,7 +26,7 @@ struct sdm_s {
 
 int sdm_init_linear(struct sdm_s *sdm, struct address_space_s *address_space, struct counter_s *counter);
 int sdm_init_thread(struct sdm_s *sdm, struct address_space_s *address_space, struct counter_s *counter, unsigned int thread_count);
-int sdm_init_opencl(struct sdm_s *sdm, struct address_space_s *address_space, struct counter_s *counter);
+int sdm_init_opencl(struct sdm_s *sdm, struct address_space_s *address_space, struct counter_s *counter, char *opencl_source);
 
 void sdm_free(struct sdm_s *sdm);
 

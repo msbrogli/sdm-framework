@@ -11,6 +11,7 @@ typedef cl_ulong cl_bitstring_t;
 
 struct opencl_scanner_s {
 	struct address_space_s *address_space;
+	char* opencl_source;
 
 	char* kernel_name;
 	size_t global_worksize;
@@ -33,7 +34,7 @@ struct opencl_scanner_s {
 	//TimeMeasure time;
 };
 
-int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s *as);
+int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s *as, char *opencl_source);
 void as_scanner_opencl_free(struct opencl_scanner_s *this);
 int as_scan_opencl(struct opencl_scanner_s *this, bitstring_t *bs, unsigned int radius, uint8_t *result);
 

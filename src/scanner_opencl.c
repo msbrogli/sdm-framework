@@ -10,8 +10,9 @@
 // - https://www.khronos.org/registry/cl/sdk/1.0/docs/man/xhtml/scalarDataTypes.html
 // - https://code.google.com/p/simple-opencl/
 
-int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s *as) {
+int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s *as, char *opencl_source) {
 	this->address_space = as;
+	this->opencl_source = opencl_source;
 
 	// =============================
 	// Set local and group worksize.
@@ -69,7 +70,7 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 	const int MAX_SOURCE_SIZE = 1<<20;
 	char *source_str = (char *)malloc(sizeof(char)*MAX_SOURCE_SIZE);
 	size_t source_size;
-	FILE *fp = fopen("scanner_opencl.cl", "r");
+	FILE *fp = fopen(this->opencl_source, "r");
 	assert(fp != NULL);
 	source_size = fread(source_str, 1, MAX_SOURCE_SIZE, fp);
 	source_str[source_size] = '\0';

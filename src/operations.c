@@ -36,14 +36,14 @@ int sdm_init_thread(struct sdm_s *sdm, struct address_space_s *address_space, st
 	return 0;
 }
 
-int sdm_init_opencl(struct sdm_s *sdm, struct address_space_s *address_space, struct counter_s *counter) {
+int sdm_init_opencl(struct sdm_s *sdm, struct address_space_s *address_space, struct counter_s *counter, char *opencl_source) {
 	int ret = _sdm_init(sdm, address_space, counter);
 	if (ret) {
 		return ret;
 	}
 	sdm->scanner_type = SDM_SCANNER_OPENCL;
 	sdm->opencl_opts = (struct opencl_scanner_s *) malloc(sizeof(struct opencl_scanner_s));
-	as_scanner_opencl_init(sdm->opencl_opts, sdm->address_space);
+	as_scanner_opencl_init(sdm->opencl_opts, sdm->address_space, opencl_source);
 	return 0;
 }
 

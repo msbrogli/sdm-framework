@@ -171,7 +171,7 @@ class SDM(Structure):
         elif scanner_type == SDM_SCANNER_THREAD:
             libsdm.sdm_init_thread(pointer(self), pointer(address_space), pointer(counter), thread_count)
         elif scanner_type == SDM_SCANNER_OPENCL:
-            libsdm.sdm_init_opencl(pointer(self), pointer(address_space), pointer(counter))
+            libsdm.sdm_init_opencl(pointer(self), pointer(address_space), pointer(counter), c_char_p("src/scanner_opencl.cl"))
 
         self.address_space = address_space
         self.counter = counter

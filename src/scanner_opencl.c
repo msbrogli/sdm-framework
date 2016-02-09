@@ -46,18 +46,18 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 	 * Create context.
 	 * ==============
 	 */
-   // query the number of platforms
-   cl_uint numPlatforms;
-   error = clGetPlatformIDs(0, NULL, &numPlatforms);
+	// query the number of platforms
+	cl_uint numPlatforms;
+	error = clGetPlatformIDs(0, NULL, &numPlatforms);
 	assert(error == CL_SUCCESS);
 
-   // now get all the platform IDs
-   cl_platform_id platforms[numPlatforms];
-   error = clGetPlatformIDs(numPlatforms, platforms, NULL);
+	// now get all the platform IDs
+	cl_platform_id platforms[numPlatforms];
+	error = clGetPlatformIDs(numPlatforms, platforms, NULL);
 	assert(error == CL_SUCCESS);
 
-   // set platform property - we just pick the first one
-   cl_context_properties properties[] = {CL_CONTEXT_PLATFORM, (int) platforms[0], 0};
+	// set platform property - we just pick the first one
+	cl_context_properties properties[] = {CL_CONTEXT_PLATFORM, (int) platforms[0], 0};
 	this->context = clCreateContextFromType(properties, CL_DEVICE_TYPE_GPU, NULL, NULL, &error);
 	assert(error == CL_SUCCESS);
 

@@ -1,12 +1,44 @@
-from distutils.core import setup
+from distutils.core import setup, Extension
+
+# Classifiers: https://pypi.python.org/pypi?%3Aaction=list_classifiers
+
+macros = [
+    ('OS_OSX', None),
+    ('SDM_USE_BITCOUNT_TABLE', None),
+    ('SDM_ENABLE_OPENCL', None),
+]
+extra_compile_args = None
+extra_link_args=['-framework', 'OpenCL']
+libraries = None
+
+libsdm_ext = Extension('sdm/_libsdm', [
+    'src/bitstring.c', 'src/address_space.c', 'src/counter.c',
+    'src/scanner_thread.c', 'src/scanner_opencl.c', 
+    'src/operations.c', 'src/lib/base64.c',
+], libraries=libraries, define_macros=macros, extra_compile_args=extra_compile_args, extra_link_args=extra_link_args)
 
 setup(name='sdm',
-    version='0.0.1',
-    license='GPL',
+    version='1.0.0',
+    license='GPLv2',
     author='Marcelo Salhab Brogliato',
     author_email='msbrogli@vialink.com.br',
     description='Sparse Distributed Memory Framework',
     long_description='',
+    ext_modules=[libsdm_ext],
     packages=['sdm'],
+    package_data={'sdm': ['scanner_opencl.cl']},
     url='https://github.com/msbrogli/sdm-framework',
+    classifiers=[
+        'Development Status :: 4 - Beta',
+        'Framework :: Sparse Distributed Memory',
+        'Intended Audience :: Developers',
+        'Intended Audience :: Science/Research',
+        'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
+        'Natural Language :: English',
+        'Topic :: Scientific/Engineering',
+        'Programming Language :: C',
+        'Programming Language :: Python'
+        'Operating System :: MacOS :: MacOS X',
+        'Operating System :: POSIX',
+    ]
 )

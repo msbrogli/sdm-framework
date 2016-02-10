@@ -2,13 +2,19 @@
 from ctypes import cdll, cast, sizeof
 from ctypes import Structure, POINTER, pointer, create_string_buffer
 from ctypes import c_uint, c_uint64, c_char_p, c_int, c_void_p
+import os
 
 bitstring_t = c_uint64
 counter_t = c_int
 
-libsdm = cdll.LoadLibrary('src/libsdm.so')
+basedir = os.path.dirname(__file__)
+libsdm = cdll.LoadLibrary(os.path.join(basedir, '_libsdm.so'))
 libsdm.bs_alloc.restype = POINTER(bitstring_t)
 libsdm.bs_init_bitcount_table()
+
+opencl_source_code = os.path.join(basedir, 'scanner_opencl.cl')
+if not os.path.exists(opencl_source_code):
+    print "Ops!", opencl_source_code
 
 class AddressSpace(Structure):
     _fields_ = [
@@ -37,8 +43,15 @@ class AddressSpace(Structure):
 
     def scan_linear(self, bs, radius):
         buf = create_string_buffer(self.bits)
-        libsdm.as_scan_linear(pointer(self), bs, c_uint(radius), buf)
-        return buf
+        return libsdm.as_scan_linear(pointer(self), bs.bs_data, c_uint(radius), buf)
+
+    def scan_threads(self, bs, radius, thread_count):
+        buf = create_string_buffer(self.bits)
+        return libsdm.as_scan_threads(pointer(self), bs.bs_data, c_uint(radius), buf, c_uint(thread_count))
+
+    #def scan_opencl(self, bs, radius):
+    #    buf = create_string_buffer(self.bits)
+    #    return libsdm.as_scan_threads(pointer(self), bs.bs_data, c_uint(radius), buf, c_uint(thread_count))
 
 
 class Counter(Structure):
@@ -171,7 +184,7 @@ class SDM(Structure):
         elif scanner_type == SDM_SCANNER_THREAD:
             libsdm.sdm_init_thread(pointer(self), pointer(address_space), pointer(counter), thread_count)
         elif scanner_type == SDM_SCANNER_OPENCL:
-            libsdm.sdm_init_opencl(pointer(self), pointer(address_space), pointer(counter), c_char_p("src/scanner_opencl.cl"))
+            libsdm.sdm_init_opencl(pointer(self), pointer(address_space), pointer(counter), c_char_p(opencl_source_code))
 
         self.address_space = address_space
         self.counter = counter

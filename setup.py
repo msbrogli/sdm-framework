@@ -44,14 +44,13 @@ setup(name='sdm',
     url='https://github.com/msbrogli/sdm-framework',
     classifiers=[
         'Development Status :: 4 - Beta',
-        'Framework :: Sparse Distributed Memory',
         'Intended Audience :: Developers',
         'Intended Audience :: Science/Research',
         'License :: OSI Approved :: GNU General Public License v2 (GPLv2)',
         'Natural Language :: English',
         'Topic :: Scientific/Engineering',
         'Programming Language :: C',
-        'Programming Language :: Python'
+        'Programming Language :: Python',
         'Operating System :: MacOS :: MacOS X',
         'Operating System :: POSIX',
     ]

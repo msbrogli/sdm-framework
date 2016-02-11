@@ -1,15 +1,29 @@
 from distutils.core import setup, Extension
+import subprocess
 
 # Classifiers: https://pypi.python.org/pypi?%3Aaction=list_classifiers
 
 macros = [
-    ('OS_OSX', None),
     ('SDM_USE_BITCOUNT_TABLE', None),
     ('SDM_ENABLE_OPENCL', None),
 ]
 extra_compile_args = None
-extra_link_args=['-framework', 'OpenCL']
+extra_link_args = None
 libraries = None
+
+try:
+    os_string = subprocess.check_output(['uname', '-s']).strip().lower()
+except OSError:
+    os_string = None
+
+if os_string == 'darwin':
+    macros.append(('OS_OSX', None))
+    extra_link_args = ['-framework', 'OpenCL']
+
+elif os_string == 'linux':
+    macros.append(('OS_LINUX', None))
+    libraries = ['OpenCL', 'pthread', 'bsd']
+
 
 libsdm_ext = Extension('sdm/_libsdm', [
     'src/bitstring.c', 'src/address_space.c', 'src/counter.c',
@@ -18,7 +32,7 @@ libsdm_ext = Extension('sdm/_libsdm', [
 ], libraries=libraries, define_macros=macros, extra_compile_args=extra_compile_args, extra_link_args=extra_link_args)
 
 setup(name='sdm',
-    version='1.0.0',
+    version='1.0.1',
     license='GPLv2',
     author='Marcelo Salhab Brogliato',
     author_email='msbrogli@vialink.com.br',

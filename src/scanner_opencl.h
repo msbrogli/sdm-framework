@@ -24,9 +24,11 @@ struct opencl_scanner_s {
 	size_t local_worksize;
 
 	cl_context context;
-	cl_device_id device_id;
-	cl_command_queue queue;
 	cl_program program;
+
+	int devices_count;
+	cl_device_id *devices;
+	cl_command_queue *queues;
 
 	cl_uchar bitcount_table[1<<16];
 	cl_mem bitcount_table_buf;
@@ -34,7 +36,6 @@ struct opencl_scanner_s {
 	cl_uint bs_len;
 	cl_mem bs_buf;
 	cl_mem selected_buf;
-	cl_uchar *selected;
 	cl_mem counter_buf;
 };
 

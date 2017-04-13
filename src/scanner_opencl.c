@@ -6,7 +6,15 @@
 
 #include "scanner_opencl.h"
 
+/* Prevent the double evaluation problem. */
+#define min(a,b) \
+	({ __typeof__ (a) _a = (a); \
+	   __typeof__ (b) _b = (b); \
+	   _a < _b ? _a : _b; })
+
 /*
+ * TODO Multiple device support.
+ *
  * Links:
  * - https://www.khronos.org/registry/cl/sdk/1.0/docs/man/xhtml/scalarDataTypes.html
  * - https://code.google.com/p/simple-opencl/
@@ -15,7 +23,7 @@
 int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s *as, char *opencl_source) {
 	cl_int error;
 	size_t deviceBufferSize;
-	cl_device_id *devices;
+	int i;
 
 	this->address_space = as;
 	this->opencl_source = opencl_source;
@@ -69,18 +77,20 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 	error = clGetContextInfo(this->context, CL_CONTEXT_DEVICES, 0, NULL, &deviceBufferSize);
 	assert(error == CL_SUCCESS);
 
-	devices = (cl_device_id *) malloc(deviceBufferSize);
-	error = clGetContextInfo(this->context, CL_CONTEXT_DEVICES, deviceBufferSize, devices, NULL);
+	this->devices = (cl_device_id *) malloc(deviceBufferSize);
+	error = clGetContextInfo(this->context, CL_CONTEXT_DEVICES, deviceBufferSize, this->devices, NULL);
 	assert(error == CL_SUCCESS);
-	this->device_id = devices[0];
-	free(devices);
+	this->devices_count = deviceBufferSize / sizeof(cl_device_id);
 
 	/* =============
 	 * Create queue.
 	 * =============
 	 */
-	this->queue = clCreateCommandQueue(this->context, this->device_id, 0, &error);
-	assert(error == CL_SUCCESS);
+	this->queues = (cl_command_queue *) malloc(sizeof(cl_command_queue) * this->devices_count);
+	for (i=0; i<this->devices_count; i++) {
+		this->queues[i] = clCreateCommandQueue(this->context, this->devices[i], 0, &error);
+		assert(error == CL_SUCCESS);
+	}
 
 	/* =======================
 	 * Read and build program.
@@ -97,13 +107,13 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 
 	this->program = clCreateProgramWithSource(this->context, 1, (const char **)&source_str, NULL, &error);
 	assert(error == CL_SUCCESS);
-	error = clBuildProgram(this->program, 1, &this->device_id, NULL, NULL, NULL);
+	error = clBuildProgram(this->program, this->devices_count, this->devices, NULL, NULL, NULL);
 
 	/* Print build log. */
 	size_t log_size;
-	clGetProgramBuildInfo(this->program, this->device_id, CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
+	clGetProgramBuildInfo(this->program, this->devices[0], CL_PROGRAM_BUILD_LOG, 0, NULL, &log_size);
 	char *log = (char *) malloc(log_size);
-	clGetProgramBuildInfo(this->program, this->device_id, CL_PROGRAM_BUILD_LOG, log_size, log, NULL);
+	clGetProgramBuildInfo(this->program, this->devices[0], CL_PROGRAM_BUILD_LOG, log_size, log, NULL);
 	if (strlen(log) > 0) {
 		printf("=== LOG\n%s\n=== END\n", log);
 	}
@@ -116,7 +126,6 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 	 * Generate bitcount_table.
 	 * ========================
 	 */
-	int i;
 	for(i=0; i<(1<<16); i++) {
 		int a = i, d = 0;
 		while(a) {
@@ -127,8 +136,10 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 	}
 	this->bitcount_table_buf = clCreateBuffer(this->context, CL_MEM_READ_ONLY, sizeof(this->bitcount_table), NULL, &error);
 	assert(error == CL_SUCCESS);
-	error = clEnqueueWriteBuffer(this->queue, this->bitcount_table_buf, CL_FALSE, 0, sizeof(this->bitcount_table), this->bitcount_table, 0, NULL, NULL);
-	assert(error == CL_SUCCESS);
+	for(i=0; i<this->devices_count; i++) {
+		error = clEnqueueWriteBuffer(this->queues[i], this->bitcount_table_buf, CL_FALSE, 0, sizeof(this->bitcount_table), this->bitcount_table, 0, NULL, NULL);
+		assert(error == CL_SUCCESS);
+	}
 
 	/* ====================
 	 * Generate bitstrings.
@@ -139,8 +150,10 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 	size_t bs_size = sizeof(cl_bitstring_t)*this->bs_len*this->address_space->sample;
 	this->bitstrings_buf = clCreateBuffer(this->context, CL_MEM_READ_ONLY, bs_size, NULL, &error);
 	assert(error == CL_SUCCESS);
-	error = clEnqueueWriteBuffer(this->queue, this->bitstrings_buf, CL_FALSE, 0, bs_size, this->address_space->bs_data, 0, NULL, NULL);
-	assert(error == CL_SUCCESS);
+	for(i=0; i<this->devices_count; i++) {
+		error = clEnqueueWriteBuffer(this->queues[i], this->bitstrings_buf, CL_FALSE, 0, bs_size, this->address_space->bs_data, 0, NULL, NULL);
+		assert(error == CL_SUCCESS);
+	}
 
 	/* =========================
 	 * Allocating other buffers.
@@ -153,24 +166,29 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 	this->counter_buf = clCreateBuffer(this->context, CL_MEM_WRITE_ONLY, sizeof(cl_uint), NULL, &error);
 	assert(error == CL_SUCCESS);
 	assert(sizeof(cl_uchar) == sizeof(uint8_t));
-	/*this->selected = (cl_uchar *)malloc(sizeof(cl_uchar)*this->address_space->sample);*/
 
-	error = clFinish(this->queue);
-	assert(error == CL_SUCCESS);
+	for(i=0; i<this->devices_count; i++) {
+		error = clFinish(this->queues[i]);
+		assert(error == CL_SUCCESS);
+	}
 
 	return 0;
 }
 
 void as_scanner_opencl_free(struct opencl_scanner_s *this) {
-	/*free(this->selected);*/
+	int i;
 	clReleaseMemObject(this->bitcount_table_buf);
 	clReleaseMemObject(this->bitstrings_buf);
 	clReleaseMemObject(this->bs_buf);
 	clReleaseMemObject(this->selected_buf);
 	clReleaseMemObject(this->counter_buf);
 	clReleaseProgram(this->program);
-	clReleaseCommandQueue(this->queue);
+	for(i=0; i<this->devices_count; i++) {
+		clReleaseCommandQueue(this->queues[i]);
+	}
 	clReleaseContext(this->context);
+	free(this->queues);
+	free(this->devices);
 }
 
 void opencl_scanner_devices(struct opencl_scanner_s *this) {
@@ -273,8 +291,10 @@ int as_scan_opencl(struct opencl_scanner_s *this, bitstring_t *bs, unsigned int 
 	//assert(error == CL_SUCCESS);
 
 	/* Set arg5: bs */
-	error = clEnqueueWriteBuffer(this->queue, this->bs_buf, CL_FALSE, 0, sizeof(cl_bitstring_t)*this->bs_len, bs, 0, NULL, NULL);
-	assert(error == CL_SUCCESS);
+	for(i=0; i<this->devices_count; i++) {
+		error = clEnqueueWriteBuffer(this->queues[i], this->bs_buf, CL_FALSE, 0, sizeof(cl_bitstring_t)*this->bs_len, bs, 0, NULL, NULL);
+		assert(error == CL_SUCCESS);
+	}
 	error = clSetKernelArg(kernel, 4, sizeof(this->bs_buf), &this->bs_buf);
 	assert(error == CL_SUCCESS);
 
@@ -288,32 +308,40 @@ int as_scan_opencl(struct opencl_scanner_s *this, bitstring_t *bs, unsigned int 
 	assert(error == CL_SUCCESS);
 
 	/* Set arg8: selected */
-	this->selected = (cl_uchar *)selected;
 	error = clSetKernelArg(kernel, 7, sizeof(this->selected_buf), &this->selected_buf);
 	assert(error == CL_SUCCESS);
 
 	/* Wait until all queue is done. */
-	error = clFinish(this->queue);
-	assert(error == CL_SUCCESS);
+	//error = clFinish(this->queue);
+	//assert(error == CL_SUCCESS);
 	//gettimeofday(&t1, NULL);
 	//printf("==> clEnqueueWriteBuffer %f ms\n", t1.tv_sec*1000.0 + t1.tv_usec/1000.0 - t0.tv_sec*1000.0 - t0.tv_usec/1000.0);
 	//gettimeofday(&t0, NULL);
 
 	/* Run kernel. */
-	if (this->local_worksize > 0) {
-		error = clEnqueueNDRangeKernel(this->queue, kernel, 1, NULL, &this->global_worksize, &this->local_worksize, 0, NULL, NULL);
-	} else {
-		error = clEnqueueNDRangeKernel(this->queue, kernel, 1, NULL, &this->global_worksize, NULL, 0, NULL, NULL);
+	size_t qty = this->global_worksize / this->devices_count;
+	size_t extra = this->global_worksize % this->devices_count;
+	for(i=0; i<this->devices_count; i++) {
+		size_t offset = i * qty + min(i, extra);
+		size_t worksize = qty + (i < extra ? 1 : 0);
+		if (this->local_worksize > 0) {
+			error = clEnqueueNDRangeKernel(this->queues[i], kernel, 1, &offset, &worksize, &this->local_worksize, 0, NULL, NULL);
+			assert(0);
+		} else {
+			error = clEnqueueNDRangeKernel(this->queues[i], kernel, 1, &offset, &worksize, NULL, 0, NULL, NULL);
+		}
+		if (error != CL_SUCCESS) {
+			printf("error code = %d\n", error);
+		}
+		assert(error == CL_SUCCESS);
 	}
-	if (error != CL_SUCCESS) {
-		printf("error code = %d\n", error);
-	}
-	assert(error == CL_SUCCESS);
 	/*time->mark("OpenCLScanner::scan clEnqueueNDRangeKernel");*/
 
 	/* Wait until all queue is done. */
-	error = clFinish(this->queue);
-	assert(error == CL_SUCCESS);
+	for(i=0; i<this->devices_count; i++) {
+		error = clFinish(this->queues[i]);
+		assert(error == CL_SUCCESS);
+	}
 	//gettimeofday(&t1, NULL);
 	//printf("==> clEnqueueNDRangeKernel %f ms\n", t1.tv_sec*1000.0 + t1.tv_usec/1000.0 - t0.tv_sec*1000.0 - t0.tv_usec/1000.0);
 	//gettimeofday(&t0, NULL);
@@ -323,11 +351,11 @@ int as_scan_opencl(struct opencl_scanner_s *this, bitstring_t *bs, unsigned int 
 	//error = clEnqueueReadBuffer(this->queue, this->counter_buf, CL_FALSE, 0, sizeof(cl_uint), &counter, 0, NULL, NULL);
 
 	/* Read selected bitstring indexes. */
-	error = clEnqueueReadBuffer(this->queue, this->selected_buf, CL_FALSE, 0, sizeof(cl_uchar)*this->address_space->sample, this->selected, 0, NULL, NULL);
+	error = clEnqueueReadBuffer(this->queues[0], this->selected_buf, CL_FALSE, 0, sizeof(cl_uchar)*this->address_space->sample, selected, 0, NULL, NULL);
 	/*time->mark("OpenCLScanner::scan clEnqueueReadBuffer:selected");*/
 
 	/* Wait until all queue is done. */
-	error = clFinish(this->queue);
+	error = clFinish(this->queues[0]);
 	assert(error == CL_SUCCESS);
 	//gettimeofday(&t1, NULL);
 	//printf("==> clEnqueueReadBuffer %f ms\n", t1.tv_sec*1000.0 + t1.tv_usec/1000.0 - t0.tv_sec*1000.0 - t0.tv_usec/1000.0);
@@ -336,7 +364,7 @@ int as_scan_opencl(struct opencl_scanner_s *this, bitstring_t *bs, unsigned int 
 	/* Fill result vector. */
 	cnt = 0;
 	for(i=0; i<this->address_space->sample; i++) {
-		if (this->selected[i]) {
+		if (selected[i]) {
 			cnt++;
 		}
 	}

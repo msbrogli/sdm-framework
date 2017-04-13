@@ -2,6 +2,7 @@
 #include <stdio.h>
 #include <string.h>
 #include <assert.h>
+#include <sys/time.h>
 
 #include "scanner_opencl.h"
 
@@ -242,69 +243,61 @@ void opencl_scanner_devices(struct opencl_scanner_s *this) {
 int as_scan_opencl(struct opencl_scanner_s *this, bitstring_t *bs, unsigned int radius, uint8_t *selected) {
 	int i, cnt;
 	cl_int error;
+	//struct timeval t0, t1;
+
+	//gettimeofday(&t0, NULL);
 
 	/* Create kernel. */
 	cl_kernel kernel = clCreateKernel(this->program, this->kernel_name, &error);
 	assert(error == CL_SUCCESS);
-	/*time->mark("OpenCLScanner::scan clCreateKernel");*/
 
 	/* Set arg0: bitcount_table */
 	error = clSetKernelArg(kernel, 0, sizeof(this->bitcount_table_buf), &this->bitcount_table_buf);
 	assert(error == CL_SUCCESS);
-	/*time->mark("OpenCLScanner::scan clSetKernelArg0:bitcount_table");*/
 
 	/* Set arg1: bitstrings */
 	error = clSetKernelArg(kernel, 1, sizeof(this->bitstrings_buf), &this->bitstrings_buf);
 	assert(error == CL_SUCCESS);
-	/*time->mark("OpenCLScanner::scan clSetKernelArg1:bitstrings");*/
 
 	/* Set arg2: bs_len */
 	error = clSetKernelArg(kernel, 2, sizeof(this->bs_len), &this->bs_len);
 	assert(error == CL_SUCCESS);
-	/*time->mark("OpenCLScanner::scan clSetKernelArg2:bs_len");*/
 
 	/* Set arg3: sample */
 	error = clSetKernelArg(kernel, 3, sizeof(this->address_space->sample), &this->address_space->sample);
 	assert(error == CL_SUCCESS);
-	/*time->mark("OpenCLScanner::scan clSetKernelArg3:sample");*/
 
 	/* Set arg4: global_worksize */
 	//error = clSetKernelArg(kernel, 4, sizeof(this->global_worksize), &this->global_worksize);
 //printf("@@ error = %d\n", error);
 	//assert(error == CL_SUCCESS);
-	/*time->mark("OpenCLScanner::scan clSetKernelArg4:global_worksize");*/
 
 	/* Set arg5: bs */
 	error = clEnqueueWriteBuffer(this->queue, this->bs_buf, CL_FALSE, 0, sizeof(cl_bitstring_t)*this->bs_len, bs, 0, NULL, NULL);
 	assert(error == CL_SUCCESS);
-	/*time->mark("OpenCLScanner::scan clEnqueueWriteBuffer:bs");*/
 	error = clSetKernelArg(kernel, 4, sizeof(this->bs_buf), &this->bs_buf);
 	assert(error == CL_SUCCESS);
-	/*time->mark("OpenCLScanner::scan clSetKernelArg5:bs");*/
 
 	/* Set arg6: radius */
 	cl_uint arg_radius = radius;
 	error = clSetKernelArg(kernel, 5, sizeof(arg_radius), &arg_radius);
 	assert(error == CL_SUCCESS);
-	/*time->mark("OpenCLScanner::scan clSetKernelArg6:radius");*/
 
 	/* Set arg8: counter */
 	error = clSetKernelArg(kernel, 6, sizeof(this->counter_buf), &this->counter_buf);
 	assert(error == CL_SUCCESS);
-	/*time->mark("OpenCLScanner::scan clSetKernelArg7:counter_buf");*/
 
 	/* Set arg8: selected */
 	this->selected = (cl_uchar *)selected;
 	error = clSetKernelArg(kernel, 7, sizeof(this->selected_buf), &this->selected_buf);
 	assert(error == CL_SUCCESS);
-	/*time->mark("OpenCLScanner::scan clSetKernelArg8:selected");*/
 
 	/* Wait until all queue is done. */
-	/*
-	error = clFinish(queue);
+	error = clFinish(this->queue);
 	assert(error == CL_SUCCESS);
-	time->mark("OpenCLScanner::scan clFinish (before running)");
-	*/
+	//gettimeofday(&t1, NULL);
+	//printf("==> clEnqueueWriteBuffer %f ms\n", t1.tv_sec*1000.0 + t1.tv_usec/1000.0 - t0.tv_sec*1000.0 - t0.tv_usec/1000.0);
+	//gettimeofday(&t0, NULL);
 
 	/* Run kernel. */
 	if (this->local_worksize > 0) {
@@ -319,16 +312,15 @@ int as_scan_opencl(struct opencl_scanner_s *this, bitstring_t *bs, unsigned int 
 	/*time->mark("OpenCLScanner::scan clEnqueueNDRangeKernel");*/
 
 	/* Wait until all queue is done. */
-	/*
-	error = clFinish(queue);
+	error = clFinish(this->queue);
 	assert(error == CL_SUCCESS);
-	time->mark("OpenCLScanner::scan clFinish (after running)");
-	*/
+	//gettimeofday(&t1, NULL);
+	//printf("==> clEnqueueNDRangeKernel %f ms\n", t1.tv_sec*1000.0 + t1.tv_usec/1000.0 - t0.tv_sec*1000.0 - t0.tv_usec/1000.0);
+	//gettimeofday(&t0, NULL);
 
-	/* Read selected bitstring indexes. */
-	cl_uint counter;
-	error = clEnqueueReadBuffer(this->queue, this->counter_buf, CL_FALSE, 0, sizeof(cl_uint), &counter, 0, NULL, NULL);
-	/*time->mark("OpenCLScanner::scan clEnqueueReadBuffer:selected");*/
+	/* Read counter. */
+	//cl_uint counter;
+	//error = clEnqueueReadBuffer(this->queue, this->counter_buf, CL_FALSE, 0, sizeof(cl_uint), &counter, 0, NULL, NULL);
 
 	/* Read selected bitstring indexes. */
 	error = clEnqueueReadBuffer(this->queue, this->selected_buf, CL_FALSE, 0, sizeof(cl_uchar)*this->address_space->sample, this->selected, 0, NULL, NULL);
@@ -337,7 +329,9 @@ int as_scan_opencl(struct opencl_scanner_s *this, bitstring_t *bs, unsigned int 
 	/* Wait until all queue is done. */
 	error = clFinish(this->queue);
 	assert(error == CL_SUCCESS);
-	/*time->mark("OpenCLScanner::scan clFinish (after reading)");*/
+	//gettimeofday(&t1, NULL);
+	//printf("==> clEnqueueReadBuffer %f ms\n", t1.tv_sec*1000.0 + t1.tv_usec/1000.0 - t0.tv_sec*1000.0 - t0.tv_usec/1000.0);
+	//gettimeofday(&t0, NULL);
 
 	/* Fill result vector. */
 	cnt = 0;
@@ -346,8 +340,13 @@ int as_scan_opencl(struct opencl_scanner_s *this, bitstring_t *bs, unsigned int 
 			cnt++;
 		}
 	}
-	clReleaseKernel(kernel);
-	/*time->mark("OpenCLScanner::scan Filling result vector");*/
+	//gettimeofday(&t1, NULL);
+	//printf("==> Processing results %f ms\n", t1.tv_sec*1000.0 + t1.tv_usec/1000.0 - t0.tv_sec*1000.0 - t0.tv_usec/1000.0);
+	//gettimeofday(&t0, NULL);
 	
+	clReleaseKernel(kernel);
+
+	//printf("\n");
+
 	return cnt;
 }

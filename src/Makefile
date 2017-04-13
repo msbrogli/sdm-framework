@@ -8,7 +8,7 @@ CCFLAGS += -D SDM_ENABLE_OPENCL
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
 	CCFLAGS += -D OS_LINUX
-	CCFLAGS += -lOpenCL -lpthread -lbsd ~/libbsd-0.4.2/src/.libs/libbsd.so
+	CLFLAGS += -lOpenCL -lpthread -lbsd
 endif
 ifeq ($(UNAME_S),Darwin)
 	CCFLAGS += -D OS_OSX
@@ -39,14 +39,14 @@ all: libsdm.a libsdm.so
 tests: test/test_bitstring
 
 libsdm.so: ${OBJS} ${LIB_OBJS}
-	${CC} -shared -o libsdm.so ${CLFLAGS} ${OBJS} ${LIB_OBJS}
+	${CC} -shared -o libsdm.so ${OBJS} ${LIB_OBJS} ${CLFLAGS}
 
 libsdm.a: ${OBJS} ${LIB_OBJS}
 	ar -cvr libsdm.a ${OBJS} ${LIB_OBJS}
 	ranlib libsdm.a
 
 test1: test1.c libsdm.a
-	${CC} -o test1 test1.c ${CCFLAGS} ${CLFLAGS} libsdm.a
+	${CC} -o test1 test1.c libsdm.a ${CCFLAGS} ${CLFLAGS}
 
 test2: test2.c libsdm.a
 	${CC} -o test2 test2.c ${CCFLAGS} ${CLFLAGS} libsdm.a

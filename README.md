@@ -8,9 +8,18 @@ Brogliato, M.S.; Linhares, A. (2016) Sparse Distributed Memory: a reference impl
 
 Please notice that it is still in development and not ready to be used. :)
 
+
 How do I contribute?
 ====================
 Just fork it and do the usual pull request dance. :)
+
+
+Links
+=====
+- [https://aws.amazon.com/ec2/instance-types/]
+- [http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using_cluster_computing.html]
+- [http://jackmorrison.me/2014/09/11/CUDA-on-AWS.html]
+
 
 TODO
 ====

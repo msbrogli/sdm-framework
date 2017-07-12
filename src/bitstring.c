@@ -63,6 +63,15 @@ void bs_init_random(bitstring_t *bs, unsigned int len, unsigned int bits_remaini
 	}
 }
 
+void bs_init_hex(bitstring_t *bs, unsigned int len, char *hex) {
+	int i;
+	for (i=0; i<len; i++) {
+		sscanf(hex, "%016llx", bs);
+		bs++;
+		hex += 16;
+	}
+}
+
 void bs_init_b64(bitstring_t *bs, char *b64) {
 	Base64decode((char *)bs, b64);
 }

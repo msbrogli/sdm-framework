@@ -35,7 +35,7 @@ class AddressSpace(Structure):
     @classmethod
     def init_from_b64_file(cls, filename):
         self = cls()
-        libsdm.as_init_b64_file(pointer(self), c_char_p(filename))
+        libsdm.as_init_from_b64_file(pointer(self), c_char_p(filename))
         return self
 
     def print_summary(self):
@@ -52,6 +52,9 @@ class AddressSpace(Structure):
     #def scan_opencl(self, bs, radius):
     #    buf = create_string_buffer(self.bits)
     #    return libsdm.as_scan_threads(pointer(self), bs.bs_data, c_uint(radius), buf, c_uint(thread_count))
+
+    def save(self, filename):
+        return libsdm.as_save_b64_file(pointer(self), filename)
 
 
 class Counter(Structure):
@@ -109,6 +112,18 @@ class Bitstring(object):
         self.bs_data = libsdm.bs_alloc(c_uint(self.bs_len))
 
     @classmethod
+    def init_hex(cls, bits, hex_str):
+        self = cls(bits)
+        libsdm.bs_init_hex(self.bs_data, c_uint(self.bs_len), hex_str)
+        return self
+
+    @classmethod
+    def init_b64(cls, b64):
+        self = cls(bits)
+        libsdm.bs_init_b64(self.bs_data, b64)
+        return self
+
+    @classmethod
     def init_random(cls, bits):
         self = cls(bits)
         libsdm.bs_init_random(self.bs_data, c_uint(self.bs_len), c_uint(self.bs_remaining_bits))
@@ -122,7 +137,7 @@ class Bitstring(object):
 
     @classmethod
     def init_from_bitstring(cls, other):
-        self = cls(bits)
+        self = cls(other.bits)
         libsdm.bs_copy(self.bs_data, other.bs_data, c_uint(self.bs_len))
         return self
 

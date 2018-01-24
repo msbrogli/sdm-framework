@@ -1,6 +1,8 @@
 *.swp
 *.o
 
+docs/_build/
+
 src/test_address_space
 src/test_bitstring
 src/test_counter

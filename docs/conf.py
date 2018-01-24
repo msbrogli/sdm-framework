@@ -19,6 +19,7 @@
 import os
 import sys
 sys.path.insert(0, os.path.abspath('../'))
+os.environ['GEN_DOCS'] = '1'
 
 
 # -- General configuration ------------------------------------------------

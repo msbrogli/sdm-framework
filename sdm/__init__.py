@@ -8,7 +8,18 @@ bitstring_t = c_uint64
 counter_t = c_int
 
 basedir = os.path.dirname(__file__)
-libsdm = cdll.LoadLibrary(os.path.join(basedir, '_libsdm.so'))
+if not os.environ.get('GEN_DOCS'):
+    libsdm = cdll.LoadLibrary(os.path.join(basedir, '_libsdm.so'))
+else:
+    class Dummy(object):
+        def __getattribute__(self, attr):
+            if hasattr(self, attr):
+                return object.__getattribute__(self, attr)
+            return Dummy()
+        def __call__(self, *args, **kwargs):
+            return None
+    libsdm = Dummy()
+
 libsdm.bs_alloc.restype = POINTER(bitstring_t)
 libsdm.bs_init_bitcount_table()
 

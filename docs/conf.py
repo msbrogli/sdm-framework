@@ -16,9 +16,9 @@
 # add these directories to sys.path here. If the directory is relative to the
 # documentation root, use os.path.abspath to make it absolute, like shown here.
 #
-# import os
-# import sys
-# sys.path.insert(0, os.path.abspath('.'))
+import os
+import sys
+sys.path.insert(0, os.path.abspath('../'))
 
 
 # -- General configuration ------------------------------------------------
@@ -57,7 +57,7 @@ author = u'Alexandre Linhares, Marcelo Salhab Brogliato'
 # built documents.
 #
 # The short X.Y version.
-version = u''
+version = u'1.0'
 # The full version, including alpha/beta/rc tags.
 release = u''
 
@@ -85,7 +85,7 @@ todo_include_todos = False
 # The theme to use for HTML and HTML Help pages.  See the documentation for
 # a list of builtin themes.
 #
-html_theme = 'alabaster'
+html_theme = 'classic'
 
 # Theme options are theme-specific and customize the look and feel of a theme
 # further.  For a list of options available for each theme, see the
@@ -141,7 +141,7 @@ latex_elements = {
 # (source start file, target name, title,
 #  author, documentclass [howto, manual, or own class]).
 latex_documents = [
-    (master_doc, 'SparseDistributedMemoryFramework.tex', u'Sparse Distributed Memory Framework Documentation',
+    (master_doc, 'sdm-framework.tex', u'Sparse Distributed Memory Framework Documentation',
      u'Alexandre Linhares, Marcelo Salhab Brogliato', 'manual'),
 ]
 
@@ -151,7 +151,7 @@ latex_documents = [
 # One entry per manual page. List of tuples
 # (source start file, name, description, authors, manual section).
 man_pages = [
-    (master_doc, 'sparsedistributedmemoryframework', u'Sparse Distributed Memory Framework Documentation',
+    (master_doc, 'sdm-framework', u'Sparse Distributed Memory Framework Documentation',
      [author], 1)
 ]
 

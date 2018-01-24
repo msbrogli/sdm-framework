@@ -10,6 +10,25 @@ Welcome to Sparse Distributed Memory Framework's documentation!
    :maxdepth: 2
    :caption: Contents:
 
+.. automodule:: sdm
+   :members:
+   :undoc-members:
+
+.. autoclass:: Bitstring
+   :members:
+   :undoc-members:
+
+.. autoclass:: AddressSpace
+   :members:
+   :undoc-members:
+
+.. autoclass:: Counter
+   :members:
+   :undoc-members:
+
+.. autoclass:: SDM
+   :members:
+   :undoc-members:
 
 
 Indices and tables

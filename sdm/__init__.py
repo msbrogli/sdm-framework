@@ -17,6 +17,12 @@ if not os.path.exists(opencl_source_code):
     print "Ops!", opencl_source_code
 
 class AddressSpace(Structure):
+    ''' The AddressSpace contains the hard-locations' addresses. Thus, it is required to
+    specify the number of bits (`bits`) of each hard-location and also the number of hard-locations
+    which will be generated (`sample`).
+
+    In his book, Kanerva usually uses a 1000-bit address space with 1,000,000 hard-locations (`bits=1000` and `sample=1000000`).
+    '''
     _fields_ = [
         ('bits', c_uint),
         ('sample', c_uint),
@@ -28,12 +34,16 @@ class AddressSpace(Structure):
 
     @classmethod
     def init_random(cls, bits, sample):
+        ''' Initialize an address space with hard-locations randomly chosen from {0, 1}^`bits` space.
+        '''
         self = cls()
         libsdm.as_init_random(pointer(self), c_uint(bits), c_uint(sample))
         return self
 
     @classmethod
     def init_from_b64_file(cls, filename):
+        ''' Load an address space from a file.
+        '''
         self = cls()
         libsdm.as_init_from_b64_file(pointer(self), c_char_p(filename))
         return self
@@ -42,22 +52,41 @@ class AddressSpace(Structure):
         libsdm.as_print_summary(pointer(self))
 
     def scan_linear(self, bs, radius):
-        buf = create_string_buffer(self.bits)
-        return libsdm.as_scan_linear(pointer(self), bs.bs_data, c_uint(radius), buf)
+        ''' Scan which hard-locations are in the circle with center `bs` and a given `radius`.
+        The scan is performed in O(`sample`).
 
-    def scan_threads(self, bs, radius, thread_count):
-        buf = create_string_buffer(self.bits)
-        return libsdm.as_scan_threads(pointer(self), bs.bs_data, c_uint(radius), buf, c_uint(thread_count))
+        It returns a list with the indexes of the hard-locations inside the circle.
 
-    #def scan_opencl(self, bs, radius):
-    #    buf = create_string_buffer(self.bits)
-    #    return libsdm.as_scan_threads(pointer(self), bs.bs_data, c_uint(radius), buf, c_uint(thread_count))
+        This method returns exactly the same result as :method:`AddressSpace.scan_thread`.
+        '''
+        buf = create_string_buffer(self.sample)
+        libsdm.as_scan_linear(pointer(self), bs.bs_data, c_uint(radius), buf)
+        return [i for i, x in enumerate(buf) if x != '\x00']
+
+    def scan_thread(self, bs, radius, thread_count):
+        ''' Scan which hard-locations are in the circle with center `bs` and a given `radius`.
+        The scan is distributed among threads in O(`sample`/`thread_count`).
+
+        It returnes a list with the indexes of the hard-locations inside the circle.
+
+        This method returns exactly the same result as :method:`AddressSpace.scan_linear`.
+        '''
+        buf = create_string_buffer(self.sample)
+        libsdm.as_scan_thread(pointer(self), bs.bs_data, c_uint(radius), buf, c_uint(thread_count))
+        return [i for i, x in enumerate(buf) if x != '\x00']
 
     def save(self, filename):
+        ''' Save the address space in a file. You need to provide the full filename, including the extension.
+        The suggested extension is `.as`.
+        '''
         return libsdm.as_save_b64_file(pointer(self), filename)
 
 
 class Counter(Structure):
+    ''' The Counter contains the hard-locations' counters, which is basically a list of integers.
+    The counter usually is stored in a file. For the typical SDM of 1,000,000 hard-locations of 1,000 bits each,
+    the counters use 3.7GB of space.
+    '''
     _fields_ = [
         ('bits', c_uint),
         ('sample', c_uint),
@@ -69,41 +98,60 @@ class Counter(Structure):
 
     @classmethod
     def init_zero(cls, bits, sample):
+        ''' Initialize the counters with initial value zero. The counters are stored in RAM memory.
+        '''
         self = cls()
         libsdm.counter_init(pointer(self), c_uint(bits), c_uint(sample))
         return self
 
     @classmethod
     def load_file(cls, filename):
+        ''' Load the counters from a file. It is the suggested way to use counters.
+        '''
         self = cls()
         libsdm.counter_init_file(c_char_p(filename), pointer(self))
         return self
 
     @classmethod
     def create_file(cls, filename, bits, sample):
+        ''' Create a new file to store counters. You do not need to provide any file extension,
+        because the counters are store in two files and the extensions will be automatically added.
+        '''
         libsdm.counter_create_file(c_char_p(filename), c_uint(bits), c_uint(sample))
         return cls.load_file(filename)
 
     def print_summary(self):
+        ''' Print a summary of the counters.
+        '''
         libsdm.counter_print_summary(pointer(self))
 
     def print_address(self, index):
+        ''' Print the counters of a hard-location. The index must match the index in the associated AddressSpace.
+        '''
         libsdm.counter_print(pointer(self), c_uint(index))
 
     def add_bitstring(self, bs):
+        ''' Add a bitstring to the counter of a hard-location.
+        '''
         libsdm.counter_add_bitstring(pointer(self), c_uint(index), bs.bs_data)
 
     def add_counter(self, idx1, counter, idx2):
         libsdm.counter_add_counter(pointer(self), c_uint(idx1), pointer(counter), c_uint(idx2))
 
     def to_bitstring(self, index):
+        ''' Returns a bitstring associated to the counters of the hard-location.
+        '''
         bs = Bitstring(self.bits)
         libsdm.counter_to_bitstring(pointer(self), c_uint(index), bs.bs_data)
         return bs
 
 
 class Bitstring(object):
+    ''' The Bitstring is the basic unity of storage in an SDM.
+    '''
     def __init__(self, bits):
+        '''  Initialize a new bitstring. The value of the bitstring is not initialized.
+        '''
         self.bits = bits
         self.bs_len = bits // 8 // sizeof(bitstring_t)
         if (self.bs_len * 8 * sizeof(bitstring_t) < bits):
@@ -113,57 +161,83 @@ class Bitstring(object):
 
     @classmethod
     def init_hex(cls, bits, hex_str):
+        ''' Initialize a bitstring based on an hexadecimal string.
+        '''
         self = cls(bits)
         libsdm.bs_init_hex(self.bs_data, c_uint(self.bs_len), hex_str)
         return self
 
     @classmethod
     def init_b64(cls, b64):
+        ''' Initialize a bitstring based on a base-64 string.
+        '''
         self = cls(bits)
         libsdm.bs_init_b64(self.bs_data, b64)
         return self
 
     @classmethod
     def init_random(cls, bits):
+        ''' Initialize a random bitstring.
+        '''
         self = cls(bits)
         libsdm.bs_init_random(self.bs_data, c_uint(self.bs_len), c_uint(self.bs_remaining_bits))
         return self
 
     @classmethod
     def init_ones(cls, bits):
+        ''' Initialize a bitstring with all bits equal to one.
+        '''
         self = cls(bits)
         libsdm.bs_init_ones(self.bs_data, c_uint(self.bs_len), c_uint(self.bs_remaining_bits))
         return self
 
     @classmethod
     def init_from_bitstring(cls, other):
+        ''' Initialize a bitstring copying the bits from `other` bitstring.
+        '''
         self = cls(other.bits)
         libsdm.bs_copy(self.bs_data, other.bs_data, c_uint(self.bs_len))
         return self
 
     def get_bit(self, bit):
+        ''' Return the value of a specific bit.
+        '''
         return libsdm.bs_get_bit(self.bs_data, c_uint(bit))
 
     def set_bit(self, bit, value):
+        ''' Change a specific bit.
+        '''
         return libsdm.bs_set_bit(self.bs_data, c_uint(bit), c_uint(value))
 
     def flip_bit(self, bit, value):
+        ''' Flip a specific bit.
+        '''
         return libsdm.bs_flip_bit(self.bs_data, c_uint(bit))
 
     def flip_random_bits(self, flips):
+        ''' Randomly flip some bits in the bitstring.
+
+        It may be used to generate a bitstring with a given distance from another one.
+        '''
         return libsdm.bs_flip_random_bits(self.bs_data, c_uint(self.bits), c_uint(flips))
 
     def to_b64(self):
-        buf = create_string_buffer(1000)
+        ''' Return a base-64 string of the bitstring.
+        '''
+        buf = create_string_buffer(self.bits)
         libsdm.bs_to_b64(buf, self.bs_data, c_uint(self.bs_len))
         return buf.value
 
     def to_hex(self):
-        buf = create_string_buffer(1000)
+        ''' Return an hexadecimal string of the bitstring.
+        '''
+        buf = create_string_buffer(self.bits)
         libsdm.bs_to_hex(buf, self.bs_data, c_uint(self.bs_len))
         return buf.value
 
     def distance_to(self, other):
+        ''' Return the hamming distance to `other` bitstring.
+        '''
         if self.bits != other.bits:
             raise Exception('Dimensions must be equal.')
         return libsdm.bs_distance(self.bs_data, other.bs_data, c_uint(self.bs_len))
@@ -176,6 +250,8 @@ SDM_SCANNER_THREAD = 2
 SDM_SCANNER_OPENCL = 3
 
 class SDM(Structure):
+    ''' An SDM is a facade to manage a given AddressSpace and Counters.
+    '''
     _fields_ = [
         ('bits', c_uint),
         ('sample', c_uint),
@@ -187,6 +263,11 @@ class SDM(Structure):
     ]
 
     def __init__(self, address_space, counter, radius, scanner_type, thread_count=8):
+        ''' Create a new SDM using a given address space and counters.
+        The `radius` is the default radius for read and write operations.
+        The `scanner_type` is the default scanner for read and write operations.
+        The `thread_count` will be used only when `scanner_type` is `SDM_SCANNER_THREAD`.
+        '''
         if address_space.bits != counter.bits:
             raise Exception('Dimensions must be equal.')
         if address_space.sample != counter.sample:
@@ -206,6 +287,8 @@ class SDM(Structure):
         self.radius = radius
 
     def iter_read(self, addr, radius=None, max_iter=6):
+        ''' Return an iterative reading with a maximum number of iterations.
+        '''
         if radius is None:
             radius = self.radius
         out = Bitstring(self.bits)
@@ -213,6 +296,8 @@ class SDM(Structure):
         return out
 
     def read(self, addr, radius=None):
+        ''' Return a single read from the SDM.
+        '''
         if radius is None:
             radius = self.radius
         out = Bitstring(self.bits)
@@ -220,6 +305,8 @@ class SDM(Structure):
         return out
 
     def write(self, addr, datum, radius=None):
+        ''' Write a bitstring to the SDM.
+        '''
         if radius is None:
             radius = self.radius
         libsdm.sdm_write(pointer(self), addr.bs_data, c_uint(radius), datum.bs_data)

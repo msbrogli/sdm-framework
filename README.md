@@ -16,6 +16,11 @@ Brogliato, M.S.; Linhares, A. (2017) Sparse Distributed Memory: a reference impl
 Please notice that it is still in development and not ready to be used. :)
 
 
+Documentation
+=============
+The documentation is available at [http://sdm-framework.readthedocs.io/]
+
+
 How do I contribute?
 ====================
 Just fork it and do the usual pull request dance. :)

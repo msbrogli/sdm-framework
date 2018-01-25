@@ -1,6 +1,10 @@
 *.swp
 *.o
 
+libsdm.a
+libsdm.so
+_libsdm.so
+
 build/
 dist/
 

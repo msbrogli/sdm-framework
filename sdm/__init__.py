@@ -8,20 +8,17 @@ bitstring_t = c_uint64
 counter_t = c_int
 
 basedir = os.path.dirname(__file__)
-if not os.environ.get('GEN_DOCS'):
+try:
     libsdm = cdll.LoadLibrary(os.path.join(basedir, '_libsdm.so'))
-else:
-    class Dummy(object):
-        def __getattribute__(self, attr):
-            if hasattr(self, attr):
-                return object.__getattribute__(self, attr)
-            return Dummy()
-        def __call__(self, *args, **kwargs):
-            return None
-    libsdm = Dummy()
+except Exception, e:
+    if os.environ.get('GEN_DOCS'):
+        libsdm = None
+    else:
+        raise e
 
-libsdm.bs_alloc.restype = POINTER(bitstring_t)
-libsdm.bs_init_bitcount_table()
+if libsdm is not None:
+    libsdm.bs_alloc.restype = POINTER(bitstring_t)
+    libsdm.bs_init_bitcount_table()
 
 opencl_source_code = os.path.join(basedir, 'scanner_opencl.cl')
 if not os.path.exists(opencl_source_code):
@@ -68,7 +65,7 @@ class AddressSpace(Structure):
 
         It returns a list with the indexes of the hard-locations inside the circle.
 
-        This method returns exactly the same result as :method:`AddressSpace.scan_thread`.
+        This method returns exactly the same result as :py:func:`AddressSpace.scan_thread`.
         '''
         buf = create_string_buffer(self.sample)
         libsdm.as_scan_linear(pointer(self), bs.bs_data, c_uint(radius), buf)
@@ -80,7 +77,7 @@ class AddressSpace(Structure):
 
         It returnes a list with the indexes of the hard-locations inside the circle.
 
-        This method returns exactly the same result as :method:`AddressSpace.scan_linear`.
+        This method returns exactly the same result as :py:func:`AddressSpace.scan_linear`.
         '''
         buf = create_string_buffer(self.sample)
         libsdm.as_scan_thread(pointer(self), bs.bs_data, c_uint(radius), buf, c_uint(thread_count))

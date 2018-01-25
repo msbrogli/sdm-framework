@@ -136,6 +136,9 @@ int as_init_from_b64_file(struct address_space_s *this, char *filename) {
 	int len, cnt;
 	unsigned int bits = 0, sample = 0, bits_per_bitstring = 0;
 	fp = fopen(filename, "r");
+	if (fp == NULL) {
+		return -1;
+	}
 	fgets(line, sizeof(line), fp);
 	if (strcmp(line, "SDM ADDRESS SPACE\n")) {
 		return -1;

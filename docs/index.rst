@@ -6,29 +6,26 @@
 Welcome to Sparse Distributed Memory Framework's documentation!
 ===============================================================
 
+Welcome! This is the documentation for Sparse Distributed Memory Framework.
+
+
+Parts of the documentation
+--------------------------
+
+The documentation is organized in two parts: C API and Python Library.
+
+It is suggested to use the Python Library. It is a facade which simplifies the creation and manipulation of SDM instances. It also works in the Jupyter Notebook.
+
+The C API is the low level module which may be extended to add new operations to the SDM.
+
 .. toctree::
-   :maxdepth: 2
-   :caption: Contents:
+   :maxdepth: 3
+   :numbered:
 
-.. automodule:: sdm
-   :members:
-   :undoc-members:
+   c-api
+   sdm
 
-.. autoclass:: Bitstring
-   :members:
-   :undoc-members:
-
-.. autoclass:: AddressSpace
-   :members:
-   :undoc-members:
-
-.. autoclass:: Counter
-   :members:
-   :undoc-members:
-
-.. autoclass:: SDM
-   :members:
-   :undoc-members:
+   notebooks/index.rst
 
 
 Indices and tables

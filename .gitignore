@@ -1,6 +1,11 @@
 *.swp
 *.o
 
+build/
+dist/
+
+venv/
+
 docs/_build/
 
 src/test_address_space

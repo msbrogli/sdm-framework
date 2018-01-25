@@ -1,5 +1,5 @@
-SDM Library's documentation
-===========================
+SDM Library
+===========
 
 .. automodule:: sdm
 

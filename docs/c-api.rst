@@ -1,5 +1,5 @@
-C API's documentation
-========================
+C API
+=====
 
 
 Bitstring's functions

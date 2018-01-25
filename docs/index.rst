@@ -22,9 +22,8 @@ The C API is the low level module which may be extended to add new operations to
    :maxdepth: 3
    :numbered:
 
-   c-api
    sdm
-
+   c-api
    notebooks/index.rst
 
 

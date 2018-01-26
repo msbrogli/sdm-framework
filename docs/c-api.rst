@@ -29,6 +29,11 @@ The following functions are used to create, destroy, and manipulate bitstrings. 
     Copy one bitstring into another.
 
 
+.. c:function:: void bs_init_zeros(bitstring_t *bs, unsigned int len, unsigned int bits_remaining)
+
+    Initialize a bitstring with all bits equal to zero. The bitstring's memory must have already been allocated.
+
+
 .. c:function:: void bs_init_ones(bitstring_t *bs, unsigned int len, unsigned int bits_remaining)
 
     Initialize a bitstring with all bits equal to one. The bitstring's memory must have already been allocated.
@@ -82,6 +87,26 @@ The following functions are used to create, destroy, and manipulate bitstrings. 
 .. c:function:: int bs_flip_random_bits(bitstring_t *bs, unsigned int bits, unsigned int flips)
 
     Randomly choose `flips` bits of the bitstring. It is used to generate a random bitstring with a given distance from another bitstring.
+
+
+.. c:function:: void bs_xor(bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len)
+
+    Calculate the XOR bitwise operation between two bitstrings. The result is stored in `bs1`.
+
+
+.. c:function:: void bs_and(bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len)
+
+    Calculate the AND bitwise operation between two bitstrings. The result is stored in `bs1`.
+
+
+.. c:function:: void bs_or(bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len)
+
+    Calculate the OR bitwise operation between two bitstrings. The result is stored in `bs1`.
+
+
+.. c:function:: void bs_average(bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len)
+
+    Calculate average between the bitstrings. The result is stored in `bs1`.
 
 
 Address Space's functions

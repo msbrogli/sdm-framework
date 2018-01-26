@@ -250,6 +250,30 @@ class Bitstring(object):
             raise Exception('Dimensions must be equal.')
         return libsdm.bs_distance(self.bs_data, other.bs_data, c_uint(self.bs_len))
 
+    def xor(self, other):
+        ''' Calculates the XOR between bitstrings `self` and `other`.
+        The result is stored in `self`.
+        '''
+        if self.bits != other.bits:
+            raise Exception('Dimensions must be equal.')
+        return libsdm.bs_xor(self.bs_data, other.bs_data, c_uint(self.bs_len))
+
+    def op_and(self, other):
+        ''' Calculates the OR between bitstrings `self` and `other`.
+        The result is stored in `self`.
+        '''
+        if self.bits != other.bits:
+            raise Exception('Dimensions must be equal.')
+        return libsdm.bs_and(self.bs_data, other.bs_data, c_uint(self.bs_len))
+
+    def op_or(self, other):
+        ''' Calculates the AND between bitstrings `self` and `other`.
+        The result is stored in `self`.
+        '''
+        if self.bits != other.bits:
+            raise Exception('Dimensions must be equal.')
+        return libsdm.bs_or(self.bs_data, other.bs_data, c_uint(self.bs_len))
+
     def __eq__(self, other):
         return self.distance_to(other) == 0
 

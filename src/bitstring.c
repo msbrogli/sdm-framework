@@ -40,6 +40,13 @@ void bs_copy(bitstring_t *dst, const bitstring_t *src, unsigned int len) {
 	memcpy(dst, src, sizeof(bitstring_t) * len);
 }
 
+void bs_init_zeros(bitstring_t *bs, unsigned int len, unsigned int bits_remaining) {
+	int i;
+	for (i=0; i<len; i++) {
+		bs[i] = 0;
+	}
+}
+
 void bs_init_ones(bitstring_t *bs, unsigned int len, unsigned int bits_remaining) {
 	int i;
 	bitstring_t v;
@@ -100,6 +107,52 @@ void bs_to_hex(char *buf, bitstring_t *bs, unsigned int len) {
 void bs_to_b64(char *buf, bitstring_t *bs, unsigned int len) {
 	/* TODO Handle little-endian and big-endian. */
 	Base64encode(buf, (char *)bs, sizeof(bitstring_t) * len);
+}
+
+void bs_not(bitstring_t *bs, const unsigned int len) {
+	// FIXME XXX BUG The remaining bits must be cleaned.
+	int i;
+	for(i=0; i<len; i++) {
+		bs[i] = ~bs[i];
+	}
+}
+
+void bs_xor(bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len) {
+	int i;
+	for(i=0; i<len; i++) {
+		bs1[i] ^= bs2[i];
+	}
+}
+
+void bs_and(bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len) {
+	int i;
+	for(i=0; i<len; i++) {
+		bs1[i] &= bs2[i];
+	}
+}
+
+void bs_or(bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len) {
+	int i;
+	for(i=0; i<len; i++) {
+		bs1[i] |= bs2[i];
+	}
+}
+
+void bs_average(bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len) {
+	// FIXME XXX Incomplete implementation.
+	unsigned int i, bit;
+	bitstring_t c;
+	for(i=0; i<len; i++) {
+		c = bs1[i] ^ bs2[i];
+		bit = 1;
+		while (c) {
+			if (c && 1) {
+				// Flip a coin! :)
+			}
+			bit <<= 1;
+			c >>= 1;
+		}
+	}
 }
 
 int bs_distance(const bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len) {

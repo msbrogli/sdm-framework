@@ -8,5 +8,5 @@ Examples
    Kanerva-Table-7.3.ipynb
    Noise filter.ipynb
    Noise filter A-Z 0-1 Generator.ipynb
-   Classification Test #1
-   Classification Test #2
+   Classification Test 1
+   Classification Test 2

@@ -139,17 +139,20 @@ void bs_or(bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len) {
 }
 
 void bs_average(bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len) {
-	// FIXME XXX Incomplete implementation.
+	// FIXME XXX TODO Need to be tested.
 	unsigned int i, bit;
 	bitstring_t c;
 	for(i=0; i<len; i++) {
 		c = bs1[i] ^ bs2[i];
-		bit = 1;
+		bit = 0;
 		while (c) {
 			if (c && 1) {
 				// Flip a coin! :)
+				if (arc4random() % 2) {
+					bs1[i] ^= (1<<bit);
+				}
 			}
-			bit <<= 1;
+			bit++;
 			c >>= 1;
 		}
 	}

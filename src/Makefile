@@ -2,8 +2,13 @@
 CC=cc
 CCFLAGS=-O2 -Wall -Wno-gnu -pedantic -fPIC -std=c99
 
-CCFLAGS += -D SDM_USE_BITCOUNT_TABLE
 CCFLAGS += -D SDM_ENABLE_OPENCL
+
+#CCFLAGS += -D SDM_USE_BITCOUNT_TABLE
+CCFLAGS += -D SDM_USE_BUILTIN_POPCOUNT
+
+# Profiling
+#CCFLAGS += -g
 
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)

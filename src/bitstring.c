@@ -26,6 +26,9 @@ void bs_init_bitcount_table() {
 	}
 	bitcount_table_ready = 1;
 }
+#else
+void bs_init_bitcount_table() {
+}
 #endif
 
 bitstring_t* bs_alloc(const unsigned int len) {
@@ -158,30 +161,50 @@ void bs_average(bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len
 	}
 }
 
+
+#ifdef SDM_USE_BUILTIN_POPCOUNT
 int bs_distance(const bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len) {
 	int i;
-#ifdef SDM_USE_BITCOUNT_TABLE
+	unsigned int dist = 0;
+	for(i=0; i<len; i++) {
+		dist += __builtin_popcountll(bs1[i] ^ bs2[i]);
+	}
+	return dist;
+}
+
+#elif defined SDM_USE_BITCOUNT_TABLE
+int bs_distance(const bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len) {
+	int i;
 	uint16_t *ptr;
-#endif
 
 	bitstring_t a;
 	unsigned int dist = 0;
 	for(i=0; i<len; i++) {
 		a = bs1[i] ^ bs2[i];
-#ifdef SDM_USE_BITCOUNT_TABLE
 		ptr = (uint16_t *)&a;
 		dist += bitcount_table[ptr[0]] + bitcount_table[ptr[1]] + bitcount_table[ptr[2]] + bitcount_table[ptr[3]];
+	}
+	return dist;
+}
+
 #else
+int bs_distance(const bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len) {
+	int i;
+
+	bitstring_t a;
+	unsigned int dist = 0;
+	for(i=0; i<len; i++) {
+		a = bs1[i] ^ bs2[i];
 		while(a) {
 			if (a&1) {
 				dist++;
 			}
 			a >>= 1;
 		}
-#endif
 	}
 	return dist;
 }
+#endif
 
 unsigned int bs_get_bit(bitstring_t *bs, unsigned int bit) {
 	unsigned int offset = bit / 8 / sizeof(bitstring_t);

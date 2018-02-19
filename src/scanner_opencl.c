@@ -81,7 +81,7 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 	error = clGetContextInfo(this->context, CL_CONTEXT_DEVICES, deviceBufferSize, this->devices, NULL);
 	assert(error == CL_SUCCESS);
 	this->devices_count = deviceBufferSize / sizeof(cl_device_id);
-	printf("OpenCL number of devices: %d\n", this->devices_count);
+	printf("OpenCL platforms: %d devices: %d\n", numPlatforms, this->devices_count);
 
 	/* =============
 	 * Create queue.

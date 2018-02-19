@@ -6,7 +6,6 @@
 #include "lib/base64.h"
 #include "bitstring.h"
 
-#ifdef SDM_USE_BITCOUNT_TABLE
 uint8_t bitcount_table[1<<16];
 uint8_t bitcount_table_ready = 0;
 
@@ -26,10 +25,6 @@ void bs_init_bitcount_table() {
 	}
 	bitcount_table_ready = 1;
 }
-#else
-void bs_init_bitcount_table() {
-}
-#endif
 
 bitstring_t* bs_alloc(const unsigned int len) {
 	return (bitstring_t*) malloc(sizeof(bitstring_t) * len);
@@ -161,9 +156,7 @@ void bs_average(bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len
 	}
 }
 
-
-#ifdef SDM_USE_BUILTIN_POPCOUNT
-int bs_distance(const bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len) {
+int bs_distance_popcount(const bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len) {
 	int i;
 	unsigned int dist = 0;
 	for(i=0; i<len; i++) {
@@ -172,8 +165,7 @@ int bs_distance(const bitstring_t *bs1, const bitstring_t *bs2, const unsigned i
 	return dist;
 }
 
-#elif defined SDM_USE_BITCOUNT_TABLE
-int bs_distance(const bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len) {
+int bs_distance_lookup16(const bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len) {
 	int i;
 	uint16_t *ptr;
 
@@ -187,8 +179,7 @@ int bs_distance(const bitstring_t *bs1, const bitstring_t *bs2, const unsigned i
 	return dist;
 }
 
-#else
-int bs_distance(const bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len) {
+int bs_distance_naive(const bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len) {
 	int i;
 
 	bitstring_t a;
@@ -204,7 +195,6 @@ int bs_distance(const bitstring_t *bs1, const bitstring_t *bs2, const unsigned i
 	}
 	return dist;
 }
-#endif
 
 unsigned int bs_get_bit(bitstring_t *bs, unsigned int bit) {
 	unsigned int offset = bit / 8 / sizeof(bitstring_t);

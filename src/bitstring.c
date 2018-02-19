@@ -203,6 +203,26 @@ void bs_flip_bit(bitstring_t *bs, unsigned int bit) {
 }
 
 int bs_flip_random_bits(bitstring_t *bs, unsigned int bits, unsigned int flips) {
+	unsigned int i, j, tmp, v[bits];
+	for(i=0; i<bits; i++) {
+		v[i] = i;
+	}
+	// Fisher-Yates shuffle.
+	for(i=bits-1; i>0; i--) {
+		j = arc4random_uniform(i+1);
+		tmp = v[i];
+		v[i] = v[j];
+		v[j] = tmp;
+	}
+	for(i=0; i<flips; i++) {
+		bs_flip_bit(bs, v[i]);
+	}
+	return flips;
+}
+
+int bs_flip_random_bits_old(bitstring_t *bs, unsigned int bits, unsigned int flips) {
+	// This algorithm is not efficient when `flips` is close to `bits`.
+	// We recommend to use `bs_flip_random_bits`.
 	int i, idx;
 	int cnt = 0;
 	uint8_t v[bits];

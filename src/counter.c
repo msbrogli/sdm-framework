@@ -209,12 +209,23 @@ int counter_add_bitstring(struct counter_s *this, unsigned int index, bitstring_
 	int i;
 	counter_t *ptr = this->counter[index];
 	for(i=0; i<this->bits; i++) {
-		// TODO Handle overflow.
+#ifdef COUNTER_CHECK_OVERFLOW
+		if (bs_get_bit(bs, i)) {
+			if (ptr[i] < COUNTER_MAX) {
+				ptr[i]++;
+			}
+		} else {
+			if (ptr[i] > COUNTER_MIN) {
+				ptr[i]--;
+			}
+		}
+#else
 		if (bs_get_bit(bs, i)) {
 			ptr[i]++;
 		} else {
 			ptr[i]--;
 		}
+#endif
 	}
 	return 0;
 }

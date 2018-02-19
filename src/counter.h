@@ -1,7 +1,15 @@
 #ifndef SDM_COUNTER_H
 #define SDM_COUNTER_H
 
+#include <limits.h>
+
 typedef int counter_t;
+
+#define COUNTER_MAX INT_MAX;
+#define COUNTER_MIN INT_MIN;
+
+// Uncomment to enable counter overflow checking.
+//#define COUNTER_CHECK_OVERFLOW
 
 struct counter_s {
 	unsigned int bits;

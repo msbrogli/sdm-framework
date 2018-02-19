@@ -9,9 +9,8 @@
 int main(void) {
 	struct address_space_s as;
 	bitstring_t *bs1;
-	char buf[1000];
 	struct opencl_scanner_s opencl;
-	struct counter_s counter;
+	char buf[1000];
 	int i;
 
 	int bits = 1000;
@@ -37,33 +36,15 @@ int main(void) {
 	//}
 	//printf("\n");
 
-	uint8_t selected_linear[sample];
-	printf("@@ Linear %d\n", as_scan_linear(&as, bs1, 451, selected_linear));
-
-	uint8_t selected_thread[sample];
-	printf("@@ Thread %d\n", as_scan_thread(&as, bs1, 451, selected_thread, 4));
-
 	as_scanner_opencl_init(&opencl, &as, "scanner_opencl.cl");
 	uint8_t selected_opencl[sample];
-	printf("@@ OpenCL %d\n", as_scan_opencl(&opencl, bs1, 451, selected_opencl));
+	for (i=0; i<500; i++) {
+		as_scan_opencl(&opencl, bs1, 451, selected_opencl);
+	}
+	printf("Done.\n");
 	as_scanner_opencl_free(&opencl);
 
-	for(i=0; i<sample; i++) {
-		assert(selected_linear[i] == selected_thread[i]);
-		assert(selected_linear[i] == selected_opencl[i]);
-	}
-
-	return 0;
-
-	counter_init(&counter, bits, sample);
-	//counter_init_file("test1_counter.bin", &counter, bits, sample);
-	//printf("Before\n");
-	//counter_print(&counter, 0);
-	counter_add_bitstring(&counter, 0, bs1);
-	//printf("\nAfter\n");
-	counter_print(&counter, 0);
-	counter_free(&counter);
-
 	bs_free(bs1);
+	return 0;
 }
 

@@ -38,6 +38,9 @@ all: libsdm.a libsdm.so
 .PHONY: tests
 tests: test/test_bitstring
 
+.PHONY: tests_performance
+tests_performance: test_linear test_thread test_opencl
+
 libsdm.so: ${OBJS} ${LIB_OBJS}
 	${CC} -shared -o libsdm.so ${OBJS} ${LIB_OBJS} ${CLFLAGS}
 
@@ -56,6 +59,15 @@ test3: test3.c libsdm.a
 
 test4: test4.c libsdm.a
 	${CC} -o test4 test4.c ${CCFLAGS} ${CLFLAGS} libsdm.a
+
+test_linear: test_linear.c libsdm.a
+	${CC} -o test_linear test_linear.c ${CCFLAGS} ${CLFLAGS} libsdm.a
+
+test_thread: test_thread.c libsdm.a
+	${CC} -o test_thread test_thread.c ${CCFLAGS} ${CLFLAGS} libsdm.a
+
+test_opencl: test_opencl.c libsdm.a
+	${CC} -o test_opencl test_opencl.c ${CCFLAGS} ${CLFLAGS} libsdm.a
 
 lib/base64.o: lib/base64.c lib/base64.h
 	(cd lib/ ; ${CC} -c base64.c ${CCFLAGS})
@@ -95,5 +107,5 @@ test_scanner_opencl: test_scanner_opencl.cpp $(OBJS)
 .PHONY: clean
 clean:
 	rm -f *.o lib/*.o test_bitstring test_scanner_opencl
-	rm -f libsdm.a libsdm.so test1 test1-dyn test2 test3 test4
+	rm -f libsdm.a libsdm.so test1 test1-dyn test2 test3 test4 test_linear test_thread test_opencl
 	rm -f test/test_bitstring

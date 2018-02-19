@@ -92,6 +92,9 @@ int as_scan_linear(const struct address_space_s *this, const bitstring_t *bs, un
 	int i, cnt;
 	cnt = 0;
 	for(i=0; i<this->sample; i++) {
+		selected[i] = (bs_distance(this->addresses[i], bs, this->bs_len) <= radius);
+		cnt += selected[i];
+		/*
 		if (bs_distance(this->addresses[i], bs, this->bs_len) <= radius) {
 			cnt++;
 			if (selected) {
@@ -102,6 +105,7 @@ int as_scan_linear(const struct address_space_s *this, const bitstring_t *bs, un
 				selected[i] = 0;
 			}
 		}
+		*/
 	}
 	return cnt;
 }

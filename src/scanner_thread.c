@@ -66,12 +66,18 @@ int as_scan_thread(const struct address_space_s *this, const bitstring_t *bs, un
 static
 void* scan_task(void *ptr) {
 	unsigned int i;
+	uint8_t x;
 	struct thread_params_t *params = (struct thread_params_t*) ptr;
 
 	const unsigned int idx_end = params->idx_end;
 	const unsigned int radius = params->radius;
 
 	for(i=params->idx_begin; i<idx_end; i++) {
+		x = params->selected[i] = (bs_distance(params->bs, params->address_space->addresses[i], params->address_space->bs_len) <= radius);
+		if (x) {
+			params->cnt++;
+		}
+		/*
 		if (bs_distance(params->bs, params->address_space->addresses[i], params->address_space->bs_len) <= radius) {
 			params->cnt++;
 			if (params->selected) {
@@ -82,6 +88,7 @@ void* scan_task(void *ptr) {
 				params->selected[i] = 0;
 			}
 		}
+		*/
 	}
 	return NULL;
 }

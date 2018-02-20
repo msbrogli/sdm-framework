@@ -1,6 +1,6 @@
 
 CC=cc
-CCFLAGS=-O2 -Wall -Wno-gnu -pedantic -fPIC -std=c99
+CCFLAGS=-O2 -Wall -Wstrict-prototypes -Wsign-compare -Wno-gnu -pedantic -fPIC -std=c99
 
 CCFLAGS += -D SDM_ENABLE_OPENCL
 

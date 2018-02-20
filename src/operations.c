@@ -64,7 +64,7 @@ void sdm_free(struct sdm_s *sdm) {
 }
 
 int sdm_iter_read(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, unsigned int max_iter, bitstring_t *output) {
-	int i;
+	unsigned int i;
 	bitstring_t *bs1, *bs2, *tmp;
 	bs1 = bs_alloc(sdm->address_space->bs_len);
 	bs2 = bs_alloc(sdm->address_space->bs_len);
@@ -91,7 +91,7 @@ exit:
 int sdm_read(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstring_t *output) {
 	uint8_t selected[sdm->sample];
 	struct counter_s counter;
-	int i, cnt = 0;
+	unsigned int i, cnt = 0;
 
 	switch(sdm->scanner_type) {
 		case SDM_SCANNER_LINEAR:
@@ -124,7 +124,7 @@ int sdm_read(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstrin
 
 int sdm_write(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstring_t *datum) {
 	uint8_t selected[sdm->sample];
-	int i, cnt = 0;
+	unsigned int i, cnt = 0;
 
 	switch(sdm->scanner_type) {
 		case SDM_SCANNER_LINEAR:

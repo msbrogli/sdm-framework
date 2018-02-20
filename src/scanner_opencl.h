@@ -26,7 +26,7 @@ struct opencl_scanner_s {
 	cl_context context;
 	cl_program program;
 
-	int devices_count;
+	unsigned int devices_count;
 	cl_device_id *devices;
 	cl_command_queue *queues;
 

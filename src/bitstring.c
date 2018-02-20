@@ -41,14 +41,14 @@ void bs_copy(bitstring_t *dst, const bitstring_t *src, unsigned int len) {
 }
 
 void bs_init_zeros(bitstring_t *bs, unsigned int len, unsigned int bits_remaining) {
-	int i;
+	unsigned int i;
 	for (i=0; i<len; i++) {
 		bs[i] = 0;
 	}
 }
 
 void bs_init_ones(bitstring_t *bs, unsigned int len, unsigned int bits_remaining) {
-	int i;
+	unsigned int i;
 	bitstring_t v;
 	for (i=0; i<len; i++) {
 		bs[i] = -1;
@@ -86,7 +86,7 @@ void bs_init_random(bitstring_t *bs, unsigned int len, unsigned int bits_remaini
 }
 
 void bs_init_hex(bitstring_t *bs, unsigned int len, char *hex) {
-	int i;
+	unsigned int i;
 	for (i=0; i<len; i++) {
 		sscanf(hex, "%016llx", bs);
 		bs++;
@@ -111,7 +111,7 @@ We could have used the following code, but it would change the output if the pro
 ```
 */
 void bs_to_hex(char *buf, bitstring_t *bs, unsigned int len) {
-	int i;
+	unsigned int i;
 	for (i=0; i<len; i++) {
 		sprintf(buf, "%016llx", *bs);
 		bs++;
@@ -126,28 +126,28 @@ void bs_to_b64(char *buf, bitstring_t *bs, unsigned int len) {
 
 void bs_not(bitstring_t *bs, const unsigned int len) {
 	// FIXME XXX BUG The remaining bits must be cleaned.
-	int i;
+	unsigned int i;
 	for(i=0; i<len; i++) {
 		bs[i] = ~bs[i];
 	}
 }
 
 void bs_xor(bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len) {
-	int i;
+	unsigned int i;
 	for(i=0; i<len; i++) {
 		bs1[i] ^= bs2[i];
 	}
 }
 
 void bs_and(bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len) {
-	int i;
+	unsigned int i;
 	for(i=0; i<len; i++) {
 		bs1[i] &= bs2[i];
 	}
 }
 
 void bs_or(bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len) {
-	int i;
+	unsigned int i;
 	for(i=0; i<len; i++) {
 		bs1[i] |= bs2[i];
 	}
@@ -174,7 +174,7 @@ void bs_average(bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len
 }
 
 
-int bs_distance(const bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len) {
+unsigned int bs_distance(const bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len) {
 #ifdef SDM_USE_BUILTIN_POPCOUNT
 	return bs_distance_popcount(bs1, bs2, len);
 
@@ -187,8 +187,8 @@ int bs_distance(const bitstring_t *bs1, const bitstring_t *bs2, const unsigned i
 #endif
 }
 
-inline int bs_distance_popcount(const bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len) {
-	int i;
+inline unsigned int bs_distance_popcount(const bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len) {
+	unsigned int i;
 	unsigned int dist = 0;
 	for(i=0; i<len; i++) {
 		dist += __builtin_popcountll(bs1[i] ^ bs2[i]);
@@ -196,8 +196,8 @@ inline int bs_distance_popcount(const bitstring_t *bs1, const bitstring_t *bs2, 
 	return dist;
 }
 
-inline int bs_distance_lookup16(const bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len) {
-	int i;
+inline unsigned int bs_distance_lookup16(const bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len) {
+	unsigned int i;
 	uint16_t *ptr;
 
 	bitstring_t a;
@@ -210,8 +210,8 @@ inline int bs_distance_lookup16(const bitstring_t *bs1, const bitstring_t *bs2, 
 	return dist;
 }
 
-inline int bs_distance_naive(const bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len) {
-	int i;
+inline unsigned int bs_distance_naive(const bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len) {
+	unsigned int i;
 
 	bitstring_t a;
 	unsigned int dist = 0;
@@ -270,8 +270,8 @@ int bs_flip_random_bits(bitstring_t *bs, unsigned int bits, unsigned int flips) 
 int bs_flip_random_bits_old(bitstring_t *bs, unsigned int bits, unsigned int flips) {
 	// This algorithm is not efficient when `flips` is close to `bits`.
 	// We recommend to use `bs_flip_random_bits`.
-	int i, idx;
-	int cnt = 0;
+	unsigned int i, idx;
+	unsigned int cnt = 0;
 	uint8_t v[bits];
 	memset(v, 0, sizeof(v));
 	do {

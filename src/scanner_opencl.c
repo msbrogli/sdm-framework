@@ -23,7 +23,7 @@
 int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s *as, char *opencl_source) {
 	cl_int error;
 	size_t deviceBufferSize;
-	int i;
+	unsigned int i;
 
 	this->address_space = as;
 	this->opencl_source = opencl_source;
@@ -177,7 +177,7 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 }
 
 void as_scanner_opencl_free(struct opencl_scanner_s *this) {
-	int i;
+	unsigned int i;
 	clReleaseMemObject(this->bitcount_table_buf);
 	clReleaseMemObject(this->bitstrings_buf);
 	clReleaseMemObject(this->bs_buf);
@@ -193,7 +193,7 @@ void as_scanner_opencl_free(struct opencl_scanner_s *this) {
 }
 
 void opencl_scanner_devices(struct opencl_scanner_s *this) {
-	int i, j;
+	unsigned int i, j;
 	char* value;
 	size_t valueSize;
 	cl_uint platformCount;
@@ -260,7 +260,7 @@ void opencl_scanner_devices(struct opencl_scanner_s *this) {
 }
 
 int as_scan_opencl(struct opencl_scanner_s *this, bitstring_t *bs, unsigned int radius, uint8_t *selected) {
-	int i, cnt;
+	unsigned int i, cnt;
 	cl_int error;
 	//struct timeval t0, t1;
 

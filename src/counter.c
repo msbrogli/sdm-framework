@@ -13,7 +13,7 @@
 #include "version.h"
 
 int _post_init(struct counter_s *this) {
-	int i;
+	unsigned int i;
 	this->counter = (counter_t **) malloc(sizeof(counter_t*) * this->sample);
 	if (this->counter == NULL) {
 		return -1;
@@ -50,7 +50,7 @@ void counter_print_summary(struct counter_s *this) {
 
 int counter_create_file(char *filename, unsigned int bits, unsigned int sample) {
 	FILE *fp1, *fp2;
-	int i;
+	unsigned int i;
 	counter_t v[bits];
 
 	char meta[1000], bin[1000];
@@ -193,7 +193,7 @@ void counter_free(struct counter_s *this) {
 }
 
 void counter_print(struct counter_s *this, unsigned int index) {
-	int i, cols = 20;
+	unsigned int i, cols = 20;
 	counter_t *ptr = this->counter[index];
 	for(i=0; i<this->bits; i++) {
 		if(i%cols == 0) {
@@ -206,7 +206,7 @@ void counter_print(struct counter_s *this, unsigned int index) {
 }
 
 int counter_add_bitstring(struct counter_s *this, unsigned int index, bitstring_t *bs) {
-	int i;
+	unsigned int i;
 	counter_t *ptr = this->counter[index];
 	for(i=0; i<this->bits; i++) {
 #ifdef COUNTER_CHECK_OVERFLOW
@@ -231,7 +231,7 @@ int counter_add_bitstring(struct counter_s *this, unsigned int index, bitstring_
 }
 
 int counter_add_counter(struct counter_s *c1, unsigned int idx1, struct counter_s *c2, unsigned int idx2) {
-	int i;
+	unsigned int i;
 	counter_t *ptr1 = c1->counter[idx1];
 	counter_t *ptr2 = c2->counter[idx2];
 	for(i=0; i<c1->bits; i++) {
@@ -242,7 +242,7 @@ int counter_add_counter(struct counter_s *c1, unsigned int idx1, struct counter_
 }
 
 int counter_to_bitstring(struct counter_s *this, unsigned int index, bitstring_t *bs) {
-	int i;
+	unsigned int i;
 	counter_t *ptr = this->counter[index];
 	for(i=0; i<this->bits; i++) {
 		if (ptr[i] > 0) {

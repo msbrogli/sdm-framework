@@ -25,7 +25,7 @@ void as_print_summary(struct address_space_s *this) {
 }
 
 void as_print_addresses_hex(struct address_space_s *this) {
-	int i;
+	unsigned int i;
 	char buf[1000];
 	for (i=0; i < this->sample; i++) {
 		bs_to_hex(buf, this->addresses[i], this->bs_len);
@@ -34,7 +34,7 @@ void as_print_addresses_hex(struct address_space_s *this) {
 }
 
 void as_print_addresses_b64(struct address_space_s *this) {
-	int i;
+	unsigned int i;
 	char buf[1000];
 	for (i=0; i < this->sample; i++) {
 		bs_to_b64(buf, this->addresses[i], this->bs_len);
@@ -43,7 +43,7 @@ void as_print_addresses_b64(struct address_space_s *this) {
 }
 
 int as_init(struct address_space_s *this, unsigned int bits, unsigned int sample) {
-	int i;
+	unsigned int i;
 
 	this->bits = bits;
 	this->sample = sample;
@@ -72,7 +72,7 @@ int as_init(struct address_space_s *this, unsigned int bits, unsigned int sample
 }
 
 int as_init_random(struct address_space_s *this, unsigned int bits, unsigned int sample) {
-	int i;
+	unsigned int i;
 	if (as_init(this, bits, sample)) {
 		return -1;
 	}
@@ -89,7 +89,7 @@ int as_free(struct address_space_s *this) {
 }
 
 int as_scan_linear(const struct address_space_s *this, const bitstring_t *bs, unsigned int radius, uint8_t *selected) {
-	int i, cnt;
+	unsigned int i, cnt;
 	cnt = 0;
 	for(i=0; i<this->sample; i++) {
 		selected[i] = (bs_distance(this->addresses[i], bs, this->bs_len) <= radius);
@@ -111,7 +111,7 @@ int as_scan_linear(const struct address_space_s *this, const bitstring_t *bs, un
 }
 
 int as_save_b64_file(const struct address_space_s *this, char *filename) {
-	int i;
+	unsigned int i;
 	char buf[1000];
 	FILE *fp = fopen(filename, "w");
 	if (fp == NULL) {
@@ -137,7 +137,7 @@ int as_init_from_b64_file(struct address_space_s *this, char *filename) {
 	FILE *fp;
 	char line[2000], *key, *value;
 	int ret = 0;
-	int len, cnt;
+	unsigned int len, cnt;
 	unsigned int bits = 0, sample = 0, bits_per_bitstring = 0;
 	fp = fopen(filename, "r");
 	if (fp == NULL) {

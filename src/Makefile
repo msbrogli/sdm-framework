@@ -57,19 +57,19 @@ test1: test1.c libsdm.a
 	${CC} -o test1 test1.c libsdm.a ${CCFLAGS} ${CLFLAGS}
 
 test2: test2.c libsdm.a
-	${CC} -o test2 test2.c ${CCFLAGS} ${CLFLAGS} libsdm.a
+	${CC} -o test2 test2.c libsdm.a ${CCFLAGS} ${CLFLAGS}
 
 test3: test3.c libsdm.a
-	${CC} -o test3 test3.c ${CCFLAGS} ${CLFLAGS} libsdm.a
+	${CC} -o test3 test3.c libsdm.a ${CCFLAGS} ${CLFLAGS}
 
 test4: test4.c libsdm.a
-	${CC} -o test4 test4.c ${CCFLAGS} ${CLFLAGS} libsdm.a
+	${CC} -o test4 test4.c libsdm.a ${CCFLAGS} ${CLFLAGS}
 
 test_linear: test_linear.c libsdm.a
-	${CC} -o test_linear test_linear.c ${CCFLAGS} ${CLFLAGS} libsdm.a
+	${CC} -o test_linear test_linear.c libsdm.a ${CCFLAGS} ${CLFLAGS}
 
 test_thread: test_thread.c libsdm.a
-	${CC} -o test_thread test_thread.c ${CCFLAGS} ${CLFLAGS} libsdm.a
+	${CC} -o test_thread test_thread.c libsdm.a ${CCFLAGS} ${CLFLAGS}
 
 test_opencl: test_opencl.c libsdm.a
 	${CC} -o test_opencl test_opencl.c libsdm.a ${CCFLAGS} ${CLFLAGS}

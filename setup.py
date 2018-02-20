@@ -20,7 +20,8 @@ if os_string == 'darwin':
     macros.append(('OS_OSX', None))
     extra_link_args = ['-framework', 'OpenCL']
 
-elif os_string == 'linux':
+#elif os_string == 'linux':
+else:
     macros.append(('OS_LINUX', None))
     libraries = ['OpenCL', 'pthread', 'bsd']
 

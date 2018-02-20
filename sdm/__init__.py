@@ -200,6 +200,14 @@ class Bitstring(object):
         return self
 
     @classmethod
+    def init_zeros(cls, bits):
+        ''' Initialize a bitstring with all bits equal to one.
+        '''
+        self = cls(bits)
+        libsdm.bs_init_zeros(self.bs_data, c_uint(self.bs_len), c_uint(self.bs_remaining_bits))
+        return self
+
+    @classmethod
     def init_from_bitstring(cls, other):
         ''' Initialize a bitstring copying the bits from `other` bitstring.
         '''
@@ -242,6 +250,9 @@ class Bitstring(object):
         buf = create_string_buffer(self.bits)
         libsdm.bs_to_hex(buf, self.bs_data, c_uint(self.bs_len))
         return buf.value
+
+    def to_binary(self):
+        return ''.join([str(self.get_bit(i)) for i in xrange(self.bits)])
 
     def distance_to(self, other):
         ''' Return the hamming distance to `other` bitstring.

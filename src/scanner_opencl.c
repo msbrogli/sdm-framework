@@ -201,18 +201,25 @@ void opencl_scanner_devices(struct opencl_scanner_s *this) {
 	cl_uint deviceCount;
 	cl_device_id* devices;
 	cl_uint maxComputeUnits;
+	cl_int error;
 
 	/* get all platforms */
-	clGetPlatformIDs(0, NULL, &platformCount);
+	error = clGetPlatformIDs(0, NULL, &platformCount);
+	assert(error == CL_SUCCESS);
+
 	platforms = (cl_platform_id*) malloc(sizeof(cl_platform_id) * platformCount);
-	clGetPlatformIDs(platformCount, platforms, NULL);
+	error = clGetPlatformIDs(platformCount, platforms, NULL);
+	assert(error == CL_SUCCESS);
 
 	for (i = 0; i < platformCount; i++) {
 
 		/* get all devices */
-		clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_ALL, 0, NULL, &deviceCount);
+		error = clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_ALL, 0, NULL, &deviceCount);
+		assert(error == CL_SUCCESS);
+
 		devices = (cl_device_id*) malloc(sizeof(cl_device_id) * deviceCount);
-		clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_ALL, deviceCount, devices, NULL);
+		error = clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_ALL, deviceCount, devices, NULL);
+		assert(error == CL_SUCCESS);
 
 		/* for each device print critical attributes */
 		for (j = 0; j < deviceCount; j++) {

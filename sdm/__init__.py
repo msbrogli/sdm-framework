@@ -11,7 +11,7 @@ counter_t = c_int
 basedir = os.path.dirname(__file__)
 try:
     libsdm = cdll.LoadLibrary(os.path.join(basedir, '_libsdm.so'))
-except Exception, e:
+except Exception as e:
     if os.environ.get('GEN_DOCS'):
         libsdm = None
     else:

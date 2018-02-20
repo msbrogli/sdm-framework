@@ -27,7 +27,9 @@ void bs_init_bitcount_table() {
 }
 
 bitstring_t* bs_alloc(const unsigned int len) {
-	return (bitstring_t*) malloc(sizeof(bitstring_t) * len);
+	bitstring_t *bs = (bitstring_t*) malloc(sizeof(bitstring_t) * len);
+	bs[len-1] = 0;
+	return bs;
 }
 
 void bs_free(bitstring_t *bs) {
@@ -53,6 +55,21 @@ void bs_init_ones(bitstring_t *bs, unsigned int len, unsigned int bits_remaining
 	}
 	/* Clear the remaining bits. */
 	v = -1;
+	if (bits_remaining > 0) {
+		bs[len-1] &= (v << bits_remaining);
+	}
+}
+
+void bs_calculate_params(unsigned int bits, unsigned int *len, unsigned int *bits_remaining) {
+	*len = bits / 8 / sizeof(bitstring_t);
+	if ((*len) * 8 * sizeof(bitstring_t) < bits) {
+		(*len)++;
+	}
+	*bits_remaining = (*len) * 8 * sizeof(bitstring_t) - bits;
+}
+
+void bs_clear_remaining_bits(bitstring_t *bs, unsigned int len, unsigned int bits_remaining) {
+	bitstring_t v = -1;
 	if (bits_remaining > 0) {
 		bs[len-1] &= (v << bits_remaining);
 	}
@@ -156,7 +173,21 @@ void bs_average(bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len
 	}
 }
 
-int bs_distance_popcount(const bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len) {
+
+int bs_distance(const bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len) {
+#ifdef SDM_USE_BUILTIN_POPCOUNT
+	return bs_distance_popcount(bs1, bs2, len);
+
+#elif defined SDM_USE_BITCOUNT_TABLE
+	return bs_distance_lookup16(bs1, bs2, len);
+
+#else
+	return bs_distance_naive(bs1, bs2, len);
+
+#endif
+}
+
+inline int bs_distance_popcount(const bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len) {
 	int i;
 	unsigned int dist = 0;
 	for(i=0; i<len; i++) {
@@ -165,7 +196,7 @@ int bs_distance_popcount(const bitstring_t *bs1, const bitstring_t *bs2, const u
 	return dist;
 }
 
-int bs_distance_lookup16(const bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len) {
+inline int bs_distance_lookup16(const bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len) {
 	int i;
 	uint16_t *ptr;
 
@@ -179,7 +210,7 @@ int bs_distance_lookup16(const bitstring_t *bs1, const bitstring_t *bs2, const u
 	return dist;
 }
 
-int bs_distance_naive(const bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len) {
+inline int bs_distance_naive(const bitstring_t *bs1, const bitstring_t *bs2, const unsigned int len) {
 	int i;
 
 	bitstring_t a;

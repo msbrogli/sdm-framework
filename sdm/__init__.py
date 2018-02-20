@@ -1,4 +1,5 @@
 
+from __future__ import print_function
 from ctypes import cdll, cast, sizeof
 from ctypes import Structure, POINTER, pointer, create_string_buffer
 from ctypes import c_uint, c_uint64, c_char_p, c_int, c_void_p
@@ -22,7 +23,7 @@ if libsdm is not None:
 
 opencl_source_code = os.path.join(basedir, 'scanner_opencl.cl')
 if not os.path.exists(opencl_source_code):
-    print "Ops!", opencl_source_code
+    print('Ops!', opencl_source_code)
 
 class AddressSpace(Structure):
     ''' The AddressSpace contains the hard-locations' addresses. Thus, it is required to
@@ -365,10 +366,10 @@ def gen_sdm(scanner_type):
 
 def test_read_write(sdm):
     bs1 = Bitstring(bits)
-    print bs1.to_b64()
+    print(bs1.to_b64())
     sdm.write(bs1, bs1)
     bs2 = sdm.read(bs1)
-    print bs2.to_b64()
+    print(bs2.to_b64())
 
 
 def gen_all():

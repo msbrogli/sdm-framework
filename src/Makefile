@@ -72,7 +72,7 @@ test_thread: test_thread.c libsdm.a
 	${CC} -o test_thread test_thread.c ${CCFLAGS} ${CLFLAGS} libsdm.a
 
 test_opencl: test_opencl.c libsdm.a
-	${CC} -o test_opencl test_opencl.c ${CCFLAGS} ${CLFLAGS} libsdm.a
+	${CC} -o test_opencl test_opencl.c libsdm.a ${CCFLAGS} ${CLFLAGS}
 
 lib/base64.o: lib/base64.c lib/base64.h
 	(cd lib/ ; ${CC} -c base64.c ${CCFLAGS})

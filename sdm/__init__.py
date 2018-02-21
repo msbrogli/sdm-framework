@@ -8,17 +8,17 @@ import sys
 
 def get_lib_fullpath():
     try:
-	from sysconfig import get_config_var
+        from sysconfig import get_config_var
     except ImportError:
-	def get_config_var(name):
-	    if name == 'SO':
-		return '.so'
-	    raise Exception('Not implemented')
+        def get_config_var(name):
+            if name == 'SO':
+                return '.so'
+            raise NotImplemented
 
     if sys.version_info >= (3, 3):
-	ext = get_config_var("EXT_SUFFIX")
+        ext = get_config_var('EXT_SUFFIX')
     else:
-	ext = get_config_var('SO')
+        ext = get_config_var('SO')
 
     return os.path.join(basedir, '_libsdm'+ext)
 

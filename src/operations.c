@@ -16,6 +16,8 @@ int _sdm_init(struct sdm_s *sdm, struct address_space_s *address_space, struct c
 	}
 	sdm->bits = address_space->bits;
 	sdm->sample = address_space->sample;
+	sdm->address_space = address_space;
+	sdm->counter = counter;
 	return 0;
 }
 
@@ -157,7 +159,7 @@ int sdm_generic_read(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, 
 	uint8_t selected[sdm->sample];
 	double counter[sdm->bits];
 	counter_t *ptr;
-	double sign;
+	double x;
 	unsigned int i, j, cnt = 0;
 
 	switch(sdm->scanner_type) {
@@ -181,11 +183,15 @@ int sdm_generic_read(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, 
 		if (selected[i] == 1) {
 			ptr = sdm->counter->counter[i];
 			for(j=0; j<sdm->bits; j++) {
-				sign = 1;
 				if (ptr[j] < 0) {
-					sign = -1;
+					x = -pow(-ptr[j], z);
+				} else if (ptr[j] > 0) {
+					x = pow(ptr[j], z);
+				} else {
+					x = 0;
 				}
-				counter[j] += sign * pow(fabs(ptr[j]), z);
+				counter[j] += x;
+				//printf("!! %10.2f %8d %10.2f\n", counter[j], ptr[j], x);
 			}
 			cnt++;
 		}

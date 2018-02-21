@@ -1,4 +1,4 @@
-
+#include <stdio.h>
 #include <stdio.h>
 #include <assert.h>
 #include <string.h>
@@ -11,9 +11,10 @@ int main(void) {
 	struct counter_s *counter;
 	bitstring_t *bs1, *bs2;
 	char buf[1000];
+	int i;
 
-	int bits = 1000;
-	int sample = 1000000;
+	unsigned int bits = 1000;
+	unsigned int sample = 1000000;
 
 	as = (struct address_space_s *) malloc(sizeof(struct address_space_s));
 	counter = (struct counter_s *) malloc(sizeof(struct counter_s));
@@ -22,8 +23,8 @@ int main(void) {
 	assert(!as_init_random(as, bits, sample));
 	as_print_summary(as);
 	
-	//assert(!counter_init(counter, bits, sample));
-	counter_init_file("test2_counter.bin", counter);
+	assert(!counter_init(counter, bits, sample));
+	//counter_init_file("test2_counter.bin", counter);
 	assert(counter->bits == bits);
 	assert(counter->sample == sample);
 
@@ -34,13 +35,15 @@ int main(void) {
 	bs_to_hex(buf, bs1, as->bs_len);
 	printf("bs1 = %s\n", buf);
 
-	sdm->bits = bits;
-	sdm->sample = sample;
-	sdm->address_space = as;
-	sdm->counter = counter;
+	//assert(!sdm_init_thread(sdm, as, counter, 4));
+	assert(!sdm_init_linear(sdm, as, counter));
 
 	sdm_write(sdm, bs1, 451, bs1);
-	sdm_read(sdm, bs1, 451, bs2);
+	sdm_write(sdm, bs1, 451, bs1);
+	sdm_write(sdm, bs1, 451, bs1);
+	for(i=0; i<100; i++) {
+		sdm_generic_read(sdm, bs1, 451, bs2, 2);
+	}
 	bs_to_hex(buf, bs2, as->bs_len);
 	printf("bs2 = %s\n", buf);
 

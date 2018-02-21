@@ -1,4 +1,6 @@
 
+#include <math.h>
+#include <string.h>
 #include "bitstring.h"
 #include "address_space.h"
 #include "counter.h"
@@ -151,3 +153,52 @@ int sdm_write(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstri
 	return cnt;
 }
 
+int sdm_generic_read(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstring_t *output, double z) {
+	uint8_t selected[sdm->sample];
+	double counter[sdm->bits];
+	counter_t *ptr;
+	double sign;
+	unsigned int i, j, cnt = 0;
+
+	switch(sdm->scanner_type) {
+		case SDM_SCANNER_LINEAR:
+			as_scan_linear(sdm->address_space, addr, radius, selected);
+			break;
+		case SDM_SCANNER_THREAD:
+			as_scan_thread(sdm->address_space, addr, radius, selected, sdm->thread_count);
+			break;
+#ifdef SDM_ENABLE_OPENCL
+		case SDM_SCANNER_OPENCL:
+			as_scan_opencl(sdm->opencl_opts, addr, radius, selected);
+			break;
+#endif
+		default:
+			return -1;
+	}
+
+	memset(counter, 0, sizeof(counter));
+	for(i=0; i<sdm->sample; i++) {
+		if (selected[i] == 1) {
+			ptr = sdm->counter->counter[i];
+			for(j=0; j<sdm->bits; j++) {
+				sign = 1;
+				if (ptr[j] < 0) {
+					sign = -1;
+				}
+				counter[j] += sign * pow(fabs(ptr[j]), z);
+			}
+			cnt++;
+		}
+	}
+	for(j=0; j<sdm->bits; j++) {
+		if (counter[j] > 0) {
+			bs_set_bit(output, j, 1);
+		} else if (counter[j] < 0) {
+			bs_set_bit(output, j, 0);
+		} else {
+			bs_set_bit(output, j, arc4random() % 2);
+		}
+	}
+
+	return cnt;
+}

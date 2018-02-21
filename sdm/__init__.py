@@ -2,7 +2,7 @@
 from __future__ import print_function
 from ctypes import cdll, cast, sizeof
 from ctypes import Structure, POINTER, pointer, create_string_buffer
-from ctypes import c_uint, c_uint64, c_char_p, c_int, c_void_p
+from ctypes import c_uint, c_uint64, c_char_p, c_int, c_void_p, c_double
 import os
 
 bitstring_t = c_uint64
@@ -339,13 +339,16 @@ class SDM(Structure):
         libsdm.sdm_iter_read(pointer(self), addr.bs_data, c_uint(radius), c_uint(max_iter), out.bs_data)
         return out
 
-    def read(self, addr, radius=None):
+    def read(self, addr, radius=None, z=None):
         ''' Return a single read from the SDM.
         '''
         if radius is None:
             radius = self.radius
         out = Bitstring(self.bits)
-        libsdm.sdm_read(pointer(self), addr.bs_data, c_uint(radius), out.bs_data)
+        if z is None:
+            libsdm.sdm_read(pointer(self), addr.bs_data, c_uint(radius), out.bs_data)
+        else:
+            libsdm.sdm_generic_read(pointer(self), addr.bs_data, c_uint(radius), out.bs_data, c_double(z))
         return out
 
     def write(self, addr, datum, radius=None):

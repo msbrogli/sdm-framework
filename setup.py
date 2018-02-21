@@ -26,7 +26,7 @@ else:
     libraries = ['OpenCL', 'pthread', 'bsd']
 
 
-libsdm_ext = Extension('sdm/_libsdm', [
+libsdm_ext = Extension('sdm._libsdm', [
     'src/bitstring.c', 'src/address_space.c', 'src/counter.c',
     'src/scanner_thread.c', 'src/scanner_opencl.c', 
     'src/operations.c', 'src/lib/base64.c',

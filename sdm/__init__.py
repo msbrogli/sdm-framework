@@ -4,13 +4,30 @@ from ctypes import cdll, cast, sizeof
 from ctypes import Structure, POINTER, pointer, create_string_buffer
 from ctypes import c_uint, c_uint64, c_char_p, c_int, c_void_p, c_double
 import os
+import sys
+
+def get_lib_fullpath():
+    try:
+	from sysconfig import get_config_var
+    except ImportError:
+	def get_config_var(name):
+	    if name == 'SO':
+		return '.so'
+	    raise Exception('Not implemented')
+
+    if sys.version_info >= (3, 3):
+	ext = get_config_var("EXT_SUFFIX")
+    else:
+	ext = get_config_var('SO')
+
+    return os.path.join(basedir, '_libsdm'+ext)
 
 bitstring_t = c_uint64
 counter_t = c_int
 
 basedir = os.path.dirname(__file__)
 try:
-    libsdm = cdll.LoadLibrary(os.path.join(basedir, '_libsdm.so'))
+    libsdm = cdll.LoadLibrary(get_lib_fullpath())
 except Exception as e:
     if os.environ.get('GEN_DOCS'):
         libsdm = None

@@ -21,7 +21,7 @@ if libsdm is not None:
     libsdm.bs_alloc.restype = POINTER(bitstring_t)
     libsdm.bs_init_bitcount_table()
 
-opencl_source_code = os.path.join(basedir, 'scanner_opencl.cl')
+opencl_source_code = os.path.join(basedir, 'scanner_opencl.cl').encode()
 if not os.path.exists(opencl_source_code):
     print('Ops!', opencl_source_code)
 

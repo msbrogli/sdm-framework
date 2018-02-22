@@ -233,6 +233,11 @@ class Bitstring(object):
         libsdm.bs_copy(self.bs_data, other.bs_data, c_uint(self.bs_len))
         return self
 
+    def __xor__(self, other):
+        bs = Bitstring.init_from_bitstring(self)
+        bs.xor(other)
+        return bs
+
     def get_bit(self, bit):
         ''' Return the value of a specific bit.
         '''

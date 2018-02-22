@@ -368,6 +368,15 @@ class SDM(Structure):
             libsdm.sdm_generic_read(pointer(self), addr.bs_data, c_uint(radius), out.bs_data, c_double(z))
         return out
 
+    def read_counter(self, addr, radius=None, z=None):
+        ''' Return a single read from the SDM. But, instead of returning the Bitstring, it returns the counter.
+        '''
+        if radius is None:
+            radius = self.radius
+        counter = Counter.init_zero(self.bits, 1)
+        libsdm.sdm_read_counter(pointer(self), addr.bs_data, c_uint(radius), pointer(counter))
+        return counter
+
     def write(self, addr, datum, radius=None):
         ''' Write a bitstring to the SDM.
         '''

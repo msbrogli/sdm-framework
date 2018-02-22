@@ -208,3 +208,33 @@ int sdm_generic_read(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, 
 
 	return cnt;
 }
+
+int sdm_read_counter(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, struct counter_s *counter) {
+	uint8_t selected[sdm->sample];
+	unsigned int i, cnt = 0;
+
+	switch(sdm->scanner_type) {
+		case SDM_SCANNER_LINEAR:
+			as_scan_linear(sdm->address_space, addr, radius, selected);
+			break;
+		case SDM_SCANNER_THREAD:
+			as_scan_thread(sdm->address_space, addr, radius, selected, sdm->thread_count);
+			break;
+#ifdef SDM_ENABLE_OPENCL
+		case SDM_SCANNER_OPENCL:
+			as_scan_opencl(sdm->opencl_opts, addr, radius, selected);
+			break;
+#endif
+		default:
+			return -1;
+	}
+
+	for(i=0; i<sdm->sample; i++) {
+		if (selected[i] == 1) {
+			counter_add_counter(counter, 0, sdm->counter, i);
+			cnt++;
+		}
+	}
+
+	return cnt;
+}

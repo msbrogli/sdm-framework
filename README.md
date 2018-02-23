@@ -2,18 +2,32 @@ Sparse Distributed Memory Framework
 ===================================
 This project intends to be a framework which can be adapted to any usage of a Sparse Distributed Memory (Kanerva, 1988).  
 
- We have been working on Pentii Kanerva's Sparse Distributed Memory: 
-   - The first [paper considered the range of dimensions that an SDM should have were it to respect i) chunking-by-averaging, and ii) the "magic number 7"](http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0015592); 
-   - a second [paper studied the critical distance as the memory becomes saturated](http://journal.frontiersin.org/article/10.3389/fnhum.2014.00222/full); 
+ We have been working on Pentii Kanerva's Sparse Distributed Memory:
+   - The first [paper considered the range of dimensions that an SDM should have were it to respect i) chunking-by-averaging, and ii) the "magic number 7"](http://journals.plos.org/plosone/article?id=10.1371/journal.pone.0015592);
+   - a second [paper studied the critical distance as the memory becomes saturated](http://journal.frontiersin.org/article/10.3389/fnhum.2014.00222/full);
    - a third paper (underway) studies interaction effects between different attractors, and
    - a fourth paper will document this [highly-palallel SDM framework](https://github.com/msbrogli/sdm-framework) developed by [PhD Candidate Marcelo Brogliato](https://github.com/msbrogli).  
 
 We would really like to ask users for feedback, and, should they find it useful, a link or citation:
 
-Brogliato, M.S.; Linhares, A. (2017) Sparse Distributed Memory: a reference implementation.  Working Paper, FGV, Vialink. 
+Brogliato, M.S.; Linhares, A. (2017) Sparse Distributed Memory: a reference implementation.  Working Paper, FGV, Vialink.
 
 
-Please notice that it is still in development and not ready to be used. :)
+How to install
+==============
+
+This framework has the following dependencies: `libbsd` and `libOpenCL`.
+
+To install in a FloyHub GPU instance, you just have to run:
+
+    apt-get update && apt-get install libbsd-dev nvidia-opencl-icd-304 opencl-headers
+    sudo ln -s /usr/lib/x86_64-linux-gnu/libOpenCL.so.1 /usr/lib/libOpenCL.so
+
+    pip install sdm
+
+If you would like to install the most recent code:
+
+    pip install git+https://github.com/msbrogli/sdm-framework.git
 
 
 Documentation

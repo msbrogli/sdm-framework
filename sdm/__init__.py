@@ -233,6 +233,9 @@ class Bitstring(object):
         libsdm.bs_copy(self.bs_data, other.bs_data, c_uint(self.bs_len))
         return self
 
+    def __hash__(self):
+        return hash(self.to_hex())
+
     def __xor__(self, other):
         bs = Bitstring.init_from_bitstring(self)
         bs.xor(other)
@@ -388,6 +391,11 @@ class SDM(Structure):
         if radius is None:
             radius = self.radius
         libsdm.sdm_write(pointer(self), addr.bs_data, c_uint(radius), datum.bs_data)
+
+    def write_random_bitstrings(self, n):
+        for _ in xrange(n):
+            bs = Bitstring.init_random(self.bits)
+            self.write(bs, bs)
 
 
 def gen_sdm(scanner_type):

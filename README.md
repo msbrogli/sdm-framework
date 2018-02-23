@@ -15,7 +15,6 @@ Brogliato, M.S.; Linhares, A. (2017) Sparse Distributed Memory: a reference impl
 
 How to install
 ==============
-
 This framework has the following dependencies: `libbsd` and `libOpenCL`.
 
 To install in a FloyHub GPU instance, you just have to run:
@@ -40,9 +39,26 @@ How do I contribute?
 Just fork it and do the usual pull request dance. :)
 
 
-Links
-=====
+Docker
+======
+The docker images are published at [https://hub.docker.com/r/msbrogli/sdm-framework/].
+
+They already include the OpenCL ICD for FloydHub GPU instances.
+
+Build
+-----
+    docker build -t sdm-test ./
+
+
+Run
+---
+    docker run -it -p 8888:8888 sdm-test
+
+
+Useful links
+============
 - [https://aws.amazon.com/ec2/instance-types/]
+- [https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-basics.html#docker_next_steps]
 - [http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using_cluster_computing.html]
 - [http://jackmorrison.me/2014/09/11/CUDA-on-AWS.html]
 

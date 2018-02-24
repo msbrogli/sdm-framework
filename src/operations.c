@@ -172,7 +172,7 @@ int sdm_write2(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstr
 	}
 
 	for(i=0; i<(unsigned int)cnt; i++) {
-		counter_add_bitstring(sdm->counter, i, datum);
+		counter_add_bitstring(sdm->counter, selected[i], datum);
 	}
 	return cnt;
 }

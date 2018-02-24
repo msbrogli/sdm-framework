@@ -92,25 +92,43 @@ exit:
 	return i;
 }
 
+int sdm_scan(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, uint8_t *selected) {
+	switch(sdm->scanner_type) {
+		case SDM_SCANNER_LINEAR:
+			return as_scan_linear(sdm->address_space, addr, radius, selected);
+
+		case SDM_SCANNER_THREAD:
+			return as_scan_thread(sdm->address_space, addr, radius, selected, sdm->thread_count);
+
+#ifdef SDM_ENABLE_OPENCL
+		case SDM_SCANNER_OPENCL:
+			return as_scan_opencl(sdm->opencl_opts, addr, radius, selected);
+#endif
+		default:
+			return -1;
+	}
+}
+
+int sdm_scan2(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, unsigned int *selected) {
+	switch(sdm->scanner_type) {
+		case SDM_SCANNER_LINEAR:
+			return as_scan_linear2(sdm->address_space, addr, radius, selected);
+
+		case SDM_SCANNER_THREAD:
+			return as_scan_thread2(sdm->address_space, addr, radius, selected, sdm->thread_count);
+
+		default:
+			return -1;
+	}
+}
+
 int sdm_read(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstring_t *output) {
 	uint8_t selected[sdm->sample];
 	struct counter_s counter;
 	unsigned int i, cnt = 0;
 
-	switch(sdm->scanner_type) {
-		case SDM_SCANNER_LINEAR:
-			as_scan_linear(sdm->address_space, addr, radius, selected);
-			break;
-		case SDM_SCANNER_THREAD:
-			as_scan_thread(sdm->address_space, addr, radius, selected, sdm->thread_count);
-			break;
-#ifdef SDM_ENABLE_OPENCL
-		case SDM_SCANNER_OPENCL:
-			as_scan_opencl(sdm->opencl_opts, addr, radius, selected);
-			break;
-#endif
-		default:
-			return -1;
+	if (sdm_scan(sdm, addr, radius, selected) == -1) {
+		return -1;
 	}
 
 	counter_init(&counter, sdm->bits, 1);
@@ -130,20 +148,8 @@ int sdm_write(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstri
 	uint8_t selected[sdm->sample];
 	unsigned int i, cnt = 0;
 
-	switch(sdm->scanner_type) {
-		case SDM_SCANNER_LINEAR:
-			as_scan_linear(sdm->address_space, addr, radius, selected);
-			break;
-		case SDM_SCANNER_THREAD:
-			as_scan_thread(sdm->address_space, addr, radius, selected, sdm->thread_count);
-			break;
-#ifdef SDM_ENABLE_OPENCL
-		case SDM_SCANNER_OPENCL:
-			as_scan_opencl(sdm->opencl_opts, addr, radius, selected);
-			break;
-#endif
-		default:
-			return -1;
+	if (sdm_scan(sdm, addr, radius, selected) == -1) {
+		return -1;
 	}
 
 	for(i=0; i<sdm->sample; i++) {
@@ -157,20 +163,15 @@ int sdm_write(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstri
 
 int sdm_write2(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstring_t *datum) {
 	unsigned int selected[sdm->sample];
-	unsigned int i, cnt = 0;
+	unsigned int i;
+	int cnt;
 
-	switch(sdm->scanner_type) {
-		case SDM_SCANNER_LINEAR:
-			cnt = as_scan_linear2(sdm->address_space, addr, radius, selected);
-			break;
-		case SDM_SCANNER_THREAD:
-			cnt = as_scan_thread2(sdm->address_space, addr, radius, selected, sdm->thread_count);
-			break;
-		default:
-			return -1;
+	cnt = sdm_scan2(sdm, addr, radius, selected);
+	if (cnt == -1) {
+		return -1;
 	}
 
-	for(i=0; i<cnt; i++) {
+	for(i=0; i<(unsigned int)cnt; i++) {
 		counter_add_bitstring(sdm->counter, i, datum);
 	}
 	return cnt;
@@ -183,20 +184,8 @@ int sdm_generic_read(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, 
 	double x;
 	unsigned int i, j, cnt = 0;
 
-	switch(sdm->scanner_type) {
-		case SDM_SCANNER_LINEAR:
-			as_scan_linear(sdm->address_space, addr, radius, selected);
-			break;
-		case SDM_SCANNER_THREAD:
-			as_scan_thread(sdm->address_space, addr, radius, selected, sdm->thread_count);
-			break;
-#ifdef SDM_ENABLE_OPENCL
-		case SDM_SCANNER_OPENCL:
-			as_scan_opencl(sdm->opencl_opts, addr, radius, selected);
-			break;
-#endif
-		default:
-			return -1;
+	if (sdm_scan(sdm, addr, radius, selected) == -1) {
+		return -1;
 	}
 
 	memset(counter, 0, sizeof(counter));
@@ -234,20 +223,8 @@ int sdm_read_counter(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, 
 	uint8_t selected[sdm->sample];
 	unsigned int i, cnt = 0;
 
-	switch(sdm->scanner_type) {
-		case SDM_SCANNER_LINEAR:
-			as_scan_linear(sdm->address_space, addr, radius, selected);
-			break;
-		case SDM_SCANNER_THREAD:
-			as_scan_thread(sdm->address_space, addr, radius, selected, sdm->thread_count);
-			break;
-#ifdef SDM_ENABLE_OPENCL
-		case SDM_SCANNER_OPENCL:
-			as_scan_opencl(sdm->opencl_opts, addr, radius, selected);
-			break;
-#endif
-		default:
-			return -1;
+	if (sdm_scan(sdm, addr, radius, selected) == -1) {
+		return -1;
 	}
 
 	for(i=0; i<sdm->sample; i++) {
@@ -264,20 +241,8 @@ int sdm_write_sub(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bit
 	uint8_t selected[sdm->sample];
 	unsigned int i, cnt = 0;
 
-	switch(sdm->scanner_type) {
-		case SDM_SCANNER_LINEAR:
-			as_scan_linear(sdm->address_space, addr, radius, selected);
-			break;
-		case SDM_SCANNER_THREAD:
-			as_scan_thread(sdm->address_space, addr, radius, selected, sdm->thread_count);
-			break;
-#ifdef SDM_ENABLE_OPENCL
-		case SDM_SCANNER_OPENCL:
-			as_scan_opencl(sdm->opencl_opts, addr, radius, selected);
-			break;
-#endif
-		default:
-			return -1;
+	if (sdm_scan(sdm, addr, radius, selected) == -1) {
+		return -1;
 	}
 
 	for(i=0; i<sdm->sample; i++) {
@@ -294,20 +259,8 @@ int sdm_weighted_read(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius,
 	struct counter_s counter;
 	unsigned int i, dist, cnt = 0;
 
-	switch(sdm->scanner_type) {
-		case SDM_SCANNER_LINEAR:
-			as_scan_linear(sdm->address_space, addr, radius, selected);
-			break;
-		case SDM_SCANNER_THREAD:
-			as_scan_thread(sdm->address_space, addr, radius, selected, sdm->thread_count);
-			break;
-#ifdef SDM_ENABLE_OPENCL
-		case SDM_SCANNER_OPENCL:
-			as_scan_opencl(sdm->opencl_opts, addr, radius, selected);
-			break;
-#endif
-		default:
-			return -1;
+	if (sdm_scan(sdm, addr, radius, selected) == -1) {
+		return -1;
 	}
 
 	counter_init(&counter, sdm->bits, 1);

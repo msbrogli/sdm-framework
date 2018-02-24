@@ -392,6 +392,13 @@ class SDM(Structure):
             radius = self.radius
         libsdm.sdm_write(pointer(self), addr.bs_data, c_uint(radius), datum.bs_data)
 
+    def write_sub(self, addr, datum, radius=None):
+        ''' Write a bitstring to the SDM.
+        '''
+        if radius is None:
+            radius = self.radius
+        libsdm.sdm_write_sub(pointer(self), addr.bs_data, c_uint(radius), datum.bs_data)
+
     def write_random_bitstrings(self, n):
         for _ in xrange(n):
             bs = Bitstring.init_random(self.bits)

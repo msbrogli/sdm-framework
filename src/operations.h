@@ -43,5 +43,7 @@ int sdm_read(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstrin
 int sdm_iter_read(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, unsigned int max_iter, bitstring_t *output);
 int sdm_generic_read(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstring_t *output, double z);
 int sdm_read_counter(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, struct counter_s *counter);
+int sdm_weighted_read(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstring_t *output, unsigned int *weights);
+int sdm_write_sub(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstring_t *datum);
 
 #endif

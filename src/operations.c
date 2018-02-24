@@ -238,3 +238,68 @@ int sdm_read_counter(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, 
 
 	return cnt;
 }
+
+int sdm_write_sub(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstring_t *datum) {
+	uint8_t selected[sdm->sample];
+	unsigned int i, cnt = 0;
+
+	switch(sdm->scanner_type) {
+		case SDM_SCANNER_LINEAR:
+			as_scan_linear(sdm->address_space, addr, radius, selected);
+			break;
+		case SDM_SCANNER_THREAD:
+			as_scan_thread(sdm->address_space, addr, radius, selected, sdm->thread_count);
+			break;
+#ifdef SDM_ENABLE_OPENCL
+		case SDM_SCANNER_OPENCL:
+			as_scan_opencl(sdm->opencl_opts, addr, radius, selected);
+			break;
+#endif
+		default:
+			return -1;
+	}
+
+	for(i=0; i<sdm->sample; i++) {
+		if (selected[i] == 1) {
+			counter_sub_bitstring(sdm->counter, i, datum);
+			cnt++;
+		}
+	}
+	return cnt;
+}
+
+int sdm_weighted_read(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstring_t *output, unsigned int *weights) {
+	uint8_t selected[sdm->sample];
+	struct counter_s counter;
+	unsigned int i, dist, cnt = 0;
+
+	switch(sdm->scanner_type) {
+		case SDM_SCANNER_LINEAR:
+			as_scan_linear(sdm->address_space, addr, radius, selected);
+			break;
+		case SDM_SCANNER_THREAD:
+			as_scan_thread(sdm->address_space, addr, radius, selected, sdm->thread_count);
+			break;
+#ifdef SDM_ENABLE_OPENCL
+		case SDM_SCANNER_OPENCL:
+			as_scan_opencl(sdm->opencl_opts, addr, radius, selected);
+			break;
+#endif
+		default:
+			return -1;
+	}
+
+	counter_init(&counter, sdm->bits, 1);
+	for(i=0; i<sdm->sample; i++) {
+		if (selected[i] == 1) {
+			// TODO Should we change the scanners to store the distance instead of just a flag?
+			dist = bs_distance(addr, sdm->address_space->addresses[i], sdm->address_space->bs_len);
+			counter_weighted_add_counter(&counter, 0, sdm->counter, i, weights[dist]);
+			cnt++;
+		}
+	}
+	counter_to_bitstring(&counter, 0, output);
+	counter_free(&counter);
+
+	return cnt;
+}

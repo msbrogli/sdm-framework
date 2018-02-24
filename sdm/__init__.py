@@ -351,6 +351,7 @@ class SDM(Structure):
         elif scanner_type == SDM_SCANNER_OPENCL:
             libsdm.sdm_init_opencl(pointer(self), pointer(address_space), pointer(counter), c_char_p(opencl_source_code))
 
+        self.scanner_type = scanner_type
         self.address_space = address_space
         self.counter = counter
         self.radius = radius
@@ -390,7 +391,10 @@ class SDM(Structure):
         '''
         if radius is None:
             radius = self.radius
-        libsdm.sdm_write(pointer(self), addr.bs_data, c_uint(radius), datum.bs_data)
+        if self.scanner_type == SDM_SCANNER_OPENCL:
+            libsdm.sdm_write(pointer(self), addr.bs_data, c_uint(radius), datum.bs_data)
+        else:
+            libsdm.sdm_write2(pointer(self), addr.bs_data, c_uint(radius), datum.bs_data)
 
     def write_sub(self, addr, datum, radius=None):
         ''' Write a bitstring to the SDM.

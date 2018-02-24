@@ -92,6 +92,31 @@ exit:
 	return i;
 }
 
+int sdm_iter_read2(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, unsigned int max_iter, bitstring_t *output) {
+	unsigned int i;
+	bitstring_t *bs1, *bs2, *tmp;
+	bs1 = bs_alloc(sdm->address_space->bs_len);
+	bs2 = bs_alloc(sdm->address_space->bs_len);
+	bs_copy(bs1, addr, sdm->address_space->bs_len);
+	for(i=0; i<max_iter; i++) {
+		if (sdm_read2(sdm, bs1, radius, bs2) < 0) {
+			i = -1;
+			goto exit;
+		}
+		if (bs_distance(bs1, bs2, sdm->address_space->bs_len) == 0) {
+			break;
+		}
+		tmp = bs1;
+		bs1 = bs2;
+		bs2 = tmp;
+	}
+	bs_copy(output, bs1, sdm->address_space->bs_len);
+exit:
+	bs_free(bs1);
+	bs_free(bs2);
+	return i;
+}
+
 int sdm_scan(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, uint8_t *selected) {
 	switch(sdm->scanner_type) {
 		case SDM_SCANNER_LINEAR:
@@ -117,6 +142,22 @@ int sdm_scan2(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, unsigne
 		case SDM_SCANNER_THREAD:
 			return as_scan_thread2(sdm->address_space, addr, radius, selected, sdm->thread_count);
 
+#ifdef SDM_ENABLE_OPENCL
+		case SDM_SCANNER_OPENCL:
+			{
+				uint8_t selected2[sdm->sample];
+				unsigned int i;
+				int cnt = 0;
+				as_scan_opencl(sdm->opencl_opts, addr, radius, selected2);
+				for (i=0; i<sdm->sample; i++) {
+					if (selected2[i]) {
+						selected[cnt++] = i;
+					}
+				}
+				return cnt;
+			}
+#endif
+
 		default:
 			return -1;
 	}
@@ -137,6 +178,27 @@ int sdm_read(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstrin
 			counter_add_counter(&counter, 0, sdm->counter, i);
 			cnt++;
 		}
+	}
+	counter_to_bitstring(&counter, 0, output);
+	counter_free(&counter);
+
+	return cnt;
+}
+
+int sdm_read2(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstring_t *output) {
+	unsigned int selected[sdm->sample];
+	struct counter_s counter;
+	unsigned int i;
+	int cnt;
+
+	cnt = sdm_scan2(sdm, addr, radius, selected);
+	if (cnt == -1) {
+		return -1;
+	}
+
+	counter_init(&counter, sdm->bits, 1);
+	for(i=0; i<(unsigned int)cnt; i++) {
+		counter_add_counter(&counter, 0, sdm->counter, selected[i]);
 	}
 	counter_to_bitstring(&counter, 0, output);
 	counter_free(&counter);

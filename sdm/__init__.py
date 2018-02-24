@@ -362,7 +362,7 @@ class SDM(Structure):
         if radius is None:
             radius = self.radius
         out = Bitstring(self.bits)
-        libsdm.sdm_iter_read(pointer(self), addr.bs_data, c_uint(radius), c_uint(max_iter), out.bs_data)
+        libsdm.sdm_iter_read2(pointer(self), addr.bs_data, c_uint(radius), c_uint(max_iter), out.bs_data)
         return out
 
     def read(self, addr, radius=None, z=None):
@@ -372,7 +372,7 @@ class SDM(Structure):
             radius = self.radius
         out = Bitstring(self.bits)
         if z is None:
-            libsdm.sdm_read(pointer(self), addr.bs_data, c_uint(radius), out.bs_data)
+            libsdm.sdm_read2(pointer(self), addr.bs_data, c_uint(radius), out.bs_data)
         else:
             libsdm.sdm_generic_read(pointer(self), addr.bs_data, c_uint(radius), out.bs_data, c_double(z))
         return out

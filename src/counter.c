@@ -92,6 +92,9 @@ int counter_check_meta_file(char *filename, unsigned int *bits, unsigned int *sa
 	*bits = 0;
 	*sample = 0;
 	fp = fopen(filename, "r");
+	if (fp == NULL) {
+		return -1;
+	}
 	fgets(line, sizeof(line), fp);
 	if (strcmp(line, "SDM COUNTER\n")) {
 		return -1;

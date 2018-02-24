@@ -12,10 +12,10 @@ int main(void) {
 	char buf[1000];
 	struct opencl_scanner_s opencl;
 	struct counter_s counter;
-	int i;
+	unsigned int i;
 
-	int bits = 1000;
-	int sample = 1000000;
+	unsigned int bits = 1000;
+	unsigned int sample = 1000000;
 
 	//int status = as_init_from_b64_file(&as, "test1_address_space_b64.as");
 	//assert(status == 0);
@@ -37,20 +37,39 @@ int main(void) {
 	//}
 	//printf("\n");
 
-	uint8_t selected_linear[sample];
-	printf("@@ Linear %d\n", as_scan_linear(&as, bs1, 451, selected_linear));
+	uint8_t selected1[sample];
+	uint8_t selected2[sample];
 
-	uint8_t selected_thread[sample];
-	printf("@@ Thread %d\n", as_scan_thread(&as, bs1, 451, selected_thread, 4));
+	printf("@@ Linear %d\n", as_scan_linear(&as, bs1, 451, selected1));
 
-	as_scanner_opencl_init(&opencl, &as, "scanner_opencl.cl");
-	uint8_t selected_opencl[sample];
-	printf("@@ OpenCL %d\n", as_scan_opencl(&opencl, bs1, 451, selected_opencl));
-	as_scanner_opencl_free(&opencl);
-
+	memset(selected2, 0, sizeof(selected2));
+	printf("@@ Thread %d\n", as_scan_thread(&as, bs1, 451, selected2, 4));
 	for(i=0; i<sample; i++) {
-		assert(selected_linear[i] == selected_thread[i]);
-		assert(selected_linear[i] == selected_opencl[i]);
+		assert(selected1[i] == selected2[i]);
+	}
+
+	memset(selected2, 0, sizeof(selected2));
+	as_scanner_opencl_init(&opencl, &as, "scanner_opencl.cl");
+	printf("@@ OpenCL %d\n", as_scan_opencl(&opencl, bs1, 451, selected2));
+	as_scanner_opencl_free(&opencl);
+	for(i=0; i<sample; i++) {
+		assert(selected1[i] == selected2[i]);
+	}
+
+	unsigned int selected_int[sample];
+
+	memset(selected_int, 0, sizeof(selected_int));
+	unsigned int len_linear2 = as_scan_linear2(&as, bs1, 451, selected_int);
+	printf("@@ Linear2 %d\n", len_linear2);
+	for(i=0; i<len_linear2; i++) {
+		assert(selected1[selected_int[i]] == 1);
+	}
+
+	memset(selected_int, 0, sizeof(selected_int));
+	unsigned int len_thread2 = as_scan_thread2(&as, bs1, 451, selected_int, 4);
+	printf("@@ Thread2 %d\n", len_thread2);
+	for(i=0; i<len_thread2; i++) {
+		assert(selected1[selected_int[i]] == 1);
 	}
 
 	return 0;

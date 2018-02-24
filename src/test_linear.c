@@ -36,7 +36,7 @@ int main(void) {
 	//printf("\n");
 
 	uint8_t selected_linear[sample];
-	for (i=0; i<500; i++) {
+	for (i=0; i<1000; i++) {
 		as_scan_linear(&as, bs1, 451, selected_linear);
 	}
 	printf("Done.\n");

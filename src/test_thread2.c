@@ -9,7 +9,6 @@
 int main(void) {
 	struct address_space_s as;
 	bitstring_t *bs1;
-	struct opencl_scanner_s opencl;
 	char buf[1000];
 	int i;
 
@@ -36,13 +35,11 @@ int main(void) {
 	//}
 	//printf("\n");
 
-	as_scanner_opencl_init(&opencl, &as, "scanner_opencl.cl");
-	uint8_t selected_opencl[sample];
+	unsigned int selected[sample];
 	for (i=0; i<1000; i++) {
-		as_scan_opencl(&opencl, bs1, 451, selected_opencl);
+		as_scan_thread2(&as, bs1, 451, selected, 4);
 	}
 	printf("Done.\n");
-	as_scanner_opencl_free(&opencl);
 
 	bs_free(bs1);
 	return 0;

@@ -36,8 +36,8 @@ int main(void) {
 	//printf("\n");
 
 	uint8_t selected_thread[sample];
-	for (i=0; i<500; i++) {
-		as_scan_thread(&as, bs1, 451, selected_thread, 4);
+	for (i=0; i<1000; i++) {
+		as_scan_thread(&as, bs1, 451, selected_thread, 8);
 	}
 	printf("Done.\n");
 

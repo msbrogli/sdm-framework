@@ -155,6 +155,27 @@ int sdm_write(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstri
 	return cnt;
 }
 
+int sdm_write2(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstring_t *datum) {
+	unsigned int selected[sdm->sample];
+	unsigned int i, cnt = 0;
+
+	switch(sdm->scanner_type) {
+		case SDM_SCANNER_LINEAR:
+			cnt = as_scan_linear2(sdm->address_space, addr, radius, selected);
+			break;
+		case SDM_SCANNER_THREAD:
+			cnt = as_scan_thread2(sdm->address_space, addr, radius, selected, sdm->thread_count);
+			break;
+		default:
+			return -1;
+	}
+
+	for(i=0; i<cnt; i++) {
+		counter_add_bitstring(sdm->counter, i, datum);
+	}
+	return cnt;
+}
+
 int sdm_generic_read(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstring_t *output, double z) {
 	uint8_t selected[sdm->sample];
 	double counter[sdm->bits];

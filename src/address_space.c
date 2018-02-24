@@ -110,6 +110,17 @@ int as_scan_linear(const struct address_space_s *this, const bitstring_t *bs, un
 	return cnt;
 }
 
+int as_scan_linear2(const struct address_space_s *this, const bitstring_t *bs, unsigned int radius, unsigned int *selected) {
+	unsigned int i, cnt;
+	cnt = 0;
+	for(i=0; i<this->sample; i++) {
+		if (bs_distance(this->addresses[i], bs, this->bs_len) <= radius) {
+			selected[cnt++] = i;
+		}
+	}
+	return cnt;
+}
+
 int as_save_b64_file(const struct address_space_s *this, char *filename) {
 	unsigned int i;
 	char buf[1000];

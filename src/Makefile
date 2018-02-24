@@ -26,6 +26,7 @@ LIB_OBJS += lib/base64.o
 OBJS += bitstring.o
 OBJS += address_space.o
 OBJS += scanner_thread.o
+OBJS += scanner_thread2.o
 OBJS += scanner_opencl.o
 OBJS += counter.o
 OBJS += operations.o
@@ -33,6 +34,7 @@ OBJS += operations.o
 HEADERS += bitstring.h
 HEADERS += address_space.h
 HEADERS += scanner_thread.h
+HEADERS += scanner_thread2.h
 HEADERS += scanner_opencl.h
 HEADERS += counter.h
 HEADERS += operations.h
@@ -44,7 +46,7 @@ all: libsdm.a libsdm.so
 tests: test/test_bitstring
 
 .PHONY: tests_performance
-tests_performance: test_linear test_thread test_opencl
+tests_performance: test_linear test_linear2 test_thread test_thread2 test_opencl
 
 libsdm.so: ${OBJS} ${LIB_OBJS}
 	${CC} -shared -o libsdm.so ${OBJS} ${LIB_OBJS} ${CLFLAGS}
@@ -68,8 +70,14 @@ test4: test4.c libsdm.a
 test_linear: test_linear.c libsdm.a
 	${CC} -o test_linear test_linear.c libsdm.a ${CCFLAGS} ${CLFLAGS}
 
+test_linear2: test_linear2.c libsdm.a
+	${CC} -o test_linear2 test_linear2.c libsdm.a ${CCFLAGS} ${CLFLAGS}
+
 test_thread: test_thread.c libsdm.a
 	${CC} -o test_thread test_thread.c libsdm.a ${CCFLAGS} ${CLFLAGS}
+
+test_thread2: test_thread2.c libsdm.a
+	${CC} -o test_thread2 test_thread2.c libsdm.a ${CCFLAGS} ${CLFLAGS}
 
 test_opencl: test_opencl.c libsdm.a
 	${CC} -o test_opencl test_opencl.c libsdm.a ${CCFLAGS} ${CLFLAGS}
@@ -88,6 +96,9 @@ bitstring.o: bitstring.h bitstring.c
 
 scanner_thread.o: scanner_thread.c
 	${CC} -c scanner_thread.c ${CCFLAGS}
+
+scanner_thread2.o: scanner_thread2.c
+	${CC} -c scanner_thread2.c ${CCFLAGS}
 
 scanner_opencl.o: scanner_opencl.c scanner_opencl.h
 	${CC} -c scanner_opencl.c ${CCFLAGS}
@@ -112,5 +123,5 @@ test_scanner_opencl: test_scanner_opencl.cpp $(OBJS)
 .PHONY: clean
 clean:
 	rm -f *.o lib/*.o test_bitstring test_scanner_opencl
-	rm -f libsdm.a libsdm.so test1 test1-dyn test2 test3 test4 test_linear test_thread test_opencl
+	rm -f libsdm.a libsdm.so test1 test1-dyn test2 test3 test4 test_linear test_thread test_opencl test_linear2 test_thread2
 	rm -f test/test_bitstring

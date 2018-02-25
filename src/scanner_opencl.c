@@ -162,7 +162,7 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 	 */
 	this->bs_buf = clCreateBuffer(this->context, CL_MEM_READ_ONLY, sizeof(cl_bitstring_t)*this->bs_len, NULL, &error);
 	assert(error == CL_SUCCESS);
-	this->selected_buf = clCreateBuffer(this->context, CL_MEM_WRITE_ONLY, sizeof(cl_uchar)*this->address_space->sample, NULL, &error);
+	this->selected_buf = clCreateBuffer(this->context, CL_MEM_WRITE_ONLY, sizeof(cl_uint)*this->address_space->sample, NULL, &error);
 	assert(error == CL_SUCCESS);
 	this->counter_buf = clCreateBuffer(this->context, CL_MEM_WRITE_ONLY, sizeof(cl_uint), NULL, &error);
 	assert(error == CL_SUCCESS);

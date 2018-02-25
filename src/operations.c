@@ -145,6 +145,9 @@ int sdm_scan2(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, unsigne
 
 #ifdef SDM_ENABLE_OPENCL
 		case SDM_SCANNER_OPENCL:
+			return as_scan_opencl2(sdm->opencl_opts, addr, radius, selected);
+/*
+		case SDM_SCANNER_OPENCL:
 			{
 				uint8_t *selected2 = (uint8_t *) malloc(sizeof(uint8_t) * sdm->sample);
 				assert(selected2 != NULL);
@@ -159,6 +162,7 @@ int sdm_scan2(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, unsigne
 				free(selected2);
 				return cnt;
 			}
+*/
 #endif
 
 		default:

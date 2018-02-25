@@ -11,7 +11,6 @@ int main(void) {
 	bitstring_t *bs1;
 	char buf[1000];
 	struct opencl_scanner_s opencl;
-	struct counter_s counter;
 	unsigned int i;
 
 	unsigned int bits = 1000;
@@ -72,16 +71,14 @@ int main(void) {
 		assert(selected1[selected_int[i]] == 1);
 	}
 
-	return 0;
-
-	counter_init(&counter, bits, sample);
-	//counter_init_file("test1_counter.bin", &counter, bits, sample);
-	//printf("Before\n");
-	//counter_print(&counter, 0);
-	counter_add_bitstring(&counter, 0, bs1);
-	//printf("\nAfter\n");
-	counter_print(&counter, 0);
-	counter_free(&counter);
+	memset(selected_int, 0, sizeof(selected_int));
+	as_scanner_opencl_init(&opencl, &as, "scanner_opencl2.cl");
+	unsigned int len_opencl2 = as_scan_opencl2(&opencl, bs1, 451, selected_int);
+	printf("@@ OpenCL2 %d\n", len_opencl2);
+	as_scanner_opencl_free(&opencl);
+	for(i=0; i<len_opencl2; i++) {
+		assert(selected1[selected_int[i]] == 1);
+	}
 
 	bs_free(bs1);
 }

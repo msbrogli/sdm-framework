@@ -1,6 +1,7 @@
 
 #include <math.h>
 #include <string.h>
+#include <assert.h>
 #include "bitstring.h"
 #include "address_space.h"
 #include "counter.h"
@@ -145,7 +146,8 @@ int sdm_scan2(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, unsigne
 #ifdef SDM_ENABLE_OPENCL
 		case SDM_SCANNER_OPENCL:
 			{
-				uint8_t selected2[sdm->sample];
+				uint8_t *selected2 = (uint8_t *) malloc(sizeof(uint8_t) * sdm->sample);
+				assert(selected2 != NULL);
 				unsigned int i;
 				int cnt = 0;
 				as_scan_opencl(sdm->opencl_opts, addr, radius, selected2);
@@ -154,6 +156,7 @@ int sdm_scan2(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, unsigne
 						selected[cnt++] = i;
 					}
 				}
+				free(selected2);
 				return cnt;
 			}
 #endif
@@ -164,9 +167,10 @@ int sdm_scan2(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, unsigne
 }
 
 int sdm_read(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstring_t *output) {
-	uint8_t selected[sdm->sample];
 	struct counter_s counter;
 	unsigned int i, cnt = 0;
+	uint8_t *selected = (uint8_t *) malloc(sizeof(uint8_t) * sdm->sample);
+	assert(selected != NULL);
 
 	if (sdm_scan(sdm, addr, radius, selected) == -1) {
 		return -1;
@@ -182,17 +186,20 @@ int sdm_read(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstrin
 	counter_to_bitstring(&counter, 0, output);
 	counter_free(&counter);
 
+	free(selected);
 	return cnt;
 }
 
 int sdm_read2(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstring_t *output) {
-	unsigned int selected[sdm->sample];
 	struct counter_s counter;
 	unsigned int i;
 	int cnt;
+	unsigned int *selected = (unsigned int *) malloc(sizeof(unsigned int) * sdm->sample);
+	assert(selected != NULL);
 
 	cnt = sdm_scan2(sdm, addr, radius, selected);
 	if (cnt == -1) {
+		free(selected);
 		return -1;
 	}
 
@@ -203,14 +210,17 @@ int sdm_read2(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstri
 	counter_to_bitstring(&counter, 0, output);
 	counter_free(&counter);
 
+	free(selected);
 	return cnt;
 }
 
 int sdm_write(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstring_t *datum) {
-	uint8_t selected[sdm->sample];
 	unsigned int i, cnt = 0;
+	uint8_t *selected = (uint8_t *) malloc(sizeof(uint8_t) * sdm->sample);
+	assert(selected != NULL);
 
 	if (sdm_scan(sdm, addr, radius, selected) == -1) {
+		free(selected);
 		return -1;
 	}
 
@@ -220,33 +230,39 @@ int sdm_write(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstri
 			cnt++;
 		}
 	}
+	free(selected);
 	return cnt;
 }
 
 int sdm_write2(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstring_t *datum) {
-	unsigned int selected[sdm->sample];
 	unsigned int i;
 	int cnt;
+	unsigned int *selected = (unsigned int *) malloc(sizeof(unsigned int) * sdm->sample);
+	assert(selected != NULL);
 
 	cnt = sdm_scan2(sdm, addr, radius, selected);
 	if (cnt == -1) {
+		free(selected);
 		return -1;
 	}
 
 	for(i=0; i<(unsigned int)cnt; i++) {
 		counter_add_bitstring(sdm->counter, selected[i], datum);
 	}
+	free(selected);
 	return cnt;
 }
 
 int sdm_generic_read(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstring_t *output, double z) {
-	uint8_t selected[sdm->sample];
 	double counter[sdm->bits];
 	counter_t *ptr;
 	double x;
 	unsigned int i, j, cnt = 0;
+	uint8_t *selected = (uint8_t *) malloc(sizeof(uint8_t) * sdm->sample);
+	assert(selected != NULL);
 
 	if (sdm_scan(sdm, addr, radius, selected) == -1) {
+		free(selected);
 		return -1;
 	}
 
@@ -278,6 +294,7 @@ int sdm_generic_read(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, 
 		}
 	}
 
+	free(selected);
 	return cnt;
 }
 

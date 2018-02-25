@@ -1,5 +1,6 @@
 *.swp
 *.o
+*.pyc
 
 libsdm.a
 libsdm.so

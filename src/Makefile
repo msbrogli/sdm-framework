@@ -68,6 +68,9 @@ test3: test3.c libsdm.a
 test4: test4.c libsdm.a
 	${CC} -o test4 test4.c libsdm.a ${CCFLAGS} ${CLFLAGS}
 
+opencl_debug: opencl_debug.c libsdm.a
+	${CC} -o opencl_debug opencl_debug.c libsdm.a ${CCFLAGS} ${CLFLAGS}
+
 test_linear: test_linear.c libsdm.a
 	${CC} -o test_linear test_linear.c libsdm.a ${CCFLAGS} ${CLFLAGS}
 

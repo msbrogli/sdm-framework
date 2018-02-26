@@ -41,7 +41,7 @@ setup(name='sdm',
     long_description='',
     ext_modules=[libsdm_ext],
     packages=['sdm'],
-    package_data={'sdm': ['scanner_opencl.cl']},
+    package_data={'sdm': ['scanner_opencl.cl', 'scanner_opencl2.cl']},
     url='https://github.com/msbrogli/sdm-framework',
     classifiers=[
         'Development Status :: 4 - Beta',

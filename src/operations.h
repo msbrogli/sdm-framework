@@ -46,6 +46,10 @@ int sdm_read_counter(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, 
 int sdm_weighted_read(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstring_t *output, unsigned int *weights);
 int sdm_write_sub(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstring_t *datum);
 
+int sdm_write2(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstring_t *datum);
+int sdm_write2_weighted(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstring_t *datum, int weight);
+int sdm_write2_weighted_table(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstring_t *datum, int *weight_table);
+
 int sdm_read2(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstring_t *output);
 
 #endif

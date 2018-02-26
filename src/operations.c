@@ -276,6 +276,28 @@ int sdm_write2_weighted(struct sdm_s *sdm, bitstring_t *addr, unsigned int radiu
 	return cnt;
 }
 
+int sdm_write2_weighted_table(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstring_t *datum, int *weight_table) {
+	unsigned int i;
+	int cnt;
+	unsigned int dist;
+	unsigned int *selected = (unsigned int *) malloc(sizeof(unsigned int) * sdm->sample);
+	assert(selected != NULL);
+
+	cnt = sdm_scan2(sdm, addr, radius, selected);
+	if (cnt == -1) {
+		free(selected);
+		return -1;
+	}
+
+	for(i=0; i<(unsigned int)cnt; i++) {
+		// TODO Should we change the scanners to store the distance instead of just a flag?
+		dist = bs_distance(addr, sdm->address_space->addresses[selected[i]], sdm->address_space->bs_len);
+		counter_add_bitstring_weighted(sdm->counter, selected[i], datum, weight_table[dist]);
+	}
+	free(selected);
+	return cnt;
+}
+
 int sdm_generic_read(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstring_t *output, double z) {
 	double counter[sdm->bits];
 	counter_t *ptr;
@@ -356,26 +378,30 @@ int sdm_write_sub(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bit
 	return cnt;
 }
 
-int sdm_weighted_read(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstring_t *output, unsigned int *weights) {
-	uint8_t selected[sdm->sample];
+int sdm_weighted_read2(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstring_t *output, unsigned int *weights) {
 	struct counter_s counter;
-	unsigned int i, dist, cnt = 0;
+	unsigned int dist;
+	int i;
+	int cnt;
+	unsigned int *selected = (unsigned int *) malloc(sizeof(unsigned int) * sdm->sample);
+	assert(selected != NULL);
 
-	if (sdm_scan(sdm, addr, radius, selected) == -1) {
+	cnt = sdm_scan2(sdm, addr, radius, selected);
+	if (cnt == -1) {
+		free(selected);
 		return -1;
 	}
 
 	counter_init(&counter, sdm->bits, 1);
-	for(i=0; i<sdm->sample; i++) {
-		if (selected[i] == 1) {
-			// TODO Should we change the scanners to store the distance instead of just a flag?
-			dist = bs_distance(addr, sdm->address_space->addresses[i], sdm->address_space->bs_len);
-			counter_weighted_add_counter(&counter, 0, sdm->counter, i, weights[dist]);
-			cnt++;
-		}
+	for(i=0; i<cnt; i++) {
+		// TODO Should we change the scanners to store the distance instead of just a flag?
+		dist = bs_distance(addr, sdm->address_space->addresses[selected[i]], sdm->address_space->bs_len);
+		counter_weighted_add_counter(&counter, 0, sdm->counter, selected[i], weights[dist]);
+		cnt++;
 	}
 	counter_to_bitstring(&counter, 0, output);
 	counter_free(&counter);
 
+	free(selected);
 	return cnt;
 }

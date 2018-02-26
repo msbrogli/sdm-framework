@@ -395,7 +395,15 @@ class SDM(Structure):
         if weight == 1:
             libsdm.sdm_write2(pointer(self), addr.bs_data, c_uint(radius), datum.bs_data)
         else:
-            libsdm.sdm_write2_weighted(pointer(self), addr.bs_data, c_uint(radius), datum.bs_data, c_int(weight))
+            if isinstance(weight, int):
+                libsdm.sdm_write2_weighted(pointer(self), addr.bs_data, c_uint(radius), datum.bs_data, c_int(weight))
+            elif isinstance(weight, (list, tuple)):
+                assert(self.bits+1 == len(weight))
+                # See https://docs.python.org/3/library/ctypes.html#type-conversions
+                weight_buf = (c_int * (self.bits+1))(*weight)
+                libsdm.sdm_write2_weighted_table(pointer(self), addr.bs_data, c_uint(radius), datum.bs_data, weight_buf)
+            else:
+                raise NotImplemented
 
     #def write_sub(self, addr, datum, radius=None):
     #    ''' Write a bitstring to the SDM.

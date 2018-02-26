@@ -17,16 +17,37 @@ How to install
 ==============
 This framework has the following dependencies: `libbsd` and `libOpenCL`.
 
-To install in a FloyHub GPU instance, you just have to run:
-
-    apt-get update && apt-get install libbsd-dev nvidia-opencl-icd-304 opencl-headers
-    sudo ln -s /usr/lib/x86_64-linux-gnu/libOpenCL.so.1 /usr/lib/libOpenCL.so
-
     pip install sdm
 
 If you would like to install the most recent code:
 
     pip install git+https://github.com/msbrogli/sdm-framework.git
+
+FloydHub
+--------
+To install in a FloyHub GPU instance, you just have to run:
+
+    apt-get update && apt-get install libbsd-dev nvidia-opencl-icd-304 opencl-headers
+    sudo ln -s /usr/lib/x86_64-linux-gnu/libOpenCL.so.1 /usr/lib/libOpenCL.so
+
+AWS GPU instances
+-----------------
+To install in an AWS instance, you just have to run:
+
+	install apt-get install build-essential
+	wget http://us.download.nvidia.com/XFree86/Linux-x86_64/367.106/NVIDIA-Linux-x86_64-367.106.run
+	sudo /bin/bash ./NVIDIA-Linux-x86_64-367.106.run
+
+To confirm the driver is functional, run `nvidia-smi`.
+For further information, see [https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/install-nvidia-driver.html].
+
+To optimize and achieve better performance, run:
+
+	sudo nvidia-persistenced
+	sudo nvidia-smi --auto-boost-default=0
+	sudo nvidia-smi -ac 2505,875
+
+For further information about optimization, see [https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/optimize_gpu.html].
 
 
 Documentation

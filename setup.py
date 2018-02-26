@@ -29,6 +29,7 @@ else:
 libsdm_ext = Extension('sdm._libsdm', [
     'src/bitstring.c', 'src/address_space.c', 'src/counter.c',
     'src/scanner_thread.c', 'src/scanner_opencl.c', 
+    'src/scanner_thread2.c', 'src/scanner_opencl2.c',
     'src/operations.c', 'src/lib/base64.c',
 ], libraries=libraries, define_macros=macros, extra_compile_args=extra_compile_args, extra_link_args=extra_link_args)
 

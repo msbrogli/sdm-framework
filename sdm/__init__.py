@@ -39,6 +39,7 @@ if libsdm is not None:
     libsdm.bs_init_bitcount_table()
 
 opencl_source_code = os.path.join(basedir, 'scanner_opencl.cl').encode()
+opencl2_source_code = os.path.join(basedir, 'scanner_opencl2.cl').encode()
 if not os.path.exists(opencl_source_code):
     print('Ops!', opencl_source_code)
 
@@ -349,7 +350,7 @@ class SDM(Structure):
         elif scanner_type == SDM_SCANNER_THREAD:
             libsdm.sdm_init_thread(pointer(self), pointer(address_space), pointer(counter), thread_count)
         elif scanner_type == SDM_SCANNER_OPENCL:
-            libsdm.sdm_init_opencl(pointer(self), pointer(address_space), pointer(counter), c_char_p(opencl_source_code))
+            libsdm.sdm_init_opencl(pointer(self), pointer(address_space), pointer(counter), c_char_p(opencl2_source_code))
 
         self.scanner_type = scanner_type
         self.address_space = address_space
@@ -386,19 +387,22 @@ class SDM(Structure):
         libsdm.sdm_read_counter(pointer(self), addr.bs_data, c_uint(radius), pointer(counter))
         return counter
 
-    def write(self, addr, datum, radius=None):
+    def write(self, addr, datum, radius=None, weight=1):
         ''' Write a bitstring to the SDM.
         '''
         if radius is None:
             radius = self.radius
-        libsdm.sdm_write2(pointer(self), addr.bs_data, c_uint(radius), datum.bs_data)
+        if weight == 1:
+            libsdm.sdm_write2(pointer(self), addr.bs_data, c_uint(radius), datum.bs_data)
+        else:
+            libsdm.sdm_write2_weighted(pointer(self), addr.bs_data, c_uint(radius), datum.bs_data, c_int(weight))
 
-    def write_sub(self, addr, datum, radius=None):
-        ''' Write a bitstring to the SDM.
-        '''
-        if radius is None:
-            radius = self.radius
-        libsdm.sdm_write_sub(pointer(self), addr.bs_data, c_uint(radius), datum.bs_data)
+    #def write_sub(self, addr, datum, radius=None):
+    #    ''' Write a bitstring to the SDM.
+    #    '''
+    #    if radius is None:
+    #        radius = self.radius
+    #    libsdm.sdm_write_sub(pointer(self), addr.bs_data, c_uint(radius), datum.bs_data)
 
     def write_random_bitstrings(self, n):
         for _ in xrange(n):

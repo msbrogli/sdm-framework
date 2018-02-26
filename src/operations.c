@@ -257,6 +257,25 @@ int sdm_write2(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstr
 	return cnt;
 }
 
+int sdm_write2_weighted(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstring_t *datum, int weight) {
+	unsigned int i;
+	int cnt;
+	unsigned int *selected = (unsigned int *) malloc(sizeof(unsigned int) * sdm->sample);
+	assert(selected != NULL);
+
+	cnt = sdm_scan2(sdm, addr, radius, selected);
+	if (cnt == -1) {
+		free(selected);
+		return -1;
+	}
+
+	for(i=0; i<(unsigned int)cnt; i++) {
+		counter_add_bitstring_weighted(sdm->counter, selected[i], datum, weight);
+	}
+	free(selected);
+	return cnt;
+}
+
 int sdm_generic_read(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstring_t *output, double z) {
 	double counter[sdm->bits];
 	counter_t *ptr;

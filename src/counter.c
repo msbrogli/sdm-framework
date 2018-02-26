@@ -233,6 +233,31 @@ int counter_add_bitstring(struct counter_s *this, unsigned int index, bitstring_
 	return 0;
 }
 
+int counter_add_bitstring_weighted(struct counter_s *this, unsigned int index, bitstring_t *bs, int weight) {
+	unsigned int i;
+	counter_t *ptr = this->counter[index];
+	for(i=0; i<this->bits; i++) {
+#ifdef COUNTER_CHECK_OVERFLOW
+		if (bs_get_bit(bs, i)) {
+			if (ptr[i] <= COUNTER_MAX - weight) {
+				ptr[i] += weight;
+			}
+		} else {
+			if (ptr[i] >= COUNTER_MIN + weight) {
+				ptr[i] -= weight;
+			}
+		}
+#else
+		if (bs_get_bit(bs, i)) {
+			ptr[i] += weight;
+		} else {
+			ptr[i] -= weight;
+		}
+#endif
+	}
+	return 0;
+}
+
 int counter_sub_bitstring(struct counter_s *this, unsigned int index, bitstring_t *bs) {
 	unsigned int i;
 	counter_t *ptr = this->counter[index];

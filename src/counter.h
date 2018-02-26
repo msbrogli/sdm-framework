@@ -28,6 +28,7 @@ void counter_print_summary(struct counter_s *this);
 void counter_print(struct counter_s *this, unsigned int index);
 
 int counter_add_bitstring(struct counter_s *this, unsigned int index, bitstring_t *bs);
+int counter_add_bitstring_weighted(struct counter_s *this, unsigned int index, bitstring_t *bs, int weight);
 int counter_sub_bitstring(struct counter_s *this, unsigned int index, bitstring_t *bs);
 int counter_add_counter(struct counter_s *c1, unsigned int idx1, struct counter_s *c2, unsigned int idx2);
 int counter_weighted_add_counter(struct counter_s *c1, unsigned int idx1, struct counter_s *c2, unsigned int idx2, unsigned int weight);

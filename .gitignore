@@ -22,3 +22,4 @@ src/test_scanner_opencl
 src/test_performance_scanners
 
 .ipynb_checkpoints/
+*.dSYM/

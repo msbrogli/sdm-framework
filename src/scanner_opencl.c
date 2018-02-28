@@ -221,6 +221,8 @@ void opencl_scanner_devices(struct opencl_scanner_s *this) {
 		error = clGetDeviceIDs(platforms[i], CL_DEVICE_TYPE_ALL, deviceCount, devices, NULL);
 		assert(error == CL_SUCCESS);
 
+		printf("Platform %d\n", i+1);
+
 		/* for each device print critical attributes */
 		for (j = 0; j < deviceCount; j++) {
 

@@ -35,10 +35,17 @@ int main(void) {
 	bs_to_hex(buf, bs1, as->bs_len);
 	printf("bs1 = %s\n", buf);
 
-	//assert(!sdm_init_thread(sdm, as, counter, 4));
-	assert(!sdm_init_linear(sdm, as, counter));
+	//sdm_init_opencl(sdm, as, counter, "scanner_opencl2.cl");
+	assert(!sdm_init_thread(sdm, as, counter, 4));
+	//assert(!sdm_init_linear(sdm, as, counter));
 
-	sdm_write(sdm, bs1, 451, bs1);
+	for(i=0; i<1000; i++) {
+		sdm_write2(sdm, bs1, 451, bs1);
+	}
+
+	printf("Done.\n");
+
+	/*
 	sdm_write(sdm, bs1, 451, bs1);
 	sdm_write(sdm, bs1, 451, bs1);
 	for(i=0; i<100; i++) {
@@ -46,6 +53,7 @@ int main(void) {
 	}
 	bs_to_hex(buf, bs2, as->bs_len);
 	printf("bs2 = %s\n", buf);
+	*/
 
 	bs_free(bs1);
 	bs_free(bs2);

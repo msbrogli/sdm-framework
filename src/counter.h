@@ -36,5 +36,9 @@ int counter_weighted_add_counter(struct counter_s *c1, unsigned int idx1, struct
 int counter_to_bitstring(struct counter_s *this, unsigned int index, bitstring_t *bs);
 
 int counter_create_file(char *filename, unsigned int bits, unsigned int sample);
+int counter_save_file(struct counter_s *this, char *filename);
+
+static
+int save(char *filename, unsigned int bits, unsigned int sample, counter_t *data, unsigned int nitems);
 
 #endif

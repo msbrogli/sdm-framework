@@ -172,6 +172,9 @@ class Counter(Structure):
         libsdm.counter_to_bitstring(pointer(self), c_uint(index), bs.bs_data)
         return bs
 
+    def save(self, filename):
+        libsdm.counter_save_file(pointer(self), c_char_p(filename))
+
 
 class Bitstring(object):
     ''' The Bitstring is the basic unity of storage in an SDM.

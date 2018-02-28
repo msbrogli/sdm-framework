@@ -48,10 +48,10 @@ void counter_print_summary(struct counter_s *this) {
 	}
 }
 
-int counter_create_file(char *filename, unsigned int bits, unsigned int sample) {
+static
+int save(char *filename, unsigned int bits, unsigned int sample, counter_t *data, unsigned int nitems) {
 	FILE *fp1, *fp2;
 	unsigned int i;
-	counter_t v[bits];
 
 	char meta[1000], bin[1000];
 	sprintf(meta, "%s.meta", filename);
@@ -74,14 +74,23 @@ int counter_create_file(char *filename, unsigned int bits, unsigned int sample) 
 	fprintf(fp1, "Bits: %d\n", bits);
 	fprintf(fp1, "Sample: %d\n", sample);
 
-	memset(v, 0, sizeof(v));
-	for(i=0; i<sample; i++) {
-		fwrite(v, sizeof(v), 1, fp2);
+	for(i=0; i<sample; i+=nitems) {
+		fwrite(data, sizeof(counter_t)*bits, nitems, fp2);
 	}
 
 	fclose(fp1);
 	fclose(fp2);
 	return 0;
+}
+
+int counter_save_file(struct counter_s *this, char *filename) {
+	return save(filename, this->bits, this->sample, this->data, this->sample);
+}
+
+int counter_create_file(char *filename, unsigned int bits, unsigned int sample) {
+	counter_t v[bits];
+	memset(v, 0, sizeof(counter_t)*bits);
+	return save(filename, bits, sample, v, 1);
 }
 
 int counter_check_meta_file(char *filename, unsigned int *bits, unsigned int *sample) {

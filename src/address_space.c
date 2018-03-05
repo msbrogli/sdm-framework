@@ -68,6 +68,9 @@ int as_init(struct address_space_s *this, unsigned int bits, unsigned int sample
 		this->addresses[i] = &this->bs_data[i * this->bs_len];
 	}
 
+#ifdef SDM_ENABLE_OPENCL
+	this->opencl_opts = (struct opencl_scanner_s *) malloc(sizeof(struct opencl_scanner_s));
+#endif
 	return 0;
 }
 
@@ -85,6 +88,9 @@ int as_init_random(struct address_space_s *this, unsigned int bits, unsigned int
 int as_free(struct address_space_s *this) {
 	free(this->addresses);
 	free(this->bs_data);
+#ifdef SDM_ENABLE_OPENCL
+	free(this->opencl_opts);
+#endif
 	return 0;
 }
 

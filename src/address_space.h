@@ -4,12 +4,21 @@
 
 #include "bitstring.h"
 
+#ifdef SDM_ENABLE_OPENCL
+#include "scanner_opencl.h"
+#endif
+
 struct address_space_s {
 	/* SDM dimension */
 	unsigned int bits;
 
 	/* Number of hard-locations. */
 	unsigned int sample;
+
+#ifdef SDM_ENABLE_OPENCL
+	/* Options for SDM_SCANNER_OPENCL. */
+	struct opencl_scanner_s *opencl_opts;
+#endif
 
 	/*
 	This approach allocates a continuous chunk of memory for all bitstring addresses.

@@ -18,11 +18,6 @@ struct sdm_s {
 
 	unsigned int scanner_type;
 
-#ifdef SDM_ENABLE_OPENCL
-	/* Options for SDM_SCANNER_OPENCL. */
-	struct opencl_scanner_s *opencl_opts;
-#endif
-
 	/* Number of threads for SDM_SCANNER_THREAD. */
 	unsigned int thread_count;
 

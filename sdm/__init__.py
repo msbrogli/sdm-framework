@@ -53,6 +53,7 @@ class AddressSpace(Structure):
     _fields_ = [
         ('bits', c_uint),
         ('sample', c_uint),
+        ('opencl_opts', POINTER(c_void_p)),
         ('addresses', POINTER(POINTER(bitstring_t))),
         ('bs_len', c_uint),
         ('bs_bits_remaining', c_uint),
@@ -101,6 +102,25 @@ class AddressSpace(Structure):
         buf = create_string_buffer(self.sample)
         libsdm.as_scan_thread(pointer(self), bs.bs_data, c_uint(radius), buf, c_uint(thread_count))
         return [i for i, x in enumerate(buf) if x != '\x00']
+
+    def opencl_init(self):
+        return libsdm.as_scanner_opencl_init(self.opencl_opts, pointer(self), c_char_p(opencl2_source_code))
+
+    def opencl_free(self):
+        return libsdm.as_scanner_opencl_free(self.opencl_opts)
+
+    def scan_opencl2(self, bs, radius):
+        ''' Scan which hard-locations are in the circle with center `bs` and a given `radius`.
+        The scan is distributed among threads in O(`sample`/`thread_count`).
+
+        It returnes a list with the indexes of the hard-locations inside the circle.
+
+        This method returns exactly the same result as :py:func:`AddressSpace.scan_linear`.
+        '''
+        # See https://docs.python.org/3/library/ctypes.html#type-conversions
+        selected = (c_uint * (self.sample))()
+        cnt = libsdm.as_scan_opencl2(self.opencl_opts, bs.bs_data, c_uint(radius), selected)
+        return selected[:cnt]
 
     def save(self, filename):
         ''' Save the address space in a file. You need to provide the full filename, including the extension.
@@ -329,7 +349,6 @@ class SDM(Structure):
         ('bits', c_uint),
         ('sample', c_uint),
         ('scanner_type', c_uint),
-        ('opencl_opts', POINTER(c_void_p)),
         ('thread_count', c_uint),
         ('c_address_space_p', POINTER(AddressSpace)),
         ('c_counter_p', POINTER(Counter)),

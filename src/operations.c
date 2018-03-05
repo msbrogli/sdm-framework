@@ -48,8 +48,7 @@ int sdm_init_opencl(struct sdm_s *sdm, struct address_space_s *address_space, st
 		return ret;
 	}
 	sdm->scanner_type = SDM_SCANNER_OPENCL;
-	sdm->opencl_opts = (struct opencl_scanner_s *) malloc(sizeof(struct opencl_scanner_s));
-	as_scanner_opencl_init(sdm->opencl_opts, sdm->address_space, opencl_source);
+	as_scanner_opencl_init(sdm->address_space->opencl_opts, sdm->address_space, opencl_source);
 	return 0;
 }
 #endif
@@ -61,8 +60,7 @@ void sdm_free(struct sdm_s *sdm) {
 			break;
 #ifdef SDM_ENABLE_OPENCL
 		case SDM_SCANNER_OPENCL:
-			as_scanner_opencl_free(sdm->opencl_opts);
-			free(sdm->opencl_opts);
+			as_scanner_opencl_free(sdm->address_space->opencl_opts);
 			break;
 #endif
 	}
@@ -128,7 +126,7 @@ int sdm_scan(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, uint8_t 
 
 #ifdef SDM_ENABLE_OPENCL
 		case SDM_SCANNER_OPENCL:
-			return as_scan_opencl(sdm->opencl_opts, addr, radius, selected);
+			return as_scan_opencl(sdm->address_space->opencl_opts, addr, radius, selected);
 #endif
 		default:
 			return -1;
@@ -145,7 +143,7 @@ int sdm_scan2(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, unsigne
 
 #ifdef SDM_ENABLE_OPENCL
 		case SDM_SCANNER_OPENCL:
-			return as_scan_opencl2(sdm->opencl_opts, addr, radius, selected);
+			return as_scan_opencl2(sdm->address_space->opencl_opts, addr, radius, selected);
 /*
 		case SDM_SCANNER_OPENCL:
 			{
@@ -153,7 +151,7 @@ int sdm_scan2(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, unsigne
 				assert(selected2 != NULL);
 				unsigned int i;
 				int cnt = 0;
-				as_scan_opencl(sdm->opencl_opts, addr, radius, selected2);
+				as_scan_opencl(sdm->address_space->opencl_opts, addr, radius, selected2);
 				for (i=0; i<sdm->sample; i++) {
 					if (selected2[i]) {
 						selected[cnt++] = i;

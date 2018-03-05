@@ -322,3 +322,7 @@ int counter_to_bitstring(struct counter_s *this, unsigned int index, bitstring_t
 	return 0;
 }
 
+void counter_reset(struct counter_s *this, unsigned int index) {
+	counter_t *ptr = this->counter[index];
+	memset(ptr, 0, sizeof(counter_t) * this->bits);
+}

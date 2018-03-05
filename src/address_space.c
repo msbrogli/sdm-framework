@@ -121,6 +121,11 @@ int as_scan_linear2(const struct address_space_s *this, const bitstring_t *bs, u
 	return cnt;
 }
 
+void as_reset_address(struct address_space_s *this, unsigned int index) {
+	bitstring_t *bs = this->addresses[index];
+	bs_init_random(bs, this->bs_len, this->bs_bits_remaining);
+}
+
 int as_save_b64_file(const struct address_space_s *this, char *filename) {
 	unsigned int i;
 	char buf[1000];

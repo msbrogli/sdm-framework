@@ -25,6 +25,7 @@ int counter_init_file(char *filename, struct counter_s *this);
 void counter_free(struct counter_s *this);
 void counter_print_summary(struct counter_s *this);
 
+void counter_reset(struct counter_s *this, unsigned int index);
 void counter_print(struct counter_s *this, unsigned int index);
 
 int counter_add_bitstring(struct counter_s *this, unsigned int index, bitstring_t *bs);

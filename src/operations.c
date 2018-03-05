@@ -68,6 +68,11 @@ void sdm_free(struct sdm_s *sdm) {
 	}
 }
 
+void sdm_reset_hardlocation(struct sdm_s *sdm, unsigned int index) {
+	as_reset_address(sdm->address_space, index);
+	counter_reset(sdm->counter, index);
+}
+
 int sdm_iter_read(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, unsigned int max_iter, bitstring_t *output) {
 	unsigned int i;
 	bitstring_t *bs1, *bs2, *tmp;

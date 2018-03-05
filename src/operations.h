@@ -31,6 +31,7 @@ int sdm_init_thread(struct sdm_s *sdm, struct address_space_s *address_space, st
 int sdm_init_opencl(struct sdm_s *sdm, struct address_space_s *address_space, struct counter_s *counter, char *opencl_source);
 #endif
 
+void sdm_reset_hardlocation(struct sdm_s *sdm, unsigned int index);
 void sdm_free(struct sdm_s *sdm);
 
 int sdm_write(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstring_t *datum);

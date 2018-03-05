@@ -379,6 +379,9 @@ class SDM(Structure):
         self.counter = counter
         self.radius = radius
 
+    def reset_hardlocation(self, index):
+        return libsdm.sdm_reset_hardlocation(pointer(self), c_uint(index))
+
     def iter_read(self, addr, radius=None, max_iter=6):
         ''' Return an iterative reading with a maximum number of iterations.
         '''

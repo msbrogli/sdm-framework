@@ -35,3 +35,7 @@ def calculate_radius(bits, threshold=0.001):
         # norminv(0.001) = 3.090232306167814
         return int(bits/2.0 - 3.090232306167814*(bits**0.5)/2.0)
     return __calculate_radius(bits, threshold)
+
+def calculate_probability(bits, radius):
+    from scipy.stats import binom
+    return binom.cdf(radius, bits, 0.5)

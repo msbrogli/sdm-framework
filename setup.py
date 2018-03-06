@@ -16,6 +16,9 @@ try:
 except OSError:
     os_string = None
 
+# Python 3 fix
+os_string = os_string.decode()
+
 if os_string == 'darwin':
     macros.append(('OS_OSX', None))
     extra_link_args = ['-framework', 'OpenCL']

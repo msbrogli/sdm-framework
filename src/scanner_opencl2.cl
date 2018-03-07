@@ -185,10 +185,12 @@ void single_scan3_16(
 		barrier(CLK_LOCAL_MEM_FENCE);
 
 		// We do not need to sync because they all run in the same warp.
-		partial_dist[get_local_id(0)] += partial_dist[get_local_id(0) + 8];
-		partial_dist[get_local_id(0)] += partial_dist[get_local_id(0) + 4];
-		partial_dist[get_local_id(0)] += partial_dist[get_local_id(0) + 2];
-		partial_dist[get_local_id(0)] += partial_dist[get_local_id(0) + 1];
+		if (get_local_id(0) < 8) {
+			partial_dist[get_local_id(0)] += partial_dist[get_local_id(0) + 8];
+			partial_dist[get_local_id(0)] += partial_dist[get_local_id(0) + 4];
+			partial_dist[get_local_id(0)] += partial_dist[get_local_id(0) + 2];
+			partial_dist[get_local_id(0)] += partial_dist[get_local_id(0) + 1];
+		}
 
 		if (get_local_id(0) == 0) {
 			if (partial_dist[0] <= radius) {

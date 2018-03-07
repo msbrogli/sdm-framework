@@ -82,6 +82,8 @@ Useful links
 - [https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-basics.html#docker_next_steps]
 - [http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using_cluster_computing.html]
 - [http://jackmorrison.me/2014/09/11/CUDA-on-AWS.html]
+- [https://github.com/sschaetz/nvidia-opencl-examples/blob/master/OpenCL/src/oclMatVecMul/oclMatVecMul.cl]
+- [https://streamhpc.com/blog/2013-04-28/opencl-error-codes/]
 
 
 TODO

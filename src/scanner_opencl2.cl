@@ -1,3 +1,5 @@
+/* See https://github.com/sschaetz/nvidia-opencl-examples/blob/master/OpenCL/src/oclMatVecMul/oclMatVecMul.cl */
+
 __kernel
 void single_scan0(
 		__constant const uchar *bitcount_table,

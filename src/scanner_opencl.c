@@ -45,13 +45,6 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 	this->global_worksize *= this->local_worksize;
 	*/
 
-	cl_uint num_compute_units = 36;
-	this->local_worksize = this->address_space->bs_len;
-	this->global_worksize = 2 * 16 * this->local_worksize * num_compute_units;
-
-	this->kernel_name = "single_scan";
-	printf("OpenCL Local worksize=%zu  Global worksize=%zu\n", this->local_worksize, this->global_worksize);
-
 	/*
 	if (this->local_worksize == 0) {
 		this->global_worksize = this->address_space->sample;
@@ -109,11 +102,21 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 	 * Create queue.
 	 * =============
 	 */
+	cl_uint max_compute_units;
 	this->queues = (cl_command_queue *) malloc(sizeof(cl_command_queue) * this->devices_count);
 	for (i=0; i<this->devices_count; i++) {
+		// TODO Handle multiple devices with different values.
+		clGetDeviceInfo(this->devices[i], CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(max_compute_units), &max_compute_units, NULL);
 		this->queues[i] = clCreateCommandQueue(this->context, this->devices[i], 0, &error);
 		assert(error == CL_SUCCESS);
 	}
+
+	this->local_worksize = this->address_space->bs_len;
+	this->global_worksize = 2 * 16 * this->local_worksize * max_compute_units;
+
+	this->kernel_name = "single_scan";
+	printf("OpenCL Max compute units=%u Local worksize=%zu  Global worksize=%zu\n", max_compute_units, this->local_worksize, this->global_worksize);
+
 
 	/* =======================
 	 * Read and build program.

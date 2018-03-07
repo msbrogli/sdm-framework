@@ -34,9 +34,21 @@ AWS GPU instances
 -----------------
 To install in an AWS instance, you just have to run:
 
-	install apt-get install build-essential
+    apt-get update && apt-get install libbsd-dev nvidia-opencl-icd-304 opencl-headers build-essential
+
+For p2 instances:
+
 	wget http://us.download.nvidia.com/XFree86/Linux-x86_64/367.106/NVIDIA-Linux-x86_64-367.106.run
 	sudo /bin/bash ./NVIDIA-Linux-x86_64-367.106.run
+
+For p3 instances:
+
+	wget http://us.download.nvidia.com/titan/linux/387.34/nvidia-driver-local-repo-ubuntu1404-387.34_1.0-1_amd64.deb
+	dpkg -i nvidia-driver-local-repo-ubuntu1404-387.34_1.0-1_amd64.deb
+	sudo apt-key add /var/nvidia-driver-local-repo-387.34/7fa2af80.pub
+	dpkg -i nvidia-driver-local-repo-ubuntu1404-387.34_1.0-1_amd64.deb
+	apt-get update & apt-get install cuda-drivers
+	reboot
 
 To confirm the driver is functional, run `nvidia-smi`.
 For further information, see [https://docs.aws.amazon.com/AWSEC2/latest/UserGuide/install-nvidia-driver.html].
@@ -82,6 +94,8 @@ Useful links
 - [https://docs.aws.amazon.com/AmazonECR/latest/userguide/docker-basics.html#docker_next_steps]
 - [http://docs.aws.amazon.com/AWSEC2/latest/UserGuide/using_cluster_computing.html]
 - [http://jackmorrison.me/2014/09/11/CUDA-on-AWS.html]
+- [https://github.com/sschaetz/nvidia-opencl-examples/blob/master/OpenCL/src/oclMatVecMul/oclMatVecMul.cl]
+- [https://streamhpc.com/blog/2013-04-28/opencl-error-codes/]
 
 
 TODO

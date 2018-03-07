@@ -141,7 +141,9 @@ void single_scan3(
 		for(uint stride = get_local_size(0) / 2; stride > 0; stride /= 2) {
 			if (get_local_id(0) < stride) {
 				tmp = partial_dist[get_local_id(0) + stride];
-				barrier(CLK_LOCAL_MEM_FENCE);
+			}
+			barrier(CLK_LOCAL_MEM_FENCE);
+			if (get_local_id(0) < stride) {
 				partial_dist[get_local_id(0)] += tmp;
 			}
 			barrier(CLK_LOCAL_MEM_FENCE);

@@ -135,10 +135,14 @@ void single_scan3(
 			dist = popcount(a);
 		}
 		partial_dist[get_local_id(0)] = dist;
-		barrier(CLK_LOCAL_MEM_FENCE);
 
 		// Parallel reduction to sum all partial_dist array.
+		// The first barrier is in the beginning because it is needed after
+		// partial_dist[get_local_id(0)] = dist, but it is not needed in the
+		// last loop of the for (because only one partial_dist will be
+		// updated.
 		for(uint stride = get_local_size(0) / 2; stride > 0; stride /= 2) {
+			barrier(CLK_LOCAL_MEM_FENCE);
 			if (get_local_id(0) < stride) {
 				tmp = partial_dist[get_local_id(0) + stride];
 			}
@@ -146,7 +150,6 @@ void single_scan3(
 			if (get_local_id(0) < stride) {
 				partial_dist[get_local_id(0)] += tmp;
 			}
-			barrier(CLK_LOCAL_MEM_FENCE);
 		}
 
 		if (get_local_id(0) == 0) {

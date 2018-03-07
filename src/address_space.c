@@ -47,6 +47,7 @@ int as_init(struct address_space_s *this, unsigned int bits, unsigned int sample
 
 	this->bits = bits;
 	this->sample = sample;
+	this->verbose = 1;
 
 	this->bs_len = bits / 8 / sizeof(bitstring_t);
 	if (this->bs_len * 8 * sizeof(bitstring_t) < bits) {

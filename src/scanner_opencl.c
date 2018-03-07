@@ -96,7 +96,9 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 	error = clGetContextInfo(this->context, CL_CONTEXT_DEVICES, deviceBufferSize, this->devices, NULL);
 	assert(error == CL_SUCCESS);
 	this->devices_count = deviceBufferSize / sizeof(cl_device_id);
-	printf("OpenCL platforms: %d devices: %d\n", numPlatforms, this->devices_count);
+	if (this->address_space->verbose) {
+		printf("OpenCL platforms: %d devices: %d\n", numPlatforms, this->devices_count);
+	}
 
 	/* =============
 	 * Create queue.
@@ -129,8 +131,10 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 	//	this->kernel_name = "single_scan3_16";
 	//}
 
-	printf("OpenCL Max compute units=%u Local worksize=%zu  Global worksize=%zu\n", max_compute_units, this->local_worksize, this->global_worksize);
-	printf("OpenCL Kernel name=%s\n", this->kernel_name);
+	if (this->address_space->verbose) {
+		printf("OpenCL Max compute units=%u Local worksize=%zu  Global worksize=%zu\n", max_compute_units, this->local_worksize, this->global_worksize);
+		printf("OpenCL Kernel name=%s\n", this->kernel_name);
+	}
 
 
 	/* =======================

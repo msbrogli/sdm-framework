@@ -20,6 +20,8 @@ struct address_space_s {
 	struct opencl_scanner_s *opencl_opts;
 #endif
 
+	unsigned int verbose;
+
 	/*
 	This approach allocates a continuous chunk of memory for all bitstring addresses.
 	The `addresses` allows the use of array notation: addresses[0], addresses[1], ...

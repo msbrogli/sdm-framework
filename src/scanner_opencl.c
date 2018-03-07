@@ -46,8 +46,8 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 	*/
 
 	cl_uint num_compute_units = 36;
-	this->local_worksize = 256;
-	this->global_worksize = 2 * this->local_worksize * num_compute_units;
+	this->local_worksize = this->address_space->bs_len;
+	this->global_worksize = 2 * 16 * this->local_worksize * num_compute_units;
 
 	this->kernel_name = "single_scan";
 	printf("OpenCL Local worksize=%zu  Global worksize=%zu\n", this->local_worksize, this->global_worksize);

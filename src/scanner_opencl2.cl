@@ -30,7 +30,7 @@ void single_scan0(
 }
 
 __kernel
-void single_scan(
+void single_scan1(
 		__constant const uchar *bitcount_table,
 		__global const ulong *bitstrings,
 		const uint bs_len,
@@ -74,13 +74,18 @@ void single_scan2(
 		__global uint *selected,
 		__local uint *partial_dist)
 {
+	uint dist;
+	ulong a;
+	uint j;
+
 	for (uint id = get_group_id(0); id < sample; id += get_num_groups(0)) {
 
 		const __global ulong *row = bitstrings + id*bs_len;
 
-		uint dist = 0;
-		for(uint j = get_local_id(0); j < bs_len; j += get_local_size(0)) {
-			ulong a = row[j] ^ bs[j];
+		dist = 0;
+		j = get_local_id(0);
+		if (j < bs_len) {
+			a = row[j] ^ bs[j];
 			dist += popcount(a);
 		}
 		partial_dist[get_local_id(0)] = dist;
@@ -88,11 +93,58 @@ void single_scan2(
 		barrier(CLK_LOCAL_MEM_FENCE);
 
 		if (get_local_id(0) == 0) {
-			uint total = 0;
-			for(uint t = 0; t < get_local_size(0); t++) {
-				total += partial_dist[t];
+			dist = 0;
+			for(uint t = 0; t < bs_len; t++) {
+				dist += partial_dist[t];
 			}
-			if (total <= radius) {
+			if (dist <= radius) {
+				selected[atomic_inc(counter)] = id;
+			}
+		}
+
+		barrier(CLK_LOCAL_MEM_FENCE);
+	}
+}
+
+__kernel
+void single_scan(
+		__constant const uchar *bitcount_table,
+		__global const ulong *bitstrings,
+		const uint bs_len,
+		const uint sample,
+		__constant const ulong *bs,
+		const uint radius,
+		__global uint *counter,
+		__global uint *selected,
+		__local uint *partial_dist)
+{
+	uint dist;
+	ulong a;
+	uint j;
+
+	for (uint id = get_group_id(0); id < sample; id += get_num_groups(0)) {
+
+		const __global ulong *row = bitstrings + id*bs_len;
+
+		dist = 0;
+		j = get_local_id(0);
+		if (j < bs_len) {
+			a = row[j] ^ bs[j];
+			dist += popcount(a);
+		}
+		partial_dist[get_local_id(0)] = dist;
+
+		// Parallel reduction to sum all partial_dist array.
+		for(uint stride = get_local_size(0) / 2; stride > 0; stride /= 2) {
+			barrier(CLK_LOCAL_MEM_FENCE);
+
+			if (get_local_id(0) < stride) {
+				partial_dist[get_local_id(0)] += partial_dist[get_local_id(0) + stride];
+			}
+		}
+
+		if (get_local_id(0) == 0) {
+			if (partial_dist[0] <= radius) {
 				selected[atomic_inc(counter)] = id;
 			}
 		}

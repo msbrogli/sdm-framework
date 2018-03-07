@@ -10,11 +10,16 @@ int main(void) {
 	struct address_space_s as;
 	bitstring_t *bs1;
 	struct opencl_scanner_s opencl;
-	char buf[1000];
+	char buf[10000];
 	int i;
+
+	//int bits = 10000;
+	//int sample = 1000000;
+	//int radius = 4845;
 
 	int bits = 1000;
 	int sample = 1000000;
+	int radius = 451;
 
 	//int status = as_init_from_b64_file(&as, "test1_address_space_b64.as");
 	//assert(status == 0);
@@ -38,8 +43,8 @@ int main(void) {
 
 	as_scanner_opencl_init(&opencl, &as, "scanner_opencl2.cl");
 	unsigned int selected_opencl[sample];
-	for (i=0; i<1000; i++) {
-		as_scan_opencl2(&opencl, bs1, 451, selected_opencl);
+	for (i=0; i<10000; i++) {
+		as_scan_opencl2(&opencl, bs1, radius, selected_opencl);
 	}
 	printf("Done.\n");
 	as_scanner_opencl_free(&opencl);

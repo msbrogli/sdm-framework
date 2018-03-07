@@ -132,17 +132,17 @@ void single_scan(
 		j = get_local_id(0);
 		if (j < bs_len) {
 			a = row[j] ^ bs[j];
-			dist += popcount(a);
+			dist = popcount(a);
 		}
 		partial_dist[get_local_id(0)] = dist;
+		barrier(CLK_LOCAL_MEM_FENCE);
 
 		// Parallel reduction to sum all partial_dist array.
 		for(uint stride = get_local_size(0) / 2; stride > 0; stride /= 2) {
-			barrier(CLK_LOCAL_MEM_FENCE);
-
 			if (get_local_id(0) < stride) {
 				partial_dist[get_local_id(0)] += partial_dist[get_local_id(0) + stride];
 			}
+			barrier(CLK_LOCAL_MEM_FENCE);
 		}
 
 		if (get_local_id(0) == 0) {
@@ -183,18 +183,20 @@ void single_scan4(
 		dist = 0;
 		if (get_local_id(0) < bs_len) {
 			a = row[get_local_id(0)] ^ local_bs[get_local_id(0)];
-			dist += popcount(a);
+			dist = popcount(a);
 		}
 		partial_dist[get_local_id(0)] = dist;
+		barrier(CLK_LOCAL_MEM_FENCE);
 
 		// Parallel reduction to sum all partial_dist array.
 		for(uint stride = get_local_size(0) / 2; stride > 0; stride /= 2) {
-			barrier(CLK_LOCAL_MEM_FENCE);
-
 			if (get_local_id(0) < stride) {
 				partial_dist[get_local_id(0)] += partial_dist[get_local_id(0) + stride];
 			}
+			barrier(CLK_LOCAL_MEM_FENCE);
 		}
+
+		// TODO Optimize using warps sync.
 
 		if (get_local_id(0) == 0) {
 			if (partial_dist[0] <= radius) {

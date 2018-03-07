@@ -111,7 +111,17 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 		assert(error == CL_SUCCESS);
 	}
 
-	this->local_worksize = this->address_space->bs_len;
+	/*
+	this->local_worksize = this->address_space->bs_len / 16;
+	if (this->address_space->bs_len % 16 != 0) {
+		this->local_worksize++;
+	}
+	this->local_worksize *= 16;
+	*/
+	this->local_worksize = 1;
+	while (this->local_worksize < this->address_space->bs_len) {
+		this->local_worksize <<= 1;
+	}
 	this->global_worksize = 2 * 16 * this->local_worksize * max_compute_units;
 
 	this->kernel_name = "single_scan";

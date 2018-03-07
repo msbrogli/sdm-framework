@@ -32,8 +32,27 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 	 * Set local and group worksize.
 	 * =============================
 	 */
-	this->local_worksize = 0;
+	//this->local_worksize = 0;
+	//this->global_worksize = this->address_space->sample;
 
+	// Kernel: single_scan
+	/*
+	this->local_worksize = 256;
+	this->global_worksize = this->address_space->sample / this->local_worksize;
+	if (this->address_space->sample%this->local_worksize > 0) {
+		this->global_worksize++;
+	}
+	this->global_worksize *= this->local_worksize;
+	*/
+
+	cl_uint num_compute_units = 36;
+	this->local_worksize = 256;
+	this->global_worksize = 2 * this->local_worksize * num_compute_units;
+
+	this->kernel_name = "single_scan";
+	printf("OpenCL Local worksize=%zu  Global worksize=%zu\n", this->local_worksize, this->global_worksize);
+
+	/*
 	if (this->local_worksize == 0) {
 		this->global_worksize = this->address_space->sample;
 	} else {
@@ -43,13 +62,16 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 		}
 		this->global_worksize *= this->local_worksize;
 	}
+	*/
 
 	/* Choose the right kernel. */
+	/*
 	if (this->global_worksize >= this->address_space->sample) {
 		this->kernel_name = "single_scan";
 	} else {
 		this->kernel_name = "scan";
 	}
+	*/
 
 	/* ==============
 	 * Create context.
@@ -275,6 +297,9 @@ int as_scan_opencl(struct opencl_scanner_s *this, bitstring_t *bs, unsigned int 
 
 	//gettimeofday(&t0, NULL);
 
+	// You must use as_scan_opencl2.
+	assert(0);
+
 	/* Create kernel. */
 	cl_kernel kernel = clCreateKernel(this->program, this->kernel_name, &error);
 	assert(error == CL_SUCCESS);
@@ -295,12 +320,7 @@ int as_scan_opencl(struct opencl_scanner_s *this, bitstring_t *bs, unsigned int 
 	error = clSetKernelArg(kernel, 3, sizeof(this->address_space->sample), &this->address_space->sample);
 	assert(error == CL_SUCCESS);
 
-	/* Set arg4: global_worksize */
-	//error = clSetKernelArg(kernel, 4, sizeof(this->global_worksize), &this->global_worksize);
-//printf("@@ error = %d\n", error);
-	//assert(error == CL_SUCCESS);
-
-	/* Set arg5: bs */
+	/* Set arg4: bs */
 	for(i=0; i<this->devices_count; i++) {
 		error = clEnqueueWriteBuffer(this->queues[i], this->bs_buf, CL_FALSE, 0, sizeof(cl_bitstring_t)*this->bs_len, bs, 0, NULL, NULL);
 		assert(error == CL_SUCCESS);
@@ -308,25 +328,18 @@ int as_scan_opencl(struct opencl_scanner_s *this, bitstring_t *bs, unsigned int 
 	error = clSetKernelArg(kernel, 4, sizeof(this->bs_buf), &this->bs_buf);
 	assert(error == CL_SUCCESS);
 
-	/* Set arg6: radius */
+	/* Set arg5: radius */
 	cl_uint arg_radius = radius;
 	error = clSetKernelArg(kernel, 5, sizeof(arg_radius), &arg_radius);
 	assert(error == CL_SUCCESS);
 
-	/* Set arg8: counter */
+	/* Set arg6: counter */
 	error = clSetKernelArg(kernel, 6, sizeof(this->counter_buf), &this->counter_buf);
 	assert(error == CL_SUCCESS);
 
-	/* Set arg8: selected */
+	/* Set arg7: selected */
 	error = clSetKernelArg(kernel, 7, sizeof(this->selected_buf), &this->selected_buf);
 	assert(error == CL_SUCCESS);
-
-	/* Wait until all queue is done. */
-	//error = clFinish(this->queue);
-	//assert(error == CL_SUCCESS);
-	//gettimeofday(&t1, NULL);
-	//printf("==> clEnqueueWriteBuffer %f ms\n", t1.tv_sec*1000.0 + t1.tv_usec/1000.0 - t0.tv_sec*1000.0 - t0.tv_usec/1000.0);
-	//gettimeofday(&t0, NULL);
 
 	/* Run kernel. */
 	size_t qty = this->global_worksize / this->devices_count;

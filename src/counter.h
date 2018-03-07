@@ -39,7 +39,4 @@ int counter_to_bitstring(struct counter_s *this, unsigned int index, bitstring_t
 int counter_create_file(char *filename, unsigned int bits, unsigned int sample);
 int counter_save_file(struct counter_s *this, char *filename);
 
-static
-int save(char *filename, unsigned int bits, unsigned int sample, counter_t *data, unsigned int nitems);
-
 #endif

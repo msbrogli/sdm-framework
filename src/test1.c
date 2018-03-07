@@ -47,6 +47,7 @@ int main(void) {
 		assert(selected1[i] == selected2[i]);
 	}
 
+	/*
 	memset(selected2, 0, sizeof(selected2));
 	as_scanner_opencl_init(&opencl, &as, "scanner_opencl.cl");
 	printf("@@ OpenCL %d\n", as_scan_opencl(&opencl, bs1, 451, selected2));
@@ -54,6 +55,7 @@ int main(void) {
 	for(i=0; i<sample; i++) {
 		assert(selected1[i] == selected2[i]);
 	}
+	*/
 
 	unsigned int selected_int[sample];
 

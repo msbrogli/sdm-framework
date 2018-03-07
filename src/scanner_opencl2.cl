@@ -109,7 +109,7 @@ void single_scan2(
 }
 
 __kernel
-void single_scan(
+void single_scan3(
 		__constant const uchar *bitcount_table,
 		__global const ulong *bitstrings,
 		const uint bs_len,
@@ -144,6 +144,51 @@ void single_scan(
 			}
 			barrier(CLK_LOCAL_MEM_FENCE);
 		}
+
+		if (get_local_id(0) == 0) {
+			if (partial_dist[0] <= radius) {
+				selected[atomic_inc(counter)] = id;
+			}
+		}
+
+		barrier(CLK_LOCAL_MEM_FENCE);
+	}
+}
+
+__kernel
+void single_scan3_16(
+		__constant const uchar *bitcount_table,
+		__global const ulong *bitstrings,
+		const uint bs_len,
+		const uint sample,
+		__constant const ulong *bs,
+		const uint radius,
+		__global uint *counter,
+		__global uint *selected,
+		__local uint *partial_dist)
+{
+	uint dist;
+	ulong a;
+	uint j;
+
+	for (uint id = get_group_id(0); id < sample; id += get_num_groups(0)) {
+
+		const __global ulong *row = bitstrings + id*bs_len;
+
+		dist = 0;
+		j = get_local_id(0);
+		if (j < bs_len) {
+			a = row[j] ^ bs[j];
+			dist = popcount(a);
+		}
+		partial_dist[get_local_id(0)] = dist;
+		barrier(CLK_LOCAL_MEM_FENCE);
+
+		// We do not need to sync because they all run in the same warp.
+		partial_dist[get_local_id(0)] += partial_dist[get_local_id(0) + 8];
+		partial_dist[get_local_id(0)] += partial_dist[get_local_id(0) + 4];
+		partial_dist[get_local_id(0)] += partial_dist[get_local_id(0) + 2];
+		partial_dist[get_local_id(0)] += partial_dist[get_local_id(0) + 1];
 
 		if (get_local_id(0) == 0) {
 			if (partial_dist[0] <= radius) {

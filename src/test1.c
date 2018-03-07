@@ -114,7 +114,7 @@ int main(void) {
 	printf("\n");
 
 	n = 3;
-	printf("Running %d tests for 1,000 bits... ", n);
+	printf("Running %d tests for 10,000 bits... ", n);
 	for (i=0; i<n; i++) {
 		run(10000, 1000000, 4845, 0);
 		printf("!");

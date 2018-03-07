@@ -154,3 +154,54 @@ void single_scan(
 		barrier(CLK_LOCAL_MEM_FENCE);
 	}
 }
+
+__kernel
+void single_scan4(
+		__constant const uchar *bitcount_table,
+		__global const ulong *bitstrings,
+		const uint bs_len,
+		const uint sample,
+		__constant const ulong *bs,
+		const uint radius,
+		__global uint *counter,
+		__global uint *selected,
+		__local uint *partial_dist)
+{
+	uint dist;
+	ulong a;
+
+	__local ulong local_bs[32];
+	if (get_local_id(0) < bs_len) {
+		local_bs[get_local_id(0)] = bs[get_local_id(0)];
+	}
+	barrier(CLK_LOCAL_MEM_FENCE);
+
+	for (uint id = get_group_id(0); id < sample; id += get_num_groups(0)) {
+
+		const __global ulong *row = bitstrings + id*bs_len;
+
+		dist = 0;
+		if (get_local_id(0) < bs_len) {
+			a = row[get_local_id(0)] ^ local_bs[get_local_id(0)];
+			dist += popcount(a);
+		}
+		partial_dist[get_local_id(0)] = dist;
+
+		// Parallel reduction to sum all partial_dist array.
+		for(uint stride = get_local_size(0) / 2; stride > 0; stride /= 2) {
+			barrier(CLK_LOCAL_MEM_FENCE);
+
+			if (get_local_id(0) < stride) {
+				partial_dist[get_local_id(0)] += partial_dist[get_local_id(0) + stride];
+			}
+		}
+
+		if (get_local_id(0) == 0) {
+			if (partial_dist[0] <= radius) {
+				selected[atomic_inc(counter)] = id;
+			}
+		}
+
+		barrier(CLK_LOCAL_MEM_FENCE);
+	}
+}

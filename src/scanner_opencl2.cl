@@ -120,7 +120,7 @@ void single_scan3(
 		__global uint *selected,
 		__local uint *partial_dist)
 {
-	uint dist;
+	uint dist, tmp;
 	ulong a;
 	uint j;
 
@@ -140,7 +140,9 @@ void single_scan3(
 		// Parallel reduction to sum all partial_dist array.
 		for(uint stride = get_local_size(0) / 2; stride > 0; stride /= 2) {
 			if (get_local_id(0) < stride) {
-				partial_dist[get_local_id(0)] += partial_dist[get_local_id(0) + stride];
+				tmp = partial_dist[get_local_id(0) + stride];
+				barrier(CLK_LOCAL_MEM_FENCE);
+				partial_dist[get_local_id(0)] += tmp;
 			}
 			barrier(CLK_LOCAL_MEM_FENCE);
 		}
@@ -167,7 +169,7 @@ void single_scan3_16(
 		__global uint *selected,
 		__local uint *partial_dist)
 {
-	uint dist;
+	uint dist, tmp;
 	ulong a;
 	uint j;
 
@@ -186,10 +188,14 @@ void single_scan3_16(
 
 		// We do not need to sync because they all run in the same warp.
 		if (get_local_id(0) < 8) {
-			partial_dist[get_local_id(0)] += partial_dist[get_local_id(0) + 8];
-			partial_dist[get_local_id(0)] += partial_dist[get_local_id(0) + 4];
-			partial_dist[get_local_id(0)] += partial_dist[get_local_id(0) + 2];
-			partial_dist[get_local_id(0)] += partial_dist[get_local_id(0) + 1];
+			tmp = partial_dist[get_local_id(0) + 8];
+			partial_dist[get_local_id(0)] += tmp;
+			tmp = partial_dist[get_local_id(0) + 4];
+			partial_dist[get_local_id(0)] += tmp;
+			tmp = partial_dist[get_local_id(0) + 2];
+			partial_dist[get_local_id(0)] += tmp;
+			tmp = partial_dist[get_local_id(0) + 1];
+			partial_dist[get_local_id(0)] += tmp;
 		}
 
 		if (get_local_id(0) == 0) {

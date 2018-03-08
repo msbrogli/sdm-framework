@@ -76,6 +76,11 @@ class AddressSpace(Structure):
         libsdm.as_init_from_b64_file(pointer(self), c_char_p(filename))
         return self
 
+    def get_bitstring(self, index):
+        bs = Bitstring(self.bits)
+        libsdm.bs_copy(bs.bs_data, self.addresses[index], c_uint(self.bs_len))
+        return bs
+
     def print_summary(self):
         libsdm.as_print_summary(pointer(self))
 

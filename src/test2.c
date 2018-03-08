@@ -47,8 +47,10 @@ int main(void) {
 
 	bs_free(bs1);
 	bs_free(bs2);
+	as_free(as);
 	counter_free(counter);
 	free(counter);
 	free(as);
+	free(sdm);
 }
 

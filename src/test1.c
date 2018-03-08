@@ -53,7 +53,7 @@ void run(unsigned int bits, unsigned int sample, unsigned int radius, int verbos
 	}
 	*/
 
-	unsigned int *selected_int = (unsigned int *) malloc(sizeof(selected_int)*sample);
+	unsigned int *selected_int = (unsigned int *) malloc(sizeof(unsigned int)*sample);
 
 	memset(selected_int, 0, sizeof(unsigned int)*sample);
 	unsigned int len_linear2 = as_scan_linear2(&as, bs1, radius, selected_int);

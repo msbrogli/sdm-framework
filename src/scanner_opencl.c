@@ -283,14 +283,14 @@ void opencl_scanner_devices(struct opencl_scanner_s *this) {
 }
 
 int as_scan_opencl(struct opencl_scanner_s *this, bitstring_t *bs, unsigned int radius, uint8_t *selected) {
+	// You must use as_scan_opencl2.
+	assert(0);
+
 	unsigned int i, cnt;
 	cl_int error;
 	//struct timeval t0, t1;
 
 	//gettimeofday(&t0, NULL);
-
-	// You must use as_scan_opencl2.
-	assert(0);
 
 	/* Create kernel. */
 	cl_kernel kernel = clCreateKernel(this->program, this->kernel_name, &error);

@@ -59,6 +59,7 @@ class AddressSpace(Structure):
         ('bits', c_uint),
         ('sample', c_uint),
         ('opencl_opts', POINTER(c_void_p)),
+        ('verbose', c_uint),
         ('addresses', POINTER(POINTER(bitstring_t))),
         ('bs_len', c_uint),
         ('bs_bits_remaining', c_uint),
@@ -68,20 +69,29 @@ class AddressSpace(Structure):
     def __del__(self):
         libsdm.as_free(pointer(self))
 
+    def __init__(self, *args, **kwargs):
+        super(AddressSpace, self).__init__()
+        if kwargs.get('bits', None) != 0:
+            raise Exception('You must use one initializer.')
+
     @classmethod
     def init_random(cls, bits, sample):
         ''' Initialize an address space with hard-locations randomly chosen from {0, 1}^`bits` space.
         '''
-        self = cls()
-        libsdm.as_init_random(pointer(self), c_uint(bits), c_uint(sample))
+        self = cls(bits=0)
+        ret = libsdm.as_init_random(pointer(self), c_uint(bits), c_uint(sample))
+        if ret != 0:
+            raise Exception('Unable to create AddressSpace. Error code: {}'.format(ret))
         return self
 
     @classmethod
     def init_from_b64_file(cls, filename):
         ''' Load an address space from a file.
         '''
-        self = cls()
-        libsdm.as_init_from_b64_file(pointer(self), c_char_p(filename))
+        self = cls(bits=0)
+        ret = libsdm.as_init_from_b64_file(pointer(self), c_char_p(filename))
+        if ret != 0:
+            raise Exception('Unable to create AddressSpace. Error code: {}'.format(ret))
         return self
 
     def get_bitstring(self, index):
@@ -171,20 +181,29 @@ class Counter(Structure):
     def __del__(self):
         libsdm.counter_free(pointer(self))
 
+    def __init__(self, *args, **kwargs):
+        super(Counter, self).__init__()
+        if kwargs.get('bits', None) != 0:
+            raise Exception('You must use one initializer.')
+
     @classmethod
     def init_zero(cls, bits, sample):
         ''' Initialize the counters with initial value zero. The counters are stored in RAM memory.
         '''
-        self = cls()
-        libsdm.counter_init(pointer(self), c_uint(bits), c_uint(sample))
+        self = cls(bits=0)
+        ret = libsdm.counter_init(pointer(self), c_uint(bits), c_uint(sample))
+        if ret != 0:
+            raise Exception('Unable to create Counter. Error code: {}'.format(ret))
         return self
 
     @classmethod
     def load_file(cls, filename):
         ''' Load the counters from a file. It is the suggested way to use counters.
         '''
-        self = cls()
-        libsdm.counter_init_file(c_char_p(filename), pointer(self))
+        self = cls(bits=0)
+        ret = libsdm.counter_init_file(c_char_p(filename), pointer(self))
+        if ret != 0:
+            raise Exception('Unable to create Counter. Error code: {}'.format(ret))
         return self
 
     @classmethod
@@ -192,7 +211,9 @@ class Counter(Structure):
         ''' Create a new file to store counters. You do not need to provide any file extension,
         because the counters are store in two files and the extensions will be automatically added.
         '''
-        libsdm.counter_create_file(c_char_p(filename), c_uint(bits), c_uint(sample))
+        ret = libsdm.counter_create_file(c_char_p(filename), c_uint(bits), c_uint(sample))
+        if ret != 0:
+            raise Exception('Unable to create Counter. Error code: {}'.format(ret))
         return cls.load_file(filename)
 
     def print_summary(self):
@@ -236,6 +257,9 @@ class Bitstring(object):
             self.bs_len += 1
         self.bs_remaining_bits = self.bs_len * 8 * sizeof(bitstring_t) - self.bits
         self.bs_data = libsdm.bs_alloc(c_uint(self.bs_len))
+
+    def __del__(self):
+        libsdm.bs_free(self.bs_data)
 
     @classmethod
     def init_hex(cls, bits, hex_str):
@@ -292,6 +316,9 @@ class Bitstring(object):
         bs = Bitstring.init_from_bitstring(self)
         bs.xor(other)
         return bs
+
+    def copy(self):
+        return Bitstring.init_from_bitstring(self)
 
     def get_bit(self, bit):
         ''' Return the value of a specific bit.

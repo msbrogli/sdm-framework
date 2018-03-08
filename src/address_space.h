@@ -18,6 +18,9 @@ struct address_space_s {
 #ifdef SDM_ENABLE_OPENCL
 	/* Options for SDM_SCANNER_OPENCL. */
 	struct opencl_scanner_s *opencl_opts;
+#else
+	/* Just filling space, so address_space_s has the same size with and without OpenCL. */
+	void *filler;
 #endif
 
 	unsigned int verbose;

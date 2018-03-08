@@ -71,7 +71,13 @@ int as_init(struct address_space_s *this, unsigned int bits, unsigned int sample
 
 #ifdef SDM_ENABLE_OPENCL
 	this->opencl_opts = (struct opencl_scanner_s *) malloc(sizeof(struct opencl_scanner_s));
+	if (this->opencl_opts == NULL) {
+		free(this->bs_data);
+		free(this->addresses);
+		return -3;
+	}
 #endif
+
 	return 0;
 }
 

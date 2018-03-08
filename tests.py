@@ -20,38 +20,25 @@ class SDMBasicTests(unittest.TestCase):
     def test_counter(self):
         counter = Counter.init_zero(1000, 1000000)
 
-    def test_sdm_linear(self):
+    def _test_sdm(self, scanner_type):
         as1 = AddressSpace.init_random(1000, 1000000)
         counter = Counter.init_zero(1000, 1000000)
-        sdm = SDM(as1, counter, 451, sdmlib.SDM_SCANNER_LINEAR)
+        sdm = SDM(as1, counter, 451, scanner_type)
 
         bs1 = Bitstring.init_random(1000)
         sdm.write(bs1, bs1)
 
         bs2 = sdm.read(bs1)
         self.assertEqual(0, bs1.distance_to(bs2))
+
+    def test_sdm_linear(self):
+        self._test_sdm(sdmlib.SDM_SCANNER_LINEAR)
 
     def test_sdm_thread(self):
-        as1 = AddressSpace.init_random(1000, 1000000)
-        counter = Counter.init_zero(1000, 1000000)
-        sdm = SDM(as1, counter, 451, sdmlib.SDM_SCANNER_THREAD)
-
-        bs1 = Bitstring.init_random(1000)
-        sdm.write(bs1, bs1)
-
-        bs2 = sdm.read(bs1)
-        self.assertEqual(0, bs1.distance_to(bs2))
+        self._test_sdm(sdmlib.SDM_SCANNER_THREAD)
 
     def test_sdm_opencl(self):
-        as1 = AddressSpace.init_random(1000, 1000000)
-        counter = Counter.init_zero(1000, 1000000)
-        sdm = SDM(as1, counter, 451, sdmlib.SDM_SCANNER_OPENCL)
-
-        bs1 = Bitstring.init_random(1000)
-        sdm.write(bs1, bs1)
-
-        bs2 = sdm.read(bs1)
-        self.assertEqual(0, bs1.distance_to(bs2))
+        self._test_sdm(sdmlib.SDM_SCANNER_OPENCL)
 
 
 if __name__ == '__main__':

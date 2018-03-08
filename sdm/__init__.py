@@ -109,6 +109,18 @@ class AddressSpace(Structure):
     def opencl_free(self):
         return libsdm.as_scanner_opencl_free(self.opencl_opts)
 
+    def scan_linear2(self, bs, radius):
+        # See https://docs.python.org/3/library/ctypes.html#type-conversions
+        selected = (c_uint * (self.sample))()
+        cnt = libsdm.as_scan_linear2(pointer(self), bs.bs_data, c_uint(radius), selected)
+        return selected[:cnt]
+
+    def scan_thread2(self, bs, radius, thread_count=4):
+        # See https://docs.python.org/3/library/ctypes.html#type-conversions
+        selected = (c_uint * (self.sample))()
+        cnt = libsdm.as_scan_thread2(pointer(self), bs.bs_data, c_uint(radius), selected, thread_count)
+        return selected[:cnt]
+
     def scan_opencl2(self, bs, radius):
         ''' Scan which hard-locations are in the circle with center `bs` and a given `radius`.
         The scan is distributed among threads in O(`sample`/`thread_count`).

@@ -53,9 +53,9 @@ void run(unsigned int bits, unsigned int sample, unsigned int radius, int verbos
 	}
 	*/
 
-	unsigned int selected_int[sample];
+	unsigned int *selected_int = (unsigned int *) malloc(sizeof(selected_int)*sample);
 
-	memset(selected_int, 0, sizeof(selected_int));
+	memset(selected_int, 0, sizeof(unsigned int)*sample);
 	unsigned int len_linear2 = as_scan_linear2(&as, bs1, radius, selected_int);
 	if (verbose) printf("@@ Linear2 %d\n", len_linear2);
 	for(i=0; i<len_linear2; i++) {
@@ -63,7 +63,7 @@ void run(unsigned int bits, unsigned int sample, unsigned int radius, int verbos
 	}
 	assert(len_linear2 == len_linear);
 
-	memset(selected_int, 0, sizeof(selected_int));
+	memset(selected_int, 0, sizeof(unsigned int)*sample);
 	unsigned int len_thread2 = as_scan_thread2(&as, bs1, radius, selected_int, 4);
 	if (verbose) printf("@@ Thread2 %d\n", len_thread2);
 	for(i=0; i<len_thread2; i++) {
@@ -72,7 +72,7 @@ void run(unsigned int bits, unsigned int sample, unsigned int radius, int verbos
 	assert(len_thread2 == len_linear);
 
 
-	memset(selected_int, 0, sizeof(selected_int));
+	memset(selected_int, 0, sizeof(unsigned int)*sample);
 	as_scanner_opencl_init(&opencl, &as, "scanner_opencl2.cl");
 	unsigned int len_opencl2 = as_scan_opencl2(&opencl, bs1, radius, selected_int);
 	if (verbose) printf("@@ OpenCL2 %d\n", len_opencl2);
@@ -83,6 +83,7 @@ void run(unsigned int bits, unsigned int sample, unsigned int radius, int verbos
 	assert(len_opencl2 == len_linear);
 
 	bs_free(bs1);
+	free(selected_int);
 }
 
 int main(void) {

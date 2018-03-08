@@ -24,7 +24,6 @@ int main(void) {
 	as_print_summary(as);
 	
 	assert(!counter_init(counter, bits, sample));
-	//counter_init_file("test2_counter.bin", counter);
 	assert(counter->bits == bits);
 	assert(counter->sample == sample);
 
@@ -35,25 +34,16 @@ int main(void) {
 	bs_to_hex(buf, bs1, as->bs_len);
 	printf("bs1 = %s\n", buf);
 
-	//sdm_init_opencl(sdm, as, counter, "scanner_opencl2.cl");
-	assert(!sdm_init_thread(sdm, as, counter, 4));
+	assert(!sdm_init_opencl(sdm, as, counter, "scanner_opencl2.cl"));
+	//assert(!sdm_init_thread(sdm, as, counter, 4));
 	//assert(!sdm_init_linear(sdm, as, counter));
 
-	for(i=0; i<1000; i++) {
+	for(i=0; i<3000; i++) {
 		sdm_write2(sdm, bs1, 451, bs1);
+		sdm_read2(sdm, bs1, 451, bs2);
 	}
 
 	printf("Done.\n");
-
-	/*
-	sdm_write(sdm, bs1, 451, bs1);
-	sdm_write(sdm, bs1, 451, bs1);
-	for(i=0; i<100; i++) {
-		sdm_generic_read(sdm, bs1, 451, bs2, 2);
-	}
-	bs_to_hex(buf, bs2, as->bs_len);
-	printf("bs2 = %s\n", buf);
-	*/
 
 	bs_free(bs1);
 	bs_free(bs2);

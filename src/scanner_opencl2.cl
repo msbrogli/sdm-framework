@@ -109,7 +109,7 @@ void single_scan2(
 }
 
 __kernel
-void single_scan(
+void single_scan3(
 		__constant const uchar *bitcount_table,
 		__global const ulong *bitstrings,
 		const uint bs_len,
@@ -120,7 +120,7 @@ void single_scan(
 		__global uint *selected,
 		__local uint *partial_dist)
 {
-	uint dist;
+	uint dist, tmp;
 	ulong a;
 	uint j;
 
@@ -132,17 +132,75 @@ void single_scan(
 		j = get_local_id(0);
 		if (j < bs_len) {
 			a = row[j] ^ bs[j];
-			dist += popcount(a);
+			dist = popcount(a);
 		}
 		partial_dist[get_local_id(0)] = dist;
 
 		// Parallel reduction to sum all partial_dist array.
+		// The first barrier is in the beginning because it is needed after
+		// partial_dist[get_local_id(0)] = dist, but it is not needed in the
+		// last loop of the for (because only one partial_dist will be
+		// updated.
 		for(uint stride = get_local_size(0) / 2; stride > 0; stride /= 2) {
 			barrier(CLK_LOCAL_MEM_FENCE);
-
 			if (get_local_id(0) < stride) {
-				partial_dist[get_local_id(0)] += partial_dist[get_local_id(0) + stride];
+				tmp = partial_dist[get_local_id(0) + stride];
 			}
+			barrier(CLK_LOCAL_MEM_FENCE);
+			if (get_local_id(0) < stride) {
+				partial_dist[get_local_id(0)] += tmp;
+			}
+		}
+
+		if (get_local_id(0) == 0) {
+			if (partial_dist[0] <= radius) {
+				selected[atomic_inc(counter)] = id;
+			}
+		}
+
+		barrier(CLK_LOCAL_MEM_FENCE);
+	}
+}
+
+__kernel
+void single_scan3_16(
+		__constant const uchar *bitcount_table,
+		__global const ulong *bitstrings,
+		const uint bs_len,
+		const uint sample,
+		__constant const ulong *bs,
+		const uint radius,
+		__global uint *counter,
+		__global uint *selected,
+		__local uint *partial_dist)
+{
+	uint dist, tmp;
+	ulong a;
+	uint j;
+
+	for (uint id = get_group_id(0); id < sample; id += get_num_groups(0)) {
+
+		const __global ulong *row = bitstrings + id*bs_len;
+
+		dist = 0;
+		j = get_local_id(0);
+		if (j < bs_len) {
+			a = row[j] ^ bs[j];
+			dist = popcount(a);
+		}
+		partial_dist[get_local_id(0)] = dist;
+		barrier(CLK_LOCAL_MEM_FENCE);
+
+		// We do not need to sync because they all run in the same warp.
+		if (get_local_id(0) < 8) {
+			tmp = partial_dist[get_local_id(0) + 8];
+			partial_dist[get_local_id(0)] += tmp;
+			tmp = partial_dist[get_local_id(0) + 4];
+			partial_dist[get_local_id(0)] += tmp;
+			tmp = partial_dist[get_local_id(0) + 2];
+			partial_dist[get_local_id(0)] += tmp;
+			tmp = partial_dist[get_local_id(0) + 1];
+			partial_dist[get_local_id(0)] += tmp;
 		}
 
 		if (get_local_id(0) == 0) {
@@ -183,18 +241,20 @@ void single_scan4(
 		dist = 0;
 		if (get_local_id(0) < bs_len) {
 			a = row[get_local_id(0)] ^ local_bs[get_local_id(0)];
-			dist += popcount(a);
+			dist = popcount(a);
 		}
 		partial_dist[get_local_id(0)] = dist;
+		barrier(CLK_LOCAL_MEM_FENCE);
 
 		// Parallel reduction to sum all partial_dist array.
 		for(uint stride = get_local_size(0) / 2; stride > 0; stride /= 2) {
-			barrier(CLK_LOCAL_MEM_FENCE);
-
 			if (get_local_id(0) < stride) {
 				partial_dist[get_local_id(0)] += partial_dist[get_local_id(0) + stride];
 			}
+			barrier(CLK_LOCAL_MEM_FENCE);
 		}
+
+		// TODO Optimize using warps sync.
 
 		if (get_local_id(0) == 0) {
 			if (partial_dist[0] <= radius) {

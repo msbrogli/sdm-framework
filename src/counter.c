@@ -326,3 +326,39 @@ void counter_reset(struct counter_s *this, unsigned int index) {
 	counter_t *ptr = this->counter[index];
 	memset(ptr, 0, sizeof(counter_t) * this->bits);
 }
+
+int counter_add_bitstring1(struct counter_s *this, unsigned int index, bitstring_t *bs) {
+	/* This function is as slow as `counter_add_bitstring`, but it is more complex,
+	 * hence error prone.
+	 *
+	 * If you plan to use it, comment the assert inside the for. It is only for debugging purposes
+	 * and will degrade the performance because of the bs_get_bit call.
+	 */
+	unsigned int i;
+	unsigned int idx;
+	bitstring_t a;
+	counter_t *ptr = this->counter[index];
+	unsigned int offset = 0;
+	bitstring_t *bs2 = bs;
+
+	while(offset < this->bits) {
+		a = *bs2;
+		bs2++;
+		for(i=0; i<8*sizeof(bitstring_t); i++) {
+			idx = offset + 8*sizeof(bitstring_t) - 1 - i;
+			if (idx > this->bits) {
+				a >>= 1;
+				continue;
+			}
+			assert((a&1) == bs_get_bit(bs, idx));
+			if (a&1) {
+				ptr[idx]++;
+			} else {
+				ptr[idx]--;
+			}
+			a >>= 1;
+		}
+		offset += 8*sizeof(bitstring_t);
+	}
+	return 0;
+}

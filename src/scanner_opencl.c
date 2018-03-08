@@ -28,44 +28,6 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 	this->address_space = as;
 	this->opencl_source = opencl_source;
 
-	/* =============================
-	 * Set local and group worksize.
-	 * =============================
-	 */
-	//this->local_worksize = 0;
-	//this->global_worksize = this->address_space->sample;
-
-	// Kernel: single_scan
-	/*
-	this->local_worksize = 256;
-	this->global_worksize = this->address_space->sample / this->local_worksize;
-	if (this->address_space->sample%this->local_worksize > 0) {
-		this->global_worksize++;
-	}
-	this->global_worksize *= this->local_worksize;
-	*/
-
-	/*
-	if (this->local_worksize == 0) {
-		this->global_worksize = this->address_space->sample;
-	} else {
-		this->global_worksize = this->address_space->sample/this->local_worksize;
-		if (this->address_space->sample%this->local_worksize > 0) {
-			this->global_worksize++;
-		}
-		this->global_worksize *= this->local_worksize;
-	}
-	*/
-
-	/* Choose the right kernel. */
-	/*
-	if (this->global_worksize >= this->address_space->sample) {
-		this->kernel_name = "single_scan";
-	} else {
-		this->kernel_name = "scan";
-	}
-	*/
-
 	/* ==============
 	 * Create context.
 	 * ==============
@@ -96,7 +58,9 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 	error = clGetContextInfo(this->context, CL_CONTEXT_DEVICES, deviceBufferSize, this->devices, NULL);
 	assert(error == CL_SUCCESS);
 	this->devices_count = deviceBufferSize / sizeof(cl_device_id);
-	printf("OpenCL platforms: %d devices: %d\n", numPlatforms, this->devices_count);
+	if (this->address_space->verbose) {
+		printf("OpenCL platforms: %d devices: %d\n", numPlatforms, this->devices_count);
+	}
 
 	/* =============
 	 * Create queue.
@@ -111,11 +75,36 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 		assert(error == CL_SUCCESS);
 	}
 
-	this->local_worksize = this->address_space->bs_len;
-	this->global_worksize = 2 * 16 * this->local_worksize * max_compute_units;
 
-	this->kernel_name = "single_scan";
-	printf("OpenCL Max compute units=%u Local worksize=%zu  Global worksize=%zu\n", max_compute_units, this->local_worksize, this->global_worksize);
+	/* =============================
+	 * Set local and group worksize.
+	 * =============================
+	 */
+	/*
+	// Local worksize is a multiple of 16.
+	this->local_worksize = this->address_space->bs_len / 16;
+	if (this->address_space->bs_len % 16 != 0) {
+		this->local_worksize++;
+	}
+	this->local_worksize *= 16;
+	*/
+
+	// Local worksize is a power-of-2.
+	this->local_worksize = 1;
+	while (this->local_worksize < this->address_space->bs_len) {
+		this->local_worksize <<= 1;
+	}
+
+	this->global_worksize = 2 * 16 * this->local_worksize * max_compute_units;
+	this->kernel_name = "single_scan3";
+	//if (this->address_space->bs_len == 16) {
+	//	this->kernel_name = "single_scan3_16";
+	//}
+
+	if (this->address_space->verbose) {
+		printf("OpenCL Max compute units=%u Local worksize=%zu  Global worksize=%zu\n", max_compute_units, this->local_worksize, this->global_worksize);
+		printf("OpenCL Kernel name=%s\n", this->kernel_name);
+	}
 
 
 	/* =======================

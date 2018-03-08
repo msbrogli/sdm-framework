@@ -1,3 +1,4 @@
+from __future__ import print_function
 from math import log, exp
 
 def div_pow2(x, a):
@@ -11,17 +12,17 @@ def div_pow2(x, a):
 
 def calculate_probabilities(bits):
     from math import factorial
-    comb = lambda a, b: factorial(a)/factorial(b)/factorial(a-b)
+    comb = lambda a, b: factorial(a)//factorial(b)//factorial(a-b)
     acc = [0]
-    for i in xrange(bits+1):
+    for i in range(bits+1):
         acc.append(acc[-1] + comb(bits, i))
     return [div_pow2(x, bits) for x in acc[1:]]
 
 def __calculate_radius(bits, threshold=0.001):
     from math import factorial
-    comb = lambda a, b: factorial(a)/factorial(b)/factorial(a-b)
+    comb = lambda a, b: factorial(a)//factorial(b)//factorial(a-b)
     x = 0
-    for i in xrange(bits+1):
+    for i in range(bits+1):
         x += comb(bits, i)
         p = div_pow2(x, bits)
         if p >= threadhold:

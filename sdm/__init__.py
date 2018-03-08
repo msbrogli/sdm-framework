@@ -20,7 +20,12 @@ def get_lib_fullpath():
     else:
         ext = get_config_var('SO')
 
-    return os.path.join(basedir, '_libsdm'+ext)
+    fullpath = os.path.join(basedir, '_libsdm'+ext)
+    if not os.path.isfile(fullpath):
+        fullpath = os.path.join(basedir, '_libsdm.so')
+
+    return fullpath
+
 
 bitstring_t = c_uint64
 counter_t = c_int
@@ -59,6 +64,9 @@ class AddressSpace(Structure):
         ('bs_bits_remaining', c_uint),
         ('bs_data', POINTER(bitstring_t)),
     ]
+
+    def __del__(self):
+        libsdm.as_free(pointer(self))
 
     @classmethod
     def init_random(cls, bits, sample):
@@ -159,6 +167,9 @@ class Counter(Structure):
         ('counter', POINTER(POINTER(counter_t))),
         ('data', POINTER(counter_t)),
     ]
+
+    def __del__(self):
+        libsdm.counter_free(pointer(self))
 
     @classmethod
     def init_zero(cls, bits, sample):

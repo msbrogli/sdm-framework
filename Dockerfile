@@ -9,7 +9,7 @@ RUN apt-get install -y ocl-icd-opencl-dev
 RUN apt-get install -y nvidia-opencl-icd-304
 
 RUN pip install --upgrade pip
-RUN pip install numpy scipy matplotlib ipython jupyter pandas sympy nose
+RUN pip install numpy scipy matplotlib ipython jupyter pandas sympy nose pillow
 RUN pip install git+https://github.com/msbrogli/sdm-framework.git
 
 COPY docs/notebooks/*.ipynb /home/ubuntu/examples/

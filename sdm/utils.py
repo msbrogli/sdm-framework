@@ -10,7 +10,7 @@ def test_kernels(bits, sample, radius):
     valid_kernels = []
     for kernel in sorted(sdmlib.OPENCL_KERNEL_NAMES):
         address_space.set_opencl_kernel(kernel)
-        selected = set(address_space.scan_thread2(bs1, radius))
+        selected = set(address_space.scan_opencl2(bs1, radius))
         if selected == expected:
             valid_kernels.append(kernel)
     return valid_kernels

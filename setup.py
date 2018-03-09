@@ -37,7 +37,7 @@ libsdm_ext = Extension('sdm._libsdm', [
 ], libraries=libraries, define_macros=macros, extra_compile_args=extra_compile_args, extra_link_args=extra_link_args)
 
 setup(name='sdm',
-    version='1.4.0',
+    version='1.6.0',
     license='GPLv2',
     author='Marcelo Salhab Brogliato',
     author_email='msbrogli@vialink.com.br',

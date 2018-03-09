@@ -81,19 +81,19 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 	 * =============================
 	 */
 	// Local worksize is a multiple of 16.
+	/*
 	this->local_worksize = this->address_space->bs_len / 16;
 	if (this->address_space->bs_len % 16 != 0) {
 		this->local_worksize++;
 	}
 	this->local_worksize *= 16;
+	*/
 
-	/*
 	// Local worksize is a power-of-2.
 	this->local_worksize = 1;
 	while (this->local_worksize < this->address_space->bs_len) {
 		this->local_worksize <<= 1;
 	}
-	*/
 	//this->global_worksize = 2 * 16 * this->local_worksize * max_compute_units;
 
 	{
@@ -106,7 +106,7 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 		}
 		this->global_worksize *= step;
 	}
-	this->kernel_name = "single_scan4";
+	this->kernel_name = "single_scan5_unroll";
 	//if (this->address_space->bs_len == 16) {
 	//	this->kernel_name = "single_scan3_16";
 	//}

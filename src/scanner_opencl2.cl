@@ -2,12 +2,14 @@
 /*
 
 single_scan0: global_worksize must equal address_space->sample.
-single_scan1: no constrains.
-single_scan2: no constrains (same as single_scan3, but less optimized).
+single_scan1: no constraints.
+single_scan2: no constraints (same as single_scan3, but less optimized).
 single_scan3: local_worksize must be a power of 2.
 single_scan3_16: local_worksize equal 16.
-single_scan4: no constrains.
+single_scan4: no constraints.
 single_scan5: assume WARP_SIZE=32 and local_worksize must be a power of 2.
+single_scan5_unroll: unrolls the last loop of single_scan5.
+single_scan6: assume WARP_SIZE=32 and has no constraints.
 
 */
 
@@ -310,6 +312,62 @@ void single_scan5(
 		// partial_dist[get_local_id(0)] = dist, but it is not needed in the
 		// last loop of the for (because only one partial_dist will be
 		// updated).
+		uint stride;
+		for(stride = get_local_size(0)/2; stride > 32; stride /= 2) {
+			barrier(CLK_LOCAL_MEM_FENCE);
+			if (get_local_id(0) < stride) {
+				partial_dist[get_local_id(0)] += partial_dist[get_local_id(0) + stride];
+			}
+		}
+		barrier(CLK_LOCAL_MEM_FENCE);
+		for(/**/; stride > 0; stride /= 2) {
+			if (get_local_id(0) < stride) {
+				partial_dist[get_local_id(0)] += partial_dist[get_local_id(0) + stride];
+			}
+		}
+
+		if (get_local_id(0) == 0) {
+			if (partial_dist[0] <= radius) {
+				selected[atomic_inc(counter)] = id;
+			}
+		}
+
+		barrier(CLK_LOCAL_MEM_FENCE);
+	}
+}
+__kernel
+void single_scan5_unroll(
+		__constant const uchar *bitcount_table,
+		__global const ulong *bitstrings,
+		const uint bs_len,
+		const uint sample,
+		__constant const ulong *bs,
+		const uint radius,
+		__global uint *counter,
+		__global uint *selected,
+		__local uint *partial_dist)
+{
+	uint dist;
+	ulong a;
+	uint j;
+
+	for (uint id = get_group_id(0); id < sample; id += get_num_groups(0)) {
+
+		const __global ulong *row = bitstrings + id*bs_len;
+
+		dist = 0;
+		j = get_local_id(0);
+		if (j < bs_len) {
+			a = row[j] ^ bs[j];
+			dist = popcount(a);
+		}
+		partial_dist[get_local_id(0)] = dist;
+
+		// Parallel reduction to sum all partial_dist array.
+		// The first barrier is in the beginning because it is needed after
+		// partial_dist[get_local_id(0)] = dist, but it is not needed in the
+		// last loop of the for (because only one partial_dist will be
+		// updated).
 		for(uint stride = get_local_size(0)/2; stride > 32; stride /= 2) {
 			barrier(CLK_LOCAL_MEM_FENCE);
 			if (get_local_id(0) < stride) {
@@ -337,6 +395,74 @@ void single_scan5(
 		if (get_local_id(0) == 0) {
 			partial_dist[0] += partial_dist[1];
 			if (partial_dist[0] <= radius) {
+				selected[atomic_inc(counter)] = id;
+			}
+		}
+
+		barrier(CLK_LOCAL_MEM_FENCE);
+	}
+}
+
+__kernel
+void single_scan6(
+		__constant const uchar *bitcount_table,
+		__global const ulong *bitstrings,
+		const uint bs_len,
+		const uint sample,
+		__constant const ulong *bs,
+		const uint radius,
+		__global uint *counter,
+		__global uint *selected,
+		__local uint *partial_dist)
+{
+	uint dist;
+	ulong a;
+	uint j;
+
+	for (uint id = get_group_id(0); id < sample; id += get_num_groups(0)) {
+
+		const __global ulong *row = bitstrings + id*bs_len;
+
+		dist = 0;
+		j = get_local_id(0);
+		if (j < bs_len) {
+			a = row[j] ^ bs[j];
+			dist = popcount(a);
+		}
+		partial_dist[get_local_id(0)] = dist;
+
+		// Parallel reduction to sum all partial_dist array.
+		// The first barrier is in the beginning because it is needed after
+		// partial_dist[get_local_id(0)] = dist, but it is not needed in the
+		// last loop of the for (because only one partial_dist will be
+		// updated).
+		uint old_stride = get_local_size(0);
+		uint stride;
+		__local uint extra;
+		extra = 0;
+		for(stride = get_local_size(0)/2; stride > 32; stride /= 2) {
+			barrier(CLK_LOCAL_MEM_FENCE);
+			if ((old_stride&1) == 1 && get_local_id(0) == old_stride-1) {
+				extra += partial_dist[get_local_id(0)];
+			}
+			if (get_local_id(0) < stride) {
+				partial_dist[get_local_id(0)] += partial_dist[get_local_id(0) + stride];
+			}
+			old_stride = stride;
+		}
+		barrier(CLK_LOCAL_MEM_FENCE);
+		for(/**/; stride > 0; stride /= 2) {
+			if ((old_stride&1) == 1 && get_local_id(0) == old_stride-1) {
+				extra += partial_dist[get_local_id(0)];
+			}
+			if (get_local_id(0) < stride) {
+				partial_dist[get_local_id(0)] += partial_dist[get_local_id(0) + stride];
+			}
+			old_stride = stride;
+		}
+
+		if (get_local_id(0) == 0) {
+			if (partial_dist[0] + extra <= radius) {
 				selected[atomic_inc(counter)] = id;
 			}
 		}

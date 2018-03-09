@@ -48,7 +48,9 @@ if libsdm is not None:
 opencl_source_code = os.path.join(basedir, 'scanner_opencl.cl').encode()
 opencl2_source_code = os.path.join(basedir, 'scanner_opencl2.cl').encode()
 if not os.path.exists(opencl_source_code):
-    print('Ops!', opencl_source_code)
+    raise Exception('scanner_opencl.cl not found')
+if not os.path.exists(opencl2_source_code):
+    raise Exception('scanner_opencl2.cl not found')
 
 
 def _multK(value, K):
@@ -203,10 +205,10 @@ class AddressSpace(Structure):
         return [i for i, x in enumerate(buf) if x != '\x00']
 
     def opencl_init(self):
-        return libsdm.as_scanner_opencl_init(self.opencl_opts, pointer(self), c_char_p(opencl2_source_code))
+        return libsdm.as_scanner_opencl_init(self.c_opencl_opts, pointer(self), c_char_p(opencl2_source_code))
 
     def opencl_free(self):
-        return libsdm.as_scanner_opencl_free(self.opencl_opts)
+        return libsdm.as_scanner_opencl_free(self.c_opencl_opts)
 
     def scan_linear2(self, bs, radius):
         # See https://docs.python.org/3/library/ctypes.html#type-conversions
@@ -230,7 +232,7 @@ class AddressSpace(Structure):
         '''
         # See https://docs.python.org/3/library/ctypes.html#type-conversions
         selected = (c_uint * (self.sample))()
-        cnt = libsdm.as_scan_opencl2(self.opencl_opts, bs.bs_data, c_uint(radius), selected)
+        cnt = libsdm.as_scan_opencl2(self.c_opencl_opts, bs.bs_data, c_uint(radius), selected)
         return selected[:cnt]
 
     def save(self, filename):

@@ -45,6 +45,12 @@ class BitstringTests(unittest.TestCase):
         self.assertEqual(0, bs1.distance_to(bs3))
 
 
+class AddressSpaceTests(unittest.TestCase):
+    def test_init_opencl(self):
+        as1 = AddressSpace.init_random(1000, 1000000)
+        as1.opencl_init()
+
+
 class SDMTests(unittest.TestCase):
     def test_radius_calculation(self):
         self.assertEqual(451, utils.calculate_radius(1000))

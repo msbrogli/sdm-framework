@@ -1,8 +1,14 @@
 import unittest
 from sdm import Bitstring, AddressSpace, Counter, SDM
 import sdm as sdmlib
+from sdm import utils
 
 class SDMTests(unittest.TestCase):
+
+    def test_radius_calculation(self):
+        self.assertEqual(451, utils.calculate_radius(1000))
+        self.assertEqual(103, utils.calculate_radius(256))
+        self.assertEqual(4845, utils.calculate_radius(10000))
 
     def test_bitstring(self):
         bs = Bitstring.init_random(1000)

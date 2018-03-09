@@ -126,6 +126,9 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 	char *source_str = (char *)malloc(sizeof(char)*MAX_SOURCE_SIZE);
 	size_t source_size;
 	FILE *fp = fopen(this->opencl_source, "r");
+	if (fp == NULL) {
+		printf("ERROR OpenCL source code not found (file=%s).\n", this->opencl_source);
+	}
 	assert(fp != NULL);
 	source_size = fread(source_str, 1, MAX_SOURCE_SIZE, fp);
 	source_str[source_size] = '\0';

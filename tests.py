@@ -66,7 +66,6 @@ class SDMTests(unittest.TestCase):
 
         bs1 = Bitstring.init_random(1000)
         sdm.write(bs1, bs1)
-
         bs2 = sdm.read(bs1)
         self.assertEqual(0, bs1.distance_to(bs2))
 
@@ -89,7 +88,6 @@ class SDMTests(unittest.TestCase):
 
             bs1 = Bitstring.init_random(1000)
             sdm.write(bs1, bs1)
-
             bs2 = sdm.read(bs1)
             self.assertEqual(0, bs1.distance_to(bs2))
 

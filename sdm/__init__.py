@@ -1,5 +1,7 @@
 
 from __future__ import print_function
+from builtins import range
+
 from ctypes import cdll, cast, sizeof
 from ctypes import Structure, POINTER, pointer, create_string_buffer
 from ctypes import c_uint, c_uint64, c_char_p, c_int, c_void_p, c_double, c_size_t
@@ -431,7 +433,7 @@ class Bitstring(object):
         return buf.value
 
     def to_binary(self):
-        return ''.join([str(self.get_bit(i)) for i in xrange(self.bits)])
+        return ''.join([str(self.get_bit(i)) for i in range(self.bits)])
 
     def distance_to(self, other):
         ''' Return the hamming distance to `other` bitstring.
@@ -567,7 +569,7 @@ class SDM(Structure):
     #    libsdm.sdm_write_sub(pointer(self), addr.bs_data, c_uint(radius), datum.bs_data)
 
     def write_random_bitstrings(self, n):
-        for _ in xrange(n):
+        for _ in range(n):
             bs = Bitstring.init_random(self.bits)
             self.write(bs, bs)
 

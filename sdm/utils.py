@@ -1,6 +1,20 @@
 from __future__ import print_function
 from math import log, exp
 
+def test_kernels(bits, sample, radius):
+    import sdm as sdmlib
+    address_space = sdmlib.AddressSpace.init_random(bits, sample)
+    address_space.opencl_init()
+    bs1 = sdmlib.Bitstring.init_random(bits)
+    expected = set(address_space.scan_thread2(bs1, radius))
+    valid_kernels = []
+    for kernel in sorted(sdmlib.OPENCL_KERNEL_NAMES):
+        address_space.set_opencl_kernel(kernel)
+        selected = set(address_space.scan_thread2(bs1, radius))
+        if selected == expected:
+            valid_kernels.append(kernel)
+    return valid_kernels
+
 def div_pow2(x, a):
     try:
         r = x

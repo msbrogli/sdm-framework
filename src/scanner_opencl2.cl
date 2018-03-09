@@ -170,7 +170,7 @@ void single_scan3_16(
 		__global uint *selected,
 		__local uint *partial_dist)
 {
-	uint dist, tmp;
+	uint dist;
 	ulong a;
 	uint j;
 
@@ -189,17 +189,17 @@ void single_scan3_16(
 
 		// We do not need to sync because they all run in the same warp.
 		if (get_local_id(0) < 8) {
-			tmp = partial_dist[get_local_id(0) + 8];
-			partial_dist[get_local_id(0)] += tmp;
-			tmp = partial_dist[get_local_id(0) + 4];
-			partial_dist[get_local_id(0)] += tmp;
-			tmp = partial_dist[get_local_id(0) + 2];
-			partial_dist[get_local_id(0)] += tmp;
-			tmp = partial_dist[get_local_id(0) + 1];
-			partial_dist[get_local_id(0)] += tmp;
+			partial_dist[get_local_id(0)] += partial_dist[get_local_id(0) + 8];
+		}
+		if (get_local_id(0) < 4) {
+			partial_dist[get_local_id(0)] += partial_dist[get_local_id(0) + 4];
+		}
+		if (get_local_id(0) < 2) {
+			partial_dist[get_local_id(0)] += partial_dist[get_local_id(0) + 2];
 		}
 
 		if (get_local_id(0) == 0) {
+			partial_dist[get_local_id(0)] += partial_dist[get_local_id(0) + 1];
 			if (partial_dist[0] <= radius) {
 				selected[atomic_inc(counter)] = id;
 			}

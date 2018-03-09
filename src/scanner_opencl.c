@@ -140,7 +140,7 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 	char *log = (char *) malloc(log_size);
 	clGetProgramBuildInfo(this->program, this->devices[0], CL_PROGRAM_BUILD_LOG, log_size, log, NULL);
 	if (strlen(log) > 0) {
-		printf("=== LOG\n%s\n=== END\n", log);
+		printf("=== LOG (%lu bytes)\n%s\n=== END\n", strlen(log), log);
 	}
 	free(log);
 

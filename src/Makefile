@@ -13,7 +13,7 @@ CCFLAGS += -D SDM_USE_BUILTIN_POPCOUNT
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
 	CCFLAGS += -D OS_LINUX
-	CLFLAGS += -lOpenCL -lpthread -lbsd
+	CLFLAGS += -lOpenCL -lpthread -lbsd -lm
 endif
 ifeq ($(UNAME_S),Darwin)
 	CCFLAGS += -D OS_OSX

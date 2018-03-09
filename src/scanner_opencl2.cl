@@ -120,7 +120,7 @@ void single_scan3(
 		__global uint *selected,
 		__local uint *partial_dist)
 {
-	uint dist, tmp;
+	uint dist;
 	ulong a;
 	uint j;
 
@@ -141,14 +141,10 @@ void single_scan3(
 		// partial_dist[get_local_id(0)] = dist, but it is not needed in the
 		// last loop of the for (because only one partial_dist will be
 		// updated.
-		for(uint stride = get_local_size(0) / 2; stride > 0; stride /= 2) {
+		for(uint stride = get_local_size(0)/2; stride > 0; stride /= 2) {
 			barrier(CLK_LOCAL_MEM_FENCE);
 			if (get_local_id(0) < stride) {
-				tmp = partial_dist[get_local_id(0) + stride];
-			}
-			barrier(CLK_LOCAL_MEM_FENCE);
-			if (get_local_id(0) < stride) {
-				partial_dist[get_local_id(0)] += tmp;
+				partial_dist[get_local_id(0)] += partial_dist[get_local_id(0) + stride];
 			}
 		}
 

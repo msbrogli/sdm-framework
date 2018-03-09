@@ -13,6 +13,25 @@ We would really like to ask users for feedback, and, should they find it useful,
 Brogliato, M.S.; Linhares, A. (2017) Sparse Distributed Memory: a reference implementation.  Working Paper, FGV, Vialink.
 
 
+How to build & test
+===================
+To generate the library and run some tests:
+
+    cd src/
+	make
+	make tests
+	./test1
+
+To run Python tests:
+
+	python tests.py
+
+In dev mode, there should be a symbolic link from `src/libsdm.so` to `sdm/_libsdm.so`. If it does not exist, create one running:
+
+	cd sdm/
+	ln -s ../src/libsdm.so _libsdm.so
+
+
 How to install
 ==============
 This framework has the following dependencies: `libbsd` and `libOpenCL`.

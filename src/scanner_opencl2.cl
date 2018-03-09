@@ -1,4 +1,14 @@
 /* See https://github.com/sschaetz/nvidia-opencl-examples/blob/master/OpenCL/src/oclMatVecMul/oclMatVecMul.cl */
+/*
+
+single_scan0: global_worksize must equal address_space->sample.
+single_scan1: no constrains.
+single_scan2: no constrains (same as single_scan3, but less optimized).
+single_scan3: local_worksize must be a power of 2.
+single_scan3_16: local_worksize equal 16.
+single_scan4: no constrains.
+
+*/
 
 __kernel
 void single_scan0(
@@ -140,7 +150,7 @@ void single_scan3(
 		// The first barrier is in the beginning because it is needed after
 		// partial_dist[get_local_id(0)] = dist, but it is not needed in the
 		// last loop of the for (because only one partial_dist will be
-		// updated.
+		// updated).
 		for(uint stride = get_local_size(0)/2; stride > 0; stride /= 2) {
 			barrier(CLK_LOCAL_MEM_FENCE);
 			if (get_local_id(0) < stride) {
@@ -223,37 +233,41 @@ void single_scan4(
 {
 	uint dist;
 	ulong a;
-
-	__local ulong local_bs[32];
-	if (get_local_id(0) < bs_len) {
-		local_bs[get_local_id(0)] = bs[get_local_id(0)];
-	}
-	barrier(CLK_LOCAL_MEM_FENCE);
+	uint j;
 
 	for (uint id = get_group_id(0); id < sample; id += get_num_groups(0)) {
 
 		const __global ulong *row = bitstrings + id*bs_len;
 
 		dist = 0;
-		if (get_local_id(0) < bs_len) {
-			a = row[get_local_id(0)] ^ local_bs[get_local_id(0)];
+		j = get_local_id(0);
+		if (j < bs_len) {
+			a = row[j] ^ bs[j];
 			dist = popcount(a);
 		}
 		partial_dist[get_local_id(0)] = dist;
-		barrier(CLK_LOCAL_MEM_FENCE);
 
 		// Parallel reduction to sum all partial_dist array.
-		for(uint stride = get_local_size(0) / 2; stride > 0; stride /= 2) {
+		// The first barrier is in the beginning because it is needed after
+		// partial_dist[get_local_id(0)] = dist, but it is not needed in the
+		// last loop of the for (because only one partial_dist will be
+		// updated).
+		uint old_stride = get_local_size(0);
+		__local uint extra;
+		extra = 0;
+		for(uint stride = get_local_size(0)/2; stride > 0; stride /= 2) {
+			barrier(CLK_LOCAL_MEM_FENCE);
+			if ((old_stride&1) == 1 && get_local_id(0) == old_stride-1) {
+				extra += partial_dist[get_local_id(0)];
+			}
 			if (get_local_id(0) < stride) {
 				partial_dist[get_local_id(0)] += partial_dist[get_local_id(0) + stride];
 			}
-			barrier(CLK_LOCAL_MEM_FENCE);
+			old_stride = stride;
 		}
 
-		// TODO Optimize using warps sync.
-
 		if (get_local_id(0) == 0) {
-			if (partial_dist[0] <= radius) {
+			if (partial_dist[0] + extra <= radius) {
 				selected[atomic_inc(counter)] = id;
 			}
 		}

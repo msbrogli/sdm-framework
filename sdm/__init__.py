@@ -2,7 +2,7 @@
 from __future__ import print_function
 from ctypes import cdll, cast, sizeof
 from ctypes import Structure, POINTER, pointer, create_string_buffer
-from ctypes import c_uint, c_uint64, c_char_p, c_int, c_void_p, c_double
+from ctypes import c_uint, c_uint64, c_char_p, c_int, c_void_p, c_double, c_size_t
 import os
 import sys
 
@@ -48,6 +48,46 @@ opencl2_source_code = os.path.join(basedir, 'scanner_opencl2.cl').encode()
 if not os.path.exists(opencl_source_code):
     print('Ops!', opencl_source_code)
 
+
+def _multK(value, K):
+    x = value // K
+    if value % K != 0:
+        x += 1
+    x *= K
+    return x
+
+def opencl_worksize_mult16(address_space):
+    local_worksize = _multK(address_space.bs_len, 16)
+    mcu = address_space.opencl_opts.max_compute_units
+    global_worksize = _multK(address_space.sample // 20, 2*mcu*local_worksize)
+    return local_worksize, global_worksize
+
+def opencl_worksize_power2(address_space):
+    local_worksize = 1
+    while local_worksize < address_space.bs_len:
+        local_worksize *= 2
+    mcu = address_space.opencl_opts.max_compute_units
+    global_worksize = _multK(address_space.sample // 20, 2*mcu*local_worksize)
+    return local_worksize, global_worksize
+
+def opencl_worksize_sample(address_space):
+    local_worksize = 0
+    global_worksize = address_space.sample
+    return local_worksize, global_worksize
+
+OPENCL_KERNEL_WORKSIZE = {
+    'single_scan0': opencl_worksize_sample,
+    'single_scan1': opencl_worksize_mult16,
+    'single_scan2': opencl_worksize_mult16,
+    'single_scan3': opencl_worksize_power2,
+    'single_scan4': opencl_worksize_mult16,
+    'single_scan5': opencl_worksize_power2,
+    'single_scan5_unroll': opencl_worksize_power2,
+    'single_scan6': opencl_worksize_mult16,
+}
+OPENCL_KERNEL_NAMES = OPENCL_KERNEL_WORKSIZE.keys()
+
+
 class AddressSpace(Structure):
     ''' The AddressSpace contains the hard-locations' addresses. Thus, it is required to
     specify the number of bits (`bits`) of each hard-location and also the number of hard-locations
@@ -55,10 +95,19 @@ class AddressSpace(Structure):
 
     In his book, Kanerva usually uses a 1000-bit address space with 1,000,000 hard-locations (`bits=1000` and `sample=1000000`).
     '''
+    class OpenCLOptions(Structure):
+        _fields_ = [
+            ('kernel_name', c_char_p),
+            ('global_worksize', c_size_t),
+            ('local_worksize', c_size_t),
+            ('max_compute_units', c_uint),
+            ('verbose', c_uint),
+        ]
+
     _fields_ = [
         ('bits', c_uint),
         ('sample', c_uint),
-        ('opencl_opts', POINTER(c_void_p)),
+        ('c_opencl_opts', POINTER(OpenCLOptions)),
         ('verbose', c_uint),
         ('addresses', POINTER(POINTER(bitstring_t))),
         ('bs_len', c_uint),
@@ -99,8 +148,33 @@ class AddressSpace(Structure):
         libsdm.bs_copy(bs.bs_data, self.addresses[index], c_uint(self.bs_len))
         return bs
 
+    @property
+    def opencl_opts(self):
+        return self.c_opencl_opts.contents
+
     def print_summary(self):
         libsdm.as_print_summary(pointer(self))
+
+    def test_opencl_kernel(self, name):
+        raise NotImplemented
+
+    def set_opencl_kernel(self, name):
+        if name not in OPENCL_KERNEL_WORKSIZE:
+            raise Exception('Kernel not found.')
+
+        if isinstance(name, str):
+            self.opencl_kernel_name = name.encode()
+        else:
+            self.opencl_kernel_name = name
+
+        self.opencl_opts.kernel_name = c_char_p(self.opencl_kernel_name)
+
+        local_worksize, global_worksize = OPENCL_KERNEL_WORKSIZE[name](self)
+        self.set_opencl_worksize(local_worksize, global_worksize)
+
+    def set_opencl_worksize(self, local_worksize, global_worksize):
+        self.opencl_opts.local_worksize = c_size_t(local_worksize)
+        self.opencl_opts.global_worksize = c_size_t(global_worksize)
 
     def scan_linear(self, bs, radius):
         ''' Scan which hard-locations are in the circle with center `bs` and a given `radius`.

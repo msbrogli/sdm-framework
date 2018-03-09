@@ -16,12 +16,17 @@
 typedef cl_ulong cl_bitstring_t;
 
 struct opencl_scanner_s {
-	struct address_space_s *address_space;
-	char* opencl_source;
-
+	//---
+	// These fields must be on the top because they are the only ones available in Python.
 	char* kernel_name;
 	size_t global_worksize;
 	size_t local_worksize;
+	unsigned int max_compute_units;
+	unsigned int verbose;
+	//---
+
+	struct address_space_s *address_space;
+	char* opencl_source;
 
 	cl_context context;
 	cl_program program;

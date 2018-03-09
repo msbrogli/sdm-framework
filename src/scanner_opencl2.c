@@ -18,6 +18,9 @@ int as_scan_opencl2(struct opencl_scanner_s *this, bitstring_t *bs, unsigned int
 	cl_int error;
 
 	/* Create kernel. */
+	if (this->verbose) {
+		printf("OpenCL Scan with kernel %s (local_worksize: %zu  global_worksize: %zu)...\n", this->kernel_name, this->local_worksize, this->global_worksize);
+	}
 	cl_kernel kernel = clCreateKernel(this->program, this->kernel_name, &error);
 	assert(error == CL_SUCCESS);
 
@@ -64,8 +67,14 @@ int as_scan_opencl2(struct opencl_scanner_s *this, bitstring_t *bs, unsigned int
 	assert(error == CL_SUCCESS);
 
 	/* Set arg8: partial_dist */
-	error = clSetKernelArg(kernel, 8, sizeof(cl_uint) * this->local_worksize, 0);
-	assert(error == CL_SUCCESS);
+	if (this->local_worksize > 0) {
+		error = clSetKernelArg(kernel, 8, sizeof(cl_uint) * this->local_worksize, 0);
+		assert(error == CL_SUCCESS);
+	} else {
+		// I have tried passing a NULL pointer, but it did not work.
+		error = clSetKernelArg(kernel, 8, sizeof(cl_uint), 0);
+		assert(error == CL_SUCCESS);
+	}
 
 	/* Run kernel. */
 	size_t qty = this->global_worksize / this->devices_count;

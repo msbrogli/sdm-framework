@@ -27,6 +27,7 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 
 	this->address_space = as;
 	this->opencl_source = opencl_source;
+	this->verbose = 0;
 
 	/* ==============
 	 * Create context.
@@ -71,6 +72,7 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 	for (i=0; i<this->devices_count; i++) {
 		// TODO Handle multiple devices with different values.
 		clGetDeviceInfo(this->devices[i], CL_DEVICE_MAX_COMPUTE_UNITS, sizeof(max_compute_units), &max_compute_units, NULL);
+		this->max_compute_units = max_compute_units;
 		this->queues[i] = clCreateCommandQueue(this->context, this->devices[i], 0, &error);
 		assert(error == CL_SUCCESS);
 	}
@@ -94,11 +96,11 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 	while (this->local_worksize < this->address_space->bs_len) {
 		this->local_worksize <<= 1;
 	}
-	//this->global_worksize = 2 * 16 * this->local_worksize * max_compute_units;
+	//this->global_worksize = 2 * 16 * this->local_worksize * this->max_compute_units;
 
 	{
 		// Each workgroup will calculate around 20 bitstring distances.
-		const size_t step = 2 * this->local_worksize * max_compute_units;
+		const size_t step = 2 * this->local_worksize * this->max_compute_units;
 		const size_t target = this->address_space->sample / 20;
 		this->global_worksize = target / step;
 		if (target % step != 0) {
@@ -112,8 +114,7 @@ int as_scanner_opencl_init(struct opencl_scanner_s *this, struct address_space_s
 	//}
 
 	if (this->address_space->verbose) {
-		printf("OpenCL Max compute units=%u Local worksize=%zu  Global worksize=%zu\n", max_compute_units, this->local_worksize, this->global_worksize);
-		printf("OpenCL Kernel name=%s\n", this->kernel_name);
+		printf("OpenCL Max compute units=%u Default kernel=%s Local worksize=%zu  Global worksize=%zu\n", this->max_compute_units, this->kernel_name, this->local_worksize, this->global_worksize);
 	}
 
 

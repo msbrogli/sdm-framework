@@ -44,7 +44,7 @@ HEADERS += operations.h
 all: libsdm.a libsdm.so
 
 .PHONY: tests
-tests: test/test_bitstring
+tests: test1 test2 tests_performance
 
 .PHONY: tests_performance
 tests_performance: test_linear test_linear2 test_thread test_thread2 test_opencl test_opencl2

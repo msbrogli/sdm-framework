@@ -35,7 +35,7 @@ int main(void) {
 	//}
 	//printf("\n");
 
-	unsigned int selected = (unsigned int *)malloc(sizeof(unsigned int)*sample);
+	unsigned int *selected = (unsigned int *)malloc(sizeof(unsigned int)*sample);
 	for (i=0; i<1000; i++) {
 		printf("%d\n", i);
 		as_scan_thread2(&as, bs1, 451, selected, 4);

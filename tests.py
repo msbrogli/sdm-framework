@@ -3,6 +3,7 @@ from sdm import Bitstring, AddressSpace, Counter, SDM
 import sdm as sdmlib
 from sdm import utils
 
+
 class BitstringTests(unittest.TestCase):
     def test_bitstring_init_random(self):
         bs1 = Bitstring.init_random(1000)
@@ -63,7 +64,7 @@ class SDMTests(unittest.TestCase):
         as1.scan_thread2(bs, 451)
 
     def test_counter(self):
-        counter = Counter.init_zero(1000, 1000000)
+        Counter.init_zero(1000, 1000000)
 
     def _test_sdm(self, scanner_type):
         as1 = AddressSpace.init_random(1000, 1000000)

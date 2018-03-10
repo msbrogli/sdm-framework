@@ -2,11 +2,12 @@
 from __future__ import print_function
 from builtins import range
 
-from ctypes import cdll, cast, sizeof
+from ctypes import cdll, sizeof
 from ctypes import Structure, POINTER, pointer, create_string_buffer
-from ctypes import c_uint, c_uint64, c_char_p, c_int, c_void_p, c_double, c_size_t
+from ctypes import c_uint, c_uint64, c_char_p, c_int, c_double, c_size_t
 import os
 import sys
+
 
 def get_lib_fullpath():
     try:
@@ -60,11 +61,13 @@ def _multK(value, K):
     x *= K
     return x
 
+
 def opencl_worksize_mult16(address_space):
     local_worksize = _multK(address_space.bs_len, 16)
     mcu = address_space.opencl_opts.max_compute_units
     global_worksize = _multK(address_space.sample // 20, 2*mcu*local_worksize)
     return local_worksize, global_worksize
+
 
 def opencl_worksize_power2(address_space):
     local_worksize = 1
@@ -74,10 +77,12 @@ def opencl_worksize_power2(address_space):
     global_worksize = _multK(address_space.sample // 20, 2*mcu*local_worksize)
     return local_worksize, global_worksize
 
+
 def opencl_worksize_sample(address_space):
     local_worksize = 0
     global_worksize = address_space.sample
     return local_worksize, global_worksize
+
 
 OPENCL_KERNEL_WORKSIZE = {
     'single_scan0': opencl_worksize_sample,
@@ -597,4 +602,3 @@ def gen_all():
     sdm_thread = gen_sdm(SDM_SCANNER_THREAD)
     sdm_opencl = gen_sdm(SDM_SCANNER_OPENCL)
     return sdm_linear, sdm_thread, sdm_opencl
-

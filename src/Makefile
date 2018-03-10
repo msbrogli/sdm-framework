@@ -56,7 +56,7 @@ tests_performance: test_linear test_linear2 test_thread test_thread2 test_opencl
 htmlcov:
 	rm -rf htmlcov/
 	mkdir htmlcov/
-	gcovr -r ./ --html --html-details -o gcov_html/index.html
+	gcovr -r ./ --html --html-details -o htmlcov/index.html
 
 
 libsdm.so: ${OBJS} ${LIB_OBJS}

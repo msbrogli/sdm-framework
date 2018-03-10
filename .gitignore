@@ -5,7 +5,8 @@
 *.gcda
 *.gcno
 *.gcov
-src/gcov_html/
+src/htmlcov/
+htmlcov/
 
 .coverage
 .tox/

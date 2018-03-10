@@ -309,7 +309,7 @@ class Counter(Structure):
         '''
         libsdm.counter_print(pointer(self), c_uint(index))
 
-    def add_bitstring(self, bs):
+    def add_bitstring(self, index, bs):
         ''' Add a bitstring to the counter of a hard-location.
         '''
         libsdm.counter_add_bitstring(pointer(self), c_uint(index), bs.bs_data)
@@ -353,7 +353,7 @@ class Bitstring(object):
         return self
 
     @classmethod
-    def init_b64(cls, b64):
+    def init_b64(cls, bits, b64):
         ''' Initialize a bitstring based on a base-64 string.
         '''
         self = cls(bits)
@@ -476,9 +476,11 @@ class Bitstring(object):
     def __eq__(self, other):
         return self.distance_to(other) == 0
 
+
 SDM_SCANNER_LINEAR = 1
 SDM_SCANNER_THREAD = 2
 SDM_SCANNER_OPENCL = 3
+
 
 class SDM(Structure):
     ''' An SDM is a facade to manage a given AddressSpace and Counters.
@@ -579,4 +581,3 @@ class SDM(Structure):
         for _ in range(n):
             bs = Bitstring.init_random(self.bits)
             self.write(bs, bs)
-

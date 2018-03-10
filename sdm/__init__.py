@@ -23,7 +23,7 @@ def get_lib_fullpath():
     else:
         ext = get_config_var('SO')
 
-    fullpath = os.path.join(basedir, '_libsdm'+ext)
+    fullpath = os.path.join(basedir, '_libsdm' + ext)
     if not os.path.isfile(fullpath):
         fullpath = os.path.join(basedir, '_libsdm.so')
 
@@ -65,7 +65,7 @@ def _multK(value, K):
 def opencl_worksize_mult16(address_space):
     local_worksize = _multK(address_space.bs_len, 16)
     mcu = address_space.opencl_opts.max_compute_units
-    global_worksize = _multK(address_space.sample // 20, 2*mcu*local_worksize)
+    global_worksize = _multK(address_space.sample // 20, 2 * mcu * local_worksize)
     return local_worksize, global_worksize
 
 
@@ -74,7 +74,7 @@ def opencl_worksize_power2(address_space):
     while local_worksize < address_space.bs_len:
         local_worksize *= 2
     mcu = address_space.opencl_opts.max_compute_units
-    global_worksize = _multK(address_space.sample // 20, 2*mcu*local_worksize)
+    global_worksize = _multK(address_space.sample // 20, 2 * mcu * local_worksize)
     return local_worksize, global_worksize
 
 
@@ -563,19 +563,19 @@ class SDM(Structure):
             if isinstance(weight, int):
                 libsdm.sdm_write2_weighted(pointer(self), addr.bs_data, c_uint(radius), datum.bs_data, c_int(weight))
             elif isinstance(weight, (list, tuple)):
-                assert(self.bits+1 == len(weight))
+                assert(self.bits + 1 == len(weight))
                 # See https://docs.python.org/3/library/ctypes.html#type-conversions
-                weight_buf = (c_int * (self.bits+1))(*weight)
+                weight_buf = (c_int * (self.bits + 1))(*weight)
                 libsdm.sdm_write2_weighted_table(pointer(self), addr.bs_data, c_uint(radius), datum.bs_data, weight_buf)
             else:
                 raise NotImplemented
 
-    #def write_sub(self, addr, datum, radius=None):
-    #    ''' Write a bitstring to the SDM.
-    #    '''
-    #    if radius is None:
-    #        radius = self.radius
-    #    libsdm.sdm_write_sub(pointer(self), addr.bs_data, c_uint(radius), datum.bs_data)
+    # def write_sub(self, addr, datum, radius=None):
+    #     ''' Write a bitstring to the SDM.
+    #     '''
+    #     if radius is None:
+    #         radius = self.radius
+    #     libsdm.sdm_write_sub(pointer(self), addr.bs_data, c_uint(radius), datum.bs_data)
 
     def write_random_bitstrings(self, n):
         for _ in range(n):

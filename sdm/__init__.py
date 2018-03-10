@@ -580,25 +580,3 @@ class SDM(Structure):
             bs = Bitstring.init_random(self.bits)
             self.write(bs, bs)
 
-
-def gen_sdm(scanner_type):
-    bits = 1000
-    sample = 1000000
-    address_space = AddressSpace.init_random(bits, sample)
-    counter = Counter.init_zero(bits, sample)
-    sdm = SDM(address_space, counter, 451, scanner_type)
-    return sdm
-
-def test_read_write(sdm):
-    bs1 = Bitstring(bits)
-    print(bs1.to_b64())
-    sdm.write(bs1, bs1)
-    bs2 = sdm.read(bs1)
-    print(bs2.to_b64())
-
-
-def gen_all():
-    sdm_linear = gen_sdm(SDM_SCANNER_LINEAR)
-    sdm_thread = gen_sdm(SDM_SCANNER_THREAD)
-    sdm_opencl = gen_sdm(SDM_SCANNER_OPENCL)
-    return sdm_linear, sdm_thread, sdm_opencl

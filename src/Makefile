@@ -144,5 +144,6 @@ test_scanner_opencl: test_scanner_opencl.cpp $(OBJS)
 clean:
 	rm -f *.o lib/*.o test_bitstring test_scanner_opencl
 	rm -f *.gcda *.gcno *.gcov
+	rm -rf *.dSYM/
 	rm -f libsdm.a libsdm.so test1 test1-dyn test2 test3 test4 test_linear test_thread test_opencl test_linear2 test_thread2 test_opencl2
 	rm -f test/test_bitstring

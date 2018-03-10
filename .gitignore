@@ -2,6 +2,16 @@
 *.o
 *.pyc
 
+*.gcda
+*.gcno
+*.gcov
+src/gcov_html/
+
+.coverage
+.tox/
+
+.DS_Store
+
 libsdm.a
 libsdm.so
 _libsdm.so

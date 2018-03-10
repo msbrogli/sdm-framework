@@ -2,13 +2,16 @@
 CC=cc
 CCFLAGS=-O2 -Wall -Wstrict-prototypes -Wsign-compare -Wno-gnu -pedantic -fPIC -std=c99
 
-CCFLAGS += -D SDM_ENABLE_OPENCL
-
-#CCFLAGS += -D SDM_USE_BITCOUNT_TABLE
-CCFLAGS += -D SDM_USE_BUILTIN_POPCOUNT
-
 # Profiling
 #CCFLAGS += -g
+
+# Coverage
+#CCFLAGS += -fprofile-arcs -ftest-coverage
+#CLFLAGS += -fprofile-arcs -ftest-coverage
+
+CCFLAGS += -D SDM_ENABLE_OPENCL
+CCFLAGS += -D SDM_USE_BUILTIN_POPCOUNT
+#CCFLAGS += -D SDM_USE_BITCOUNT_TABLE
 
 UNAME_S := $(shell uname -s)
 ifeq ($(UNAME_S),Linux)
@@ -48,6 +51,13 @@ tests: test1 test2 tests_performance
 
 .PHONY: tests_performance
 tests_performance: test_linear test_linear2 test_thread test_thread2 test_opencl test_opencl2
+
+.PHONY: htmlcov
+htmlcov:
+	rm -rf htmlcov/
+	mkdir htmlcov/
+	gcovr -r ./ --html --html-details -o gcov_html/index.html
+
 
 libsdm.so: ${OBJS} ${LIB_OBJS}
 	${CC} -shared -o libsdm.so ${OBJS} ${LIB_OBJS} ${CLFLAGS}
@@ -133,5 +143,6 @@ test_scanner_opencl: test_scanner_opencl.cpp $(OBJS)
 .PHONY: clean
 clean:
 	rm -f *.o lib/*.o test_bitstring test_scanner_opencl
+	rm -f *.gcda *.gcno *.gcov
 	rm -f libsdm.a libsdm.so test1 test1-dyn test2 test3 test4 test_linear test_thread test_opencl test_linear2 test_thread2 test_opencl2
 	rm -f test/test_bitstring

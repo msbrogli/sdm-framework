@@ -540,7 +540,7 @@ class SDM(Structure):
         if z is None:
             libsdm.sdm_read2(pointer(self), addr.bs_data, c_uint(radius), out.bs_data)
         else:
-            libsdm.sdm_generic_read(pointer(self), addr.bs_data, c_uint(radius), out.bs_data, c_double(z))
+            libsdm.sdm_generic_read2(pointer(self), addr.bs_data, c_uint(radius), out.bs_data, c_double(z))
         return out
 
     def read_counter(self, addr, radius=None, z=None):

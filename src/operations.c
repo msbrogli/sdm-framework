@@ -301,35 +301,35 @@ int sdm_write2_weighted_table(struct sdm_s *sdm, bitstring_t *addr, unsigned int
 	return cnt;
 }
 
-int sdm_generic_read(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstring_t *output, double z) {
+int sdm_generic_read2(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, bitstring_t *output, double z) {
 	double counter[sdm->bits];
 	counter_t *ptr;
 	double x;
-	unsigned int i, j, cnt = 0;
-	uint8_t *selected = (uint8_t *) malloc(sizeof(uint8_t) * sdm->sample);
+	unsigned int j;
+	int i;
+	int cnt;
+	unsigned int *selected = (unsigned int *) malloc(sizeof(unsigned int) * sdm->sample);
 	assert(selected != NULL);
 
-	if (sdm_scan(sdm, addr, radius, selected) == -1) {
+	cnt = sdm_scan2(sdm, addr, radius, selected);
+	if (cnt == -1) {
 		free(selected);
 		return -1;
 	}
 
 	memset(counter, 0, sizeof(counter));
-	for(i=0; i<sdm->sample; i++) {
-		if (selected[i] == 1) {
-			ptr = sdm->counter->counter[i];
-			for(j=0; j<sdm->bits; j++) {
-				if (ptr[j] < 0) {
-					x = -pow(-ptr[j], z);
-				} else if (ptr[j] > 0) {
-					x = pow(ptr[j], z);
-				} else {
-					x = 0;
-				}
-				counter[j] += x;
-				//printf("!! %10.2f %8d %10.2f\n", counter[j], ptr[j], x);
+	for(i=0; i<cnt; i++) {
+		ptr = sdm->counter->counter[selected[i]];
+		for(j=0; j<sdm->bits; j++) {
+			if (ptr[j] < 0) {
+				x = -pow(-ptr[j], z);
+			} else if (ptr[j] > 0) {
+				x = pow(ptr[j], z);
+			} else {
+				x = 0;
 			}
-			cnt++;
+			counter[j] += x;
+			//printf("!! %10.2f %8d %10.2f\n", counter[j], ptr[j], x);
 		}
 	}
 	for(j=0; j<sdm->bits; j++) {

@@ -1,5 +1,6 @@
 from __future__ import print_function
 from math import log
+from collections import defaultdict
 
 
 def test_kernels(bits, sample, radius):
@@ -61,3 +62,51 @@ def calculate_radius(bits, threshold=0.001):
 def calculate_probability(bits, radius):
     from scipy.stats import binom
     return binom.cdf(radius, bits, 0.5)
+
+
+def genM(n, h):
+    """ Generate matrix M of Geometrical treatment and statistical
+    modelling of the distribution of patterns in the n-dimensional
+    Boolean space by de Pádua and Aleksander (1995).
+    """
+    from math import factorial
+
+    def comb(a, b):
+        return factorial(a) // factorial(b) // factorial(a - b)
+
+    M = defaultdict(int)
+    for i in range(n):
+        x = h + i
+        y = i
+        if 0 <= x < n and 0 <= y < n:
+            M[(x, y)] = comb(n - h, i)
+
+        x = h - i
+        y = i
+        if 0 <= x < n and 0 <= y < n:
+            M[(x, y)] = comb(h, i)
+
+    for j in range(1, h + 1):
+        mult = M[(h - j, j)]
+        for i in range(1, n):
+            x = h + i
+            y = i
+            nx = x - j
+            ny = y + j
+
+            if 0 <= x < n and 0 <= y < n and 0 <= nx < n and 0 <= ny < n:
+                M[(nx, ny)] = mult * M[(x, y)]
+
+    return M
+
+
+def circle_intersection(bits, sample, radius, d):
+    """ Calculate the average number of hardlocations in the intersection of two circle with equal radius
+    around bitstrings with distance d.
+    """
+    total = 0
+    M = genM(bits, d)
+    for i in range(radius + 1):
+        for j in range(radius + 1):
+            total += M[(i, j)]
+    return 1.0 * sample * total / (2**bits)

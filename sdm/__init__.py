@@ -549,7 +549,7 @@ class SDM(Structure):
         if radius is None:
             radius = self.radius
         counter = Counter.init_zero(self.bits, 1)
-        libsdm.sdm_read_counter(pointer(self), addr.bs_data, c_uint(radius), pointer(counter))
+        libsdm.sdm_read2_counter(pointer(self), addr.bs_data, c_uint(radius), pointer(counter))
         return counter
 
     def write(self, addr, datum, radius=None, weight=1):

@@ -60,7 +60,7 @@ void single_scan1(
 	ulong a;
 	uint dist;
 	const __global ulong *row;
-	
+
 	for (id=get_global_id(0); id < sample; id += get_global_size(0)) {
 
 		row = bitstrings + id*bs_len;

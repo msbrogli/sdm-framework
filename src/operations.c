@@ -346,6 +346,23 @@ int sdm_generic_read2(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius,
 	return cnt;
 }
 
+int sdm_read2_counter(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, struct counter_s *counter) {
+	int i, cnt;
+	unsigned int *selected = (unsigned int *) malloc(sizeof(unsigned int) * sdm->sample);
+
+	cnt = sdm_scan2(sdm, addr, radius, selected);
+	if (cnt == -1) {
+		return -1;
+	}
+
+	for(i=0; i<cnt; i++) {
+		counter_add_counter(counter, 0, sdm->counter, selected[i]);
+	}
+
+	free(selected);
+	return cnt;
+}
+
 int sdm_read_counter(struct sdm_s *sdm, bitstring_t *addr, unsigned int radius, struct counter_s *counter) {
 	uint8_t selected[sdm->sample];
 	unsigned int i, cnt = 0;

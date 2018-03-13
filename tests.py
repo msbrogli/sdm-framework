@@ -1,7 +1,9 @@
+from __future__ import print_function
 import unittest
 from sdm import Bitstring, AddressSpace, Counter, SDM
 import sdm as sdmlib
 from sdm import utils
+import random
 
 
 class BitstringTests(unittest.TestCase):
@@ -44,6 +46,33 @@ class BitstringTests(unittest.TestCase):
         bs3 = bs1.copy()
         bs3.xor(bs2)
         self.assertEqual(0, bs1.distance_to(bs3))
+
+
+class CounterTests(unittest.TestCase):
+    def test_init(self):
+        Counter.init_zero(256, 1000000)
+
+    def test_basic(self):
+        bits = 256
+        radius = 103
+        sample = 1000000
+
+        address_space = AddressSpace.init_random(bits, sample)
+        counter = Counter.init_zero(bits, sample)
+        scanner_type = sdmlib.SDM_SCANNER_OPENCL
+        sdm = SDM(address_space, counter, radius, scanner_type)
+
+        sdm.write_random_bitstrings(1000)
+
+        for k in range(1000):
+            idx = random.choice(range(sample))
+            bs = counter.to_bitstring(idx)
+            counter_values = counter.get_counter(idx)
+            for i, x in enumerate(counter_values):
+                if bs.get_bit(i):
+                    assert(x >= 0)
+                else:
+                    assert(x <= 0)
 
 
 class AddressSpaceTests(unittest.TestCase):

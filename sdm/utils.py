@@ -1,3 +1,5 @@
+# encoding: utf-8
+
 from __future__ import print_function
 from math import log
 from collections import defaultdict

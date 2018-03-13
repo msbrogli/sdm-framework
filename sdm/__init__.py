@@ -324,6 +324,9 @@ class Counter(Structure):
         libsdm.counter_to_bitstring(pointer(self), c_uint(index), bs.bs_data)
         return bs
 
+    def get_counter(self, index):
+        return [self.counter[index][i] for i in range(self.bits)]
+
     def save(self, filename):
         libsdm.counter_save_file(pointer(self), c_char_p(filename))
 

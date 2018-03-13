@@ -164,6 +164,35 @@ exit:
 	return ret;
 }
 
+int counter_load_file(struct counter_s *this, char *filename) {
+	char meta[1000], bin[1000];
+	unsigned int bits, sample;
+	sprintf(meta, "%s.meta", filename);
+	sprintf(bin, "%s.bin", filename);
+
+	if(counter_check_meta_file(meta, &bits, &sample)) {
+		return -1;
+	}
+
+	if (this->bits != bits) {
+		return -2;
+	}
+	if (this->sample != sample) {
+		return -3;
+	}
+
+	FILE *fp = fopen(bin, "r");
+	if (fp == NULL) {
+		return -4;
+	}
+	size_t nobjs = fread(this->data, sizeof(counter_t) * this->bits, this->sample, fp);
+	if (nobjs != this->sample) {
+		return -5;
+	}
+	fclose(fp);
+	return 0;
+}
+
 int counter_init_file(char *filename, struct counter_s *this) {
 	char meta[1000], bin[1000];
 	unsigned int bits, sample;
